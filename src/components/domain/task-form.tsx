@@ -1,0 +1,173 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import type { Resolver } from "react-hook-form";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { createTaskAction } from "@/lib/server/actions/create-task";
+import { updateTaskAction } from "@/lib/server/actions/update-task";
+import {
+  createTaskSchema,
+  type CreateTaskSchema,
+  type UpdateTaskSchema,
+  updateTaskSchema,
+} from "@/lib/validations/electives";
+import type { ResourceSummary, TaskSummary } from "@/types/domain";
+
+function toDateTimeInputValue(value?: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function fromDateTimeInputValue(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  return new Date(value).toISOString();
+}
+
+export function TaskForm({
+  mode,
+  spaceId,
+  resources,
+  initialValues,
+}: {
+  mode: "create" | "edit";
+  spaceId: string;
+  resources: ResourceSummary[];
+  initialValues?: Partial<TaskSummary> & { id?: string };
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [formError, setFormError] = useState<string | null>(null);
+  const form = useForm<CreateTaskSchema | UpdateTaskSchema>({
+    resolver: zodResolver(mode === "create" ? createTaskSchema : updateTaskSchema) as Resolver<CreateTaskSchema | UpdateTaskSchema>,
+    defaultValues: {
+      space_id: spaceId,
+      title: initialValues?.title ?? "",
+      slug: initialValues?.slug ?? "",
+      brief: initialValues?.brief ?? "",
+      body: initialValues?.body ?? "",
+      submission_mode: initialValues?.submissionMode ?? "group",
+      due_at: toDateTimeInputValue(initialValues?.dueAt),
+      allow_resubmission: initialValues?.allowResubmission ?? true,
+      template_resource_id: initialValues?.templateResourceId ?? "",
+      status: initialValues?.status ?? "draft",
+      ...(mode === "edit" && initialValues?.id ? { id: initialValues.id } : {}),
+    },
+  });
+
+  const onSubmit = form.handleSubmit((values) => {
+    setFormError(null);
+    startTransition(async () => {
+      try {
+        const payload = {
+          ...values,
+          space_id: spaceId,
+          due_at: fromDateTimeInputValue(values.due_at ?? null),
+          template_resource_id: values.template_resource_id || null,
+        };
+
+        if (mode === "create") {
+          await createTaskAction(payload);
+          form.reset({
+            space_id: spaceId,
+            title: "",
+            slug: "",
+            brief: "",
+            body: "",
+            submission_mode: "group",
+            due_at: "",
+            allow_resubmission: true,
+            template_resource_id: "",
+            status: "draft",
+          });
+        } else {
+          await updateTaskAction(payload);
+        }
+
+        router.refresh();
+      } catch (error) {
+        setFormError(error instanceof Error ? error.message : "Unable to save task.");
+      }
+    });
+  });
+
+  return (
+    <form className="space-y-5" onSubmit={onSubmit}>
+      <input type="hidden" value={spaceId} {...form.register("space_id")} />
+      {mode === "edit" && initialValues?.id ? <input type="hidden" value={initialValues.id} {...form.register("id")} /> : null}
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Task title</label>
+          <Input {...form.register("title")} />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Slug</label>
+          <Input {...form.register("slug")} />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Brief</label>
+        <Textarea {...form.register("brief")} />
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Instructions</label>
+        <Textarea {...form.register("body")} />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Submission mode</label>
+          <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("submission_mode")}>
+            <option value="group">Group</option>
+            <option value="individual">Individual</option>
+          </select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Due at</label>
+          <Input type="datetime-local" {...form.register("due_at")} />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Template resource</label>
+          <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("template_resource_id")}>
+            <option value="">None</option>
+            {resources.map((resource) => (
+              <option key={resource.id} value={resource.id}>
+                {resource.title}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Status</label>
+          <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("status")}>
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+      </div>
+      <label className="flex items-center gap-3 rounded-xl border border-border bg-slate-50 px-4 py-3 text-sm">
+        <input className="h-4 w-4 rounded border-border" type="checkbox" {...form.register("allow_resubmission")} />
+        Allow resubmission after teacher return
+      </label>
+      {formError ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}
+      <Button type="submit">{isPending ? "Saving..." : mode === "create" ? "Create task" : "Update task"}</Button>
+    </form>
+  );
+}

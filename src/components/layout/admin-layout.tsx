@@ -1,0 +1,25 @@
+import type { ReactNode } from "react";
+
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
+import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { TopNav } from "@/components/layout/top-nav";
+import { ADMIN_NAV } from "@/lib/constants/nav";
+import type { AppUserProfile } from "@/types/auth";
+
+export function AdminLayout({ children, profile }: { children: ReactNode; profile: AppUserProfile }) {
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <TopNav actions={<MobileNavDrawer items={ADMIN_NAV} title="Admin Navigation" />} items={ADMIN_NAV.slice(0, 1)} title={`${profile.fullName} / Admin`} />
+      <div className="flex">
+        <SidebarNav compact items={ADMIN_NAV} title="Admin Console" />
+        <main className="min-w-0 flex-1">
+          <div className="container-shell space-y-6 py-6">
+            <Breadcrumbs />
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}

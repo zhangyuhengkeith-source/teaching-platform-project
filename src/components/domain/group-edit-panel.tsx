@@ -1,0 +1,100 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { createGroupAction } from "@/lib/server/actions/create-group";
+import { updateGroupAction } from "@/lib/server/actions/update-group";
+import {
+  createGroupSchema,
+  type CreateGroupSchema,
+  type UpdateGroupSchema,
+  updateGroupSchema,
+} from "@/lib/validations/electives";
+
+export function GroupEditPanel({
+  mode,
+  spaceId,
+  initialValues,
+  showStatusField = false,
+}: {
+  mode: "create" | "edit";
+  spaceId: string;
+  initialValues?: Partial<UpdateGroupSchema>;
+  showStatusField?: boolean;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [formError, setFormError] = useState<string | null>(null);
+  const form = useForm<CreateGroupSchema | UpdateGroupSchema>({
+    resolver: zodResolver(mode === "create" ? createGroupSchema : updateGroupSchema),
+    defaultValues: {
+      space_id: spaceId,
+      name: initialValues?.name ?? "",
+      slug: initialValues?.slug ?? "",
+      project_title: initialValues?.project_title ?? "",
+      project_summary: initialValues?.project_summary ?? "",
+      status: initialValues?.status ?? "forming",
+      ...(mode === "edit" && initialValues?.id ? { id: initialValues.id } : {}),
+    },
+  });
+
+  const onSubmit = form.handleSubmit((values) => {
+    setFormError(null);
+    startTransition(async () => {
+      try {
+        if (mode === "create") {
+          await createGroupAction(values);
+        } else {
+          await updateGroupAction(values);
+        }
+        router.refresh();
+      } catch (error) {
+        setFormError(error instanceof Error ? error.message : "Unable to save group.");
+      }
+    });
+  });
+
+  return (
+    <form className="space-y-5" onSubmit={onSubmit}>
+      <input type="hidden" value={spaceId} {...form.register("space_id")} />
+      {mode === "edit" && initialValues?.id ? <input type="hidden" value={initialValues.id} {...form.register("id")} /> : null}
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Group name</label>
+          <Input {...form.register("name")} />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Slug</label>
+          <Input {...form.register("slug")} />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Project title</label>
+        <Input {...form.register("project_title")} />
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Project summary</label>
+        <Textarea {...form.register("project_summary")} />
+      </div>
+      {showStatusField ? (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Status</label>
+          <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("status")}>
+            <option value="forming">Forming</option>
+            <option value="active">Active</option>
+            <option value="locked">Locked</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+      ) : null}
+      {formError ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}
+      <Button type="submit">{isPending ? "Saving..." : mode === "create" ? "Create group" : "Update group"}</Button>
+    </form>
+  );
+}

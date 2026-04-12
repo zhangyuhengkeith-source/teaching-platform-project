@@ -1,0 +1,12 @@
+import type { ReactNode } from "react";
+
+import { cn } from "@/lib/utils/cn";
+
+export function FilterBar({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <div className={cn("flex flex-col gap-3 rounded-2xl border border-border bg-white p-4 shadow-panel sm:flex-row sm:items-center sm:justify-between", className)}>
+      {children}
+    </div>
+  );
+}
+

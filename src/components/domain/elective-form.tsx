@@ -1,0 +1,109 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { createElectiveAction } from "@/lib/server/actions/create-elective";
+import { updateElectiveAction } from "@/lib/server/actions/update-elective";
+import {
+  createElectiveSchema,
+  type CreateElectiveSchema,
+  type UpdateElectiveSchema,
+  updateElectiveSchema,
+} from "@/lib/validations/electives";
+
+export function ElectiveForm({
+  mode,
+  initialValues,
+}: {
+  mode: "create" | "edit";
+  initialValues?: Partial<UpdateElectiveSchema>;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [formError, setFormError] = useState<string | null>(null);
+  const form = useForm<CreateElectiveSchema | UpdateElectiveSchema>({
+    resolver: zodResolver(mode === "create" ? createElectiveSchema : updateElectiveSchema),
+    defaultValues: {
+      title: initialValues?.title ?? "",
+      slug: initialValues?.slug ?? "",
+      description: initialValues?.description ?? "",
+      academic_year: initialValues?.academic_year ?? "",
+      status: initialValues?.status ?? "draft",
+      grouping_locked: initialValues?.grouping_locked ?? false,
+      max_group_size: initialValues?.max_group_size ?? 4,
+      ...(mode === "edit" && initialValues?.id ? { id: initialValues.id } : {}),
+    },
+  });
+
+  const onSubmit = form.handleSubmit((values) => {
+    setFormError(null);
+    startTransition(async () => {
+      try {
+        if (mode === "create") {
+          await createElectiveAction(values);
+        } else {
+          await updateElectiveAction(values);
+        }
+        router.push("/admin/electives");
+        router.refresh();
+      } catch (error) {
+        setFormError(error instanceof Error ? error.message : "Unable to save elective.");
+      }
+    });
+  });
+
+  return (
+    <form className="space-y-6" onSubmit={onSubmit}>
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Elective title</label>
+          <Input {...form.register("title")} />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Slug</label>
+          <Input {...form.register("slug")} />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Description</label>
+        <Textarea {...form.register("description")} />
+      </div>
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Academic year</label>
+          <Input placeholder="2025-2026" {...form.register("academic_year")} />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Status</label>
+          <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("status")}>
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Max group size</label>
+          <Input type="number" {...form.register("max_group_size", { valueAsNumber: true })} />
+        </div>
+      </div>
+      <label className="flex items-center gap-3 rounded-xl border border-border bg-slate-50 px-4 py-3 text-sm">
+        <input className="h-4 w-4 rounded border-border" type="checkbox" {...form.register("grouping_locked")} />
+        Lock grouping for students
+      </label>
+      {mode === "edit" && initialValues?.id ? <input type="hidden" value={initialValues.id} {...form.register("id")} /> : null}
+      {formError ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}
+      <div className="flex gap-3">
+        <Button type="submit">{isPending ? "Saving..." : mode === "create" ? "Create elective" : "Update elective"}</Button>
+        <Button onClick={() => router.push("/admin/electives")} type="button" variant="outline">
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+}

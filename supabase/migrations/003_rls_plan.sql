@@ -1,0 +1,62 @@
+-- Task 2 RLS preparation only.
+-- Policies are intentionally not enabled yet, but this file records the target model.
+--
+-- Tables that must receive RLS in Task 3:
+--   public.profiles
+--   public.teacher_profiles
+--   public.student_profiles
+--   public.spaces
+--   public.space_memberships
+--   public.space_sections
+--   public.resources
+--   public.resource_files
+--   public.notices
+--   public.exercise_sets
+--   public.exercise_items
+--   public.exercise_attempts
+--   public.wrong_book_items
+--   public.groups
+--   public.group_members
+--   public.tasks
+--   public.task_submissions
+--   public.task_submission_files
+--
+-- Intended access model:
+-- 1. Default deny on all tables.
+-- 2. Super admins can manage all rows.
+-- 3. Teachers can manage spaces they own and spaces where they are active teacher/assistant members.
+-- 4. Internal students can read published spaces/resources/notices only when they are active members.
+-- 5. External students cannot access internal learning spaces. For now, assume no internal spaces are external-facing.
+-- 6. Public resource access must require resources.visibility = 'public' and resource/status checks.
+-- 7. Profiles should allow a user to read/update only their own row, unless elevated role grants broader access.
+-- 8. Published exercise_sets and exercise_items are readable only through an accessible parent class/section.
+-- 9. exercise_attempts are readable and writable only by the owning student, plus elevated teacher/admin roles for managed spaces.
+-- 10. wrong_book_items are private to the owning student plus elevated teacher/admin roles where review tooling is introduced later.
+-- 11. Groups are visible only to the elective's managers and the group's own members.
+-- 12. group_members inherit visibility from the parent elective plus teacher/admin overrides.
+-- 13. Published tasks are visible only to members of the elective; draft tasks remain manager-only.
+-- 14. task_submissions are private to the submitter context plus managers of the parent elective.
+--
+-- Suggested policy rollout:
+-- alter table public.profiles enable row level security;
+-- alter table public.spaces enable row level security;
+-- alter table public.space_memberships enable row level security;
+-- alter table public.resources enable row level security;
+-- alter table public.notices enable row level security;
+-- alter table public.exercise_sets enable row level security;
+-- alter table public.exercise_items enable row level security;
+-- alter table public.exercise_attempts enable row level security;
+-- alter table public.wrong_book_items enable row level security;
+-- alter table public.groups enable row level security;
+-- alter table public.group_members enable row level security;
+-- alter table public.tasks enable row level security;
+-- alter table public.task_submissions enable row level security;
+-- alter table public.task_submission_files enable row level security;
+--
+-- TODO(Task 3):
+-- - Add auth.uid()-based profile ownership policies.
+-- - Add membership-exists helper SQL or security definer functions for reusable access checks.
+-- - Add explicit teacher-management policies mirrored from src/lib/permissions/*.ts.
+-- - Add protected storage policies for resource-files and avatars buckets.
+-- - Mirror the practice visibility model from src/lib/permissions/exercises.ts once exercise tables are live.
+-- - Mirror elective group and submission visibility from src/lib/permissions/electives.ts.
