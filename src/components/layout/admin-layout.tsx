@@ -1,3 +1,5 @@
+"use client";
+
 import type { ReactNode } from "react";
 
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
