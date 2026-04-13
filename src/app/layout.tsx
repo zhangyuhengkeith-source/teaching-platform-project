@@ -5,8 +5,8 @@ import "@/styles/globals.css";
 import { I18nProvider } from "@/providers/i18n-provider";
 
 export const metadata: Metadata = {
-  title: "Teaching Platform MVP",
-  description: "Production-oriented foundation for a personal teaching platform.",
+  title: "Learn From Andy",
+  description: "Learn From Andy teaching platform.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
