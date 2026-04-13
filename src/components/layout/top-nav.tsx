@@ -5,7 +5,9 @@ import { usePathname } from "next/navigation";
 import { Bell, GraduationCap, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { LanguageSwitcher } from "@/components/common/language-switcher";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/hooks/use-i18n";
 import { cn } from "@/lib/utils/cn";
 import type { NavItem } from "@/types/nav";
 
@@ -15,10 +17,11 @@ export function TopNav({
   actions,
 }: {
   items: NavItem[];
-  title: string;
+  title: ReactNode;
   actions?: ReactNode;
 }) {
   const pathname = usePathname() ?? "";
+  const { t } = useI18n();
 
   return (
     <header className="border-b border-border bg-white/90 backdrop-blur">
@@ -29,7 +32,7 @@ export function TopNav({
               <GraduationCap className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Personal Teaching Platform</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{t("nav.platformTagline")}</p>
               <p className="text-sm font-semibold">{title}</p>
             </div>
           </Link>
@@ -43,17 +46,18 @@ export function TopNav({
                 href={item.disabled ? "#" : item.href}
                 key={item.href}
               >
-                {item.title}
+                {item.titleKey ? t(item.titleKey) : item.title}
               </Link>
             ))}
           </nav>
         </div>
         <div className="flex items-center gap-2">
           {actions}
-          <Button aria-label="Notifications" size="sm" variant="ghost">
+          <LanguageSwitcher />
+          <Button aria-label={t("nav.notifications")} size="sm" variant="ghost">
             <Bell className="h-4 w-4" />
           </Button>
-          <Button aria-label="Profile" size="sm" variant="ghost">
+          <Button aria-label={t("nav.profile")} size="sm" variant="ghost">
             <UserRound className="h-4 w-4" />
           </Button>
         </div>

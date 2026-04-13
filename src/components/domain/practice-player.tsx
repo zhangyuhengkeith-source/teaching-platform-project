@@ -8,6 +8,7 @@ import { McqQuestionCard } from "@/components/domain/mcq-question-card";
 import { PracticeSummaryCard } from "@/components/domain/practice-summary-card";
 import { RecallQuestionCard } from "@/components/domain/recall-question-card";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/hooks/use-i18n";
 import { submitExerciseAttemptAction } from "@/lib/server/actions/submit-exercise-attempt";
 import type { ExerciseSetDetail, PracticeSubmissionResult } from "@/types/domain";
 
@@ -24,6 +25,7 @@ export function PracticePlayer({ exerciseSet, wrongBookHref }: PracticePlayerPro
   const [feedbackByItemId, setFeedbackByItemId] = useState<Record<string, PracticeSubmissionResult>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [sessionComplete, setSessionComplete] = useState(false);
+  const { t } = useI18n();
 
   const items = exerciseSet.items;
   const currentItem = items[currentIndex];
@@ -64,7 +66,7 @@ export function PracticePlayer({ exerciseSet, wrongBookHref }: PracticePlayerPro
           [currentItem.id]: result,
         }));
       } catch (error) {
-        setFormError(error instanceof Error ? error.message : "Unable to submit answer.");
+        setFormError(error instanceof Error ? error.message : t("status.error"));
       }
     });
   };
@@ -92,7 +94,7 @@ export function PracticePlayer({ exerciseSet, wrongBookHref }: PracticePlayerPro
   if (!currentItem) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-white p-8 text-sm text-muted-foreground">
-        No exercise items have been added yet.
+        {t("practice.empty")}
       </div>
     );
   }
@@ -101,11 +103,11 @@ export function PracticePlayer({ exerciseSet, wrongBookHref }: PracticePlayerPro
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-[1fr_240px]">
         <div className="rounded-2xl border border-border bg-white px-5 py-4">
-          <p className="text-sm text-muted-foreground">Progress</p>
+          <p className="text-sm text-muted-foreground">{t("practice.progress")}</p>
           <p className="mt-1 text-lg font-semibold">{progressText}</p>
         </div>
         <div className="rounded-2xl border border-border bg-white px-5 py-4">
-          <p className="text-sm text-muted-foreground">Completed items</p>
+          <p className="text-sm text-muted-foreground">{t("practice.completedItems")}</p>
           <p className="mt-1 text-lg font-semibold">{attemptedResults.length}</p>
         </div>
       </div>
@@ -163,10 +165,10 @@ export function PracticePlayer({ exerciseSet, wrongBookHref }: PracticePlayerPro
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button disabled={currentIndex === 0} onClick={() => setCurrentIndex((value) => Math.max(0, value - 1))} type="button" variant="outline">
-          Previous
+          {t("practice.previous")}
         </Button>
         <Button disabled={!canMoveNext || isPending} onClick={handleNext} type="button">
-          {currentIndex === items.length - 1 ? "Finish set" : "Next item"}
+          {currentIndex === items.length - 1 ? t("practice.finishSet") : t("practice.nextItem")}
         </Button>
       </div>
 
@@ -175,11 +177,11 @@ export function PracticePlayer({ exerciseSet, wrongBookHref }: PracticePlayerPro
           <PracticeSummaryCard attempted={attemptedResults.length} correct={correctCount} incorrect={incorrectCount} />
           <div className="flex flex-wrap gap-3">
             <Button onClick={handleRetrySet} type="button" variant="outline">
-              Retry set
+              {t("practice.retrySet")}
             </Button>
             {wrongBookCount > 0 ? (
               <Button asChild>
-                <Link href={wrongBookHref}>Review wrong-book</Link>
+                <Link href={wrongBookHref}>{t("practice.reviewWrongBook")}</Link>
               </Button>
             ) : null}
           </div>
@@ -188,7 +190,7 @@ export function PracticePlayer({ exerciseSet, wrongBookHref }: PracticePlayerPro
 
       {isCurrentSubmitted && !sessionComplete ? (
         <p className="text-sm text-muted-foreground">
-          Answer saved. Move to the next item when you are ready.
+          {t("practice.answerSaved")}
         </p>
       ) : null}
     </div>

@@ -5,8 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface EmptyStateProps {
   icon: LucideIcon;
-  title: string;
-  description: string;
+  title: ReactNode;
+  description: ReactNode;
   action?: ReactNode;
 }
 
@@ -26,4 +26,3 @@ export function EmptyState({ icon: Icon, title, description, action }: EmptyStat
     </Card>
   );
 }
-

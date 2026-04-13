@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface SectionCardProps {
-  title: string;
-  description?: string;
+  title: ReactNode;
+  description?: ReactNode;
   action?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -24,4 +24,3 @@ export function SectionCard({ title, description, action, children, className }:
     </Card>
   );
 }
-

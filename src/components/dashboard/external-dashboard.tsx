@@ -1,8 +1,13 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { externalMetrics } from "@/lib/constants/mock-data";
 import { SectionCard } from "@/components/shared/section-card";
+import { useI18n } from "@/hooks/use-i18n";
 
 export function ExternalDashboard() {
+  const { t } = useI18n();
+
   return (
     <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
       <div className="space-y-6">
@@ -10,7 +15,7 @@ export function ExternalDashboard() {
           {externalMetrics.map((item) => {
             const Icon = item.icon;
             return (
-              <SectionCard description={item.detail} key={item.label} title={item.label}>
+              <SectionCard description={t(item.detailKey)} key={item.labelKey} title={t(item.labelKey)}>
                 <div className="flex items-end justify-between">
                   <p className="text-3xl font-semibold">{item.value}</p>
                   <div className="rounded-xl bg-blue-50 p-3 text-primary">
@@ -21,21 +26,20 @@ export function ExternalDashboard() {
             );
           })}
         </section>
-        <SectionCard description="The service entry point is positioned as a calm, guided workflow." title="New essay submission">
+        <SectionCard description={t("dashboard.external.newSubmissionDescription")} title={t("dashboard.external.newSubmissionTitle")}>
           <div className="space-y-4">
-            <p className="text-sm leading-6 text-muted-foreground">Upload a draft, choose the level of commentary needed, and receive structured feedback with revision guidance.</p>
-            <Button>Start a submission</Button>
+            <p className="text-sm leading-6 text-muted-foreground">{t("dashboard.external.newSubmissionBody")}</p>
+            <Button>{t("dashboard.external.startSubmission")}</Button>
           </div>
         </SectionCard>
       </div>
-      <SectionCard description="Clear expectations help external clients prepare strong submissions." title="Service instructions">
+      <SectionCard description={t("dashboard.external.serviceInstructionsDescription")} title={t("dashboard.external.serviceInstructionsTitle")}>
         <ul className="space-y-3 text-sm text-slate-600">
-          <li className="rounded-xl bg-slate-50 p-4">Submit Word or PDF files with the essay prompt attached when possible.</li>
-          <li className="rounded-xl bg-slate-50 p-4">Response windows can later be tiered by urgency and feedback depth.</li>
-          <li className="rounded-xl bg-slate-50 p-4">A future order timeline will live here once Task 2 adds the data layer.</li>
+          <li className="rounded-xl bg-slate-50 p-4">{t("dashboard.external.instruction1")}</li>
+          <li className="rounded-xl bg-slate-50 p-4">{t("dashboard.external.instruction2")}</li>
+          <li className="rounded-xl bg-slate-50 p-4">{t("dashboard.external.instruction3")}</li>
         </ul>
       </SectionCard>
     </div>
   );
 }
-

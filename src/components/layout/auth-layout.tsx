@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { Card, CardContent } from "@/components/ui/card";
 
 export function AuthLayout({
@@ -7,8 +8,8 @@ export function AuthLayout({
   description,
   children,
 }: {
-  title: string;
-  description: string;
+  title: ReactNode;
+  description: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -19,8 +20,8 @@ export function AuthLayout({
           <h1 className="mt-6 max-w-md text-4xl font-semibold leading-tight text-white">{title}</h1>
           <p className="mt-5 max-w-lg text-sm leading-7 text-slate-300">{description}</p>
           <div className="mt-10 space-y-4 text-sm text-slate-300">
-            <p>Designed for calm academic workflows, personal feedback, and long-term student growth.</p>
-            <p>Supabase auth helpers are wired in now so profile bootstrap and role routing can be added without reworking page code later.</p>
+            <p><TranslationText translationKey="auth.panelDescription1" /></p>
+            <p><TranslationText translationKey="auth.panelDescription2" /></p>
           </div>
         </div>
         <Card className="overflow-hidden">
@@ -37,4 +38,3 @@ export function AuthLayout({
     </div>
   );
 }
-

@@ -1,5 +1,6 @@
 import { NotebookPen } from "lucide-react";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { WrongBookItemCard } from "@/components/domain/wrong-book-item-card";
 import { WrongBookRetryPanel } from "@/components/domain/wrong-book-retry-panel";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -20,13 +21,13 @@ export default async function WrongBookPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        description="Review recent mistakes, retry key items, and keep your revision loop focused on what still needs repair."
-        title="Wrong Book"
+        description={<TranslationText translationKey="wrongBook.description" />}
+        title={<TranslationText translationKey="wrongBook.title" />}
       />
       <FilterBar>
-        <SearchInput placeholder="Search wrong-book items" />
+        <SearchInput placeholderKey="wrongBook.searchPlaceholder" />
       </FilterBar>
-      <SectionCard description="Active items stay here until a successful retry marks them mastered." title="Active review items">
+      <SectionCard description={<TranslationText translationKey="wrongBook.activeDescription" />} title={<TranslationText translationKey="wrongBook.activeTitle" />}>
         {activeItems.length > 0 ? (
           <div className="space-y-4">
             {activeItems.map((item) => (
@@ -35,13 +36,13 @@ export default async function WrongBookPage() {
           </div>
         ) : (
           <EmptyState
-            description="You do not have any active wrong-book items right now. New incorrect MCQ and term-recall answers will appear here."
+            description={<TranslationText translationKey="wrongBook.noActiveDescription" />}
             icon={NotebookPen}
-            title="No active wrong-book items"
+            title={<TranslationText translationKey="wrongBook.noActiveTitle" />}
           />
         )}
       </SectionCard>
-      <SectionCard description="Mastered items remain visible for review history." title="Mastered items">
+      <SectionCard description={<TranslationText translationKey="wrongBook.masteredDescription" />} title={<TranslationText translationKey="wrongBook.masteredTitle" />}>
         {masteredItems.length > 0 ? (
           <div className="space-y-4">
             {masteredItems.map((item) => (
@@ -49,7 +50,7 @@ export default async function WrongBookPage() {
             ))}
           </div>
         ) : (
-          <EmptyState description="Mastered items will appear here after successful retries." icon={NotebookPen} title="No mastered items yet" />
+          <EmptyState description={<TranslationText translationKey="wrongBook.noMasteredDescription" />} icon={NotebookPen} title={<TranslationText translationKey="wrongBook.noMasteredTitle" />} />
         )}
       </SectionCard>
     </div>

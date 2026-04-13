@@ -1,23 +1,23 @@
 import { ArrowRight, BookOpen, Clock3, FilePenLine, GraduationCap, Inbox, MessageSquareWarning } from "lucide-react";
 
 export const teacherMetrics = [
-  { label: "Pending essay orders", value: "12", detail: "4 need feedback today", icon: FilePenLine },
-  { label: "Upcoming deadlines", value: "7", detail: "Across 3 active cohorts", icon: Clock3 },
-  { label: "Active classes", value: "5", detail: "Including 2 intensive groups", icon: GraduationCap },
-  { label: "Elective groups", value: "4", detail: "Spring term pathways", icon: BookOpen },
+  { labelKey: "dashboard.teacher.metrics.essayOrders.label", value: "12", detailKey: "dashboard.teacher.metrics.essayOrders.detail", icon: FilePenLine },
+  { labelKey: "dashboard.teacher.metrics.deadlines.label", value: "7", detailKey: "dashboard.teacher.metrics.deadlines.detail", icon: Clock3 },
+  { labelKey: "dashboard.teacher.metrics.classes.label", value: "5", detailKey: "dashboard.teacher.metrics.classes.detail", icon: GraduationCap },
+  { labelKey: "dashboard.teacher.metrics.electives.label", value: "4", detailKey: "dashboard.teacher.metrics.electives.detail", icon: BookOpen },
 ];
 
 export const studentMetrics = [
-  { label: "My classes", value: "3", detail: "This week’s active schedule", icon: GraduationCap },
-  { label: "Latest notices", value: "5", detail: "2 require response", icon: Inbox },
-  { label: "Upcoming deadlines", value: "4", detail: "Essay and reading tasks", icon: Clock3 },
-  { label: "Wrong-book items", value: "9", detail: "Ready for revision", icon: MessageSquareWarning },
+  { labelKey: "dashboard.student.metrics.classes.label", value: "3", detailKey: "dashboard.student.metrics.classes.detail", icon: GraduationCap },
+  { labelKey: "dashboard.student.metrics.notices.label", value: "5", detailKey: "dashboard.student.metrics.notices.detail", icon: Inbox },
+  { labelKey: "dashboard.student.metrics.deadlines.label", value: "4", detailKey: "dashboard.student.metrics.deadlines.detail", icon: Clock3 },
+  { labelKey: "dashboard.student.metrics.wrongBook.label", value: "9", detailKey: "dashboard.student.metrics.wrongBook.detail", icon: MessageSquareWarning },
 ];
 
 export const externalMetrics = [
-  { label: "Active orders", value: "2", detail: "One in review, one in queue", icon: FilePenLine },
-  { label: "Completed feedback", value: "14", detail: "Recent reports available", icon: BookOpen },
-  { label: "Next recommended step", value: "1", detail: "Prepare your revised draft", icon: ArrowRight },
+  { labelKey: "dashboard.external.metrics.activeOrders.label", value: "2", detailKey: "dashboard.external.metrics.activeOrders.detail", icon: FilePenLine },
+  { labelKey: "dashboard.external.metrics.completedFeedback.label", value: "14", detailKey: "dashboard.external.metrics.completedFeedback.detail", icon: BookOpen },
+  { labelKey: "dashboard.external.metrics.nextStep.label", value: "1", detailKey: "dashboard.external.metrics.nextStep.detail", icon: ArrowRight },
 ];
 
 export const classesMock = [
@@ -35,4 +35,3 @@ export const notificationsMock = [
   { title: "Essay service queue confirmed", detail: "Your next submission window opens on Monday.", time: "Yesterday" },
   { title: "Elective feedback released", detail: "Annotated notes were added to your portfolio.", time: "Apr 9" },
 ];
-

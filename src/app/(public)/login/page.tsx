@@ -10,22 +10,30 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AuthLayout } from "@/components/layout/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/hooks/use-i18n";
 import { canUseDemoMode, SUPABASE_CONFIG_ERROR } from "@/lib/config/runtime";
 import { ROUTES } from "@/lib/constants/routes";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-const loginSchema = z.object({
-  email: z.string().email("Enter a valid email address."),
-  password: z.string().min(8, "Password must be at least 8 characters."),
-});
-
-type LoginValues = z.infer<typeof loginSchema>;
+type LoginValues = {
+  email: string;
+  password: string;
+};
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [message, setMessage] = useState<string | null>(null);
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+  const { t } = useI18n();
+  const loginSchema = useMemo(
+    () =>
+      z.object({
+        email: z.string().email(t("forms.validation.validEmail")),
+        password: z.string().min(8, t("forms.validation.passwordMin")),
+      }),
+    [t],
+  );
   const { register, handleSubmit, formState } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
   });
@@ -47,34 +55,34 @@ function LoginForm() {
         return;
       }
 
-      setMessage("Demo mode is enabled. Continuing into the local shell.");
+      setMessage(t("auth.demoLoginMessage"));
     }
 
     router.push(searchParams?.get("next") ?? ROUTES.dashboard);
   });
 
   return (
-    <AuthLayout description="Sign in with a configured Supabase project. Demo mode must be explicitly enabled before local mock access is allowed." title="Welcome back">
+    <AuthLayout description={t("auth.loginSubtitle")} title={t("auth.loginTitle")}>
       <form className="space-y-5" onSubmit={onSubmit}>
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="email">Email</label>
-          <Input id="email" type="email" {...register("email")} />
+          <label className="text-sm font-medium" htmlFor="email">{t("auth.email")}</label>
+          <Input id="email" placeholder={t("auth.email")} type="email" {...register("email")} />
           {formState.errors.email ? <p className="text-sm text-red-600">{formState.errors.email.message}</p> : null}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="password">Password</label>
-          <Input id="password" type="password" {...register("password")} />
+          <label className="text-sm font-medium" htmlFor="password">{t("auth.password")}</label>
+          <Input id="password" placeholder={t("auth.password")} type="password" {...register("password")} />
           {formState.errors.password ? <p className="text-sm text-red-600">{formState.errors.password.message}</p> : null}
         </div>
         {!supabase && !canUseDemoMode() ? <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">{SUPABASE_CONFIG_ERROR}</p> : null}
         {message ? <p className="rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-600">{message}</p> : null}
         <Button className="w-full" size="lg" type="submit">
-          {formState.isSubmitting ? "Signing in..." : "Sign in"}
+          {formState.isSubmitting ? t("auth.signInLoading") : t("auth.signIn")}
         </Button>
         <p className="text-center text-sm text-muted-foreground">
-          New here?{" "}
+          {t("auth.noAccount")}{" "}
           <Link className="font-medium text-primary" href="/register">
-            Create an account
+            {t("auth.createAccount")}
           </Link>
         </p>
       </form>
@@ -82,9 +90,15 @@ function LoginForm() {
   );
 }
 
+function LoginFallback() {
+  const { t } = useI18n();
+
+  return <AuthLayout description={t("auth.preparingLogin")} title={t("auth.loginTitle")}><div className="h-72" /></AuthLayout>;
+}
+
 export default function LoginPage() {
   return (
-    <Suspense fallback={<AuthLayout description="Preparing the sign-in flow." title="Welcome back"><div className="h-72" /></AuthLayout>}>
+    <Suspense fallback={<LoginFallback />}>
       <LoginForm />
     </Suspense>
   );

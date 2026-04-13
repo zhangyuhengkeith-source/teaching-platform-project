@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { useI18n } from "@/hooks/use-i18n";
 import { cn } from "@/lib/utils/cn";
 import type { NavItem } from "@/types/nav";
 
@@ -13,16 +15,17 @@ export function SidebarNav({
   compact = false,
 }: {
   items: NavItem[];
-  title: string;
+  title: ReactNode;
   compact?: boolean;
 }) {
   const pathname = usePathname() ?? "";
+  const { t } = useI18n();
 
   return (
     <aside className={cn("hidden border-r border-border bg-white lg:block", compact ? "w-72" : "w-64")}>
       <div className="sticky top-0 flex h-screen flex-col px-4 py-6">
         <div className="mb-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{compact ? "Operations" : "Navigation"}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{compact ? t("nav.operations") : t("nav.navigation")}</p>
           <h2 className="mt-2 text-xl font-semibold text-slate-900">{title}</h2>
         </div>
         <nav className="space-y-1">
@@ -43,9 +46,9 @@ export function SidebarNav({
               >
                 <span className="flex items-center gap-3">
                   {Icon ? <Icon className="h-4 w-4" /> : null}
-                  {item.title}
+                  {item.titleKey ? t(item.titleKey) : item.title}
                 </span>
-                {item.disabled ? <Badge variant="muted">Soon</Badge> : null}
+                {item.disabled ? <Badge variant="muted">{t("common.soon")}</Badge> : null}
               </Link>
             );
           })}

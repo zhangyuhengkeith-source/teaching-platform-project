@@ -1,9 +1,14 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { teacherMetrics } from "@/lib/constants/mock-data";
 import { SectionCard } from "@/components/shared/section-card";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { useI18n } from "@/hooks/use-i18n";
 
 export function TeacherDashboard() {
+  const { t } = useI18n();
+
   return (
     <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
       <div className="space-y-6">
@@ -11,7 +16,7 @@ export function TeacherDashboard() {
           {teacherMetrics.map((item) => {
             const Icon = item.icon;
             return (
-              <SectionCard description={item.detail} key={item.label} title={item.label}>
+              <SectionCard description={t(item.detailKey)} key={item.labelKey} title={t(item.labelKey)}>
                 <div className="flex items-end justify-between">
                   <p className="text-3xl font-semibold">{item.value}</p>
                   <div className="rounded-xl bg-blue-50 p-3 text-primary">
@@ -22,19 +27,19 @@ export function TeacherDashboard() {
             );
           })}
         </section>
-        <SectionCard description="A concise operations overview for the next teaching cycle." title="Recent notices">
+        <SectionCard description={t("dashboard.teacher.recentNoticesDescription")} title={t("dashboard.teacher.recentNoticesTitle")}>
           <div className="space-y-4">
             <div className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
               <div>
-                <p className="font-medium">Spring midterm rubric updated</p>
-                <p className="text-sm text-muted-foreground">Shared with all writing groups today.</p>
+                <p className="font-medium">{t("dashboard.teacher.noticeCard1Title")}</p>
+                <p className="text-sm text-muted-foreground">{t("dashboard.teacher.noticeCard1Description")}</p>
               </div>
               <StatusBadge status="published" />
             </div>
             <div className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
               <div>
-                <p className="font-medium">Elective placement review</p>
-                <p className="text-sm text-muted-foreground">Four students need approval before Friday.</p>
+                <p className="font-medium">{t("dashboard.teacher.noticeCard2Title")}</p>
+                <p className="text-sm text-muted-foreground">{t("dashboard.teacher.noticeCard2Description")}</p>
               </div>
               <StatusBadge status="pending" />
             </div>
@@ -42,22 +47,21 @@ export function TeacherDashboard() {
         </SectionCard>
       </div>
       <div className="space-y-6">
-        <SectionCard description="Frequently used control points for teaching and service work." title="Quick admin actions">
+        <SectionCard description={t("dashboard.teacher.quickActionsDescription")} title={t("dashboard.teacher.quickActionsTitle")}>
           <div className="grid gap-3">
-            <Button className="justify-start" variant="outline">Review essay queue</Button>
-            <Button className="justify-start" variant="outline">Post a notice</Button>
-            <Button className="justify-start" variant="outline">Adjust elective groups</Button>
+            <Button className="justify-start" variant="outline">{t("dashboard.teacher.reviewEssayQueue")}</Button>
+            <Button className="justify-start" variant="outline">{t("dashboard.teacher.postNotice")}</Button>
+            <Button className="justify-start" variant="outline">{t("dashboard.teacher.adjustElectiveGroups")}</Button>
           </div>
         </SectionCard>
-        <SectionCard description="Immediate priorities surfaced from recent platform activity." title="Upcoming deadlines">
+        <SectionCard description={t("dashboard.teacher.upcomingDeadlinesDescription")} title={t("dashboard.teacher.upcomingDeadlinesTitle")}>
           <ul className="space-y-3 text-sm text-slate-600">
-            <li className="rounded-xl bg-slate-50 p-4">Essay Order 241 needs commentary before 18:00 tomorrow.</li>
-            <li className="rounded-xl bg-slate-50 p-4">Reading Seminar materials should be released by Thursday morning.</li>
-            <li className="rounded-xl bg-slate-50 p-4">Elective confirmations for Debate Studio close in two days.</li>
+            <li className="rounded-xl bg-slate-50 p-4">{t("dashboard.teacher.deadline1")}</li>
+            <li className="rounded-xl bg-slate-50 p-4">{t("dashboard.teacher.deadline2")}</li>
+            <li className="rounded-xl bg-slate-50 p-4">{t("dashboard.teacher.deadline3")}</li>
           </ul>
         </SectionCard>
       </div>
     </div>
   );
 }
-

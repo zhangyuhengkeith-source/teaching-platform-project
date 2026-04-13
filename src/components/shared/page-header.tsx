@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
 interface PageHeaderProps {
-  title: string;
-  description?: string;
+  title: ReactNode;
+  description?: ReactNode;
   actions?: ReactNode;
   breadcrumbs?: ReactNode;
 }
@@ -21,4 +21,3 @@ export function PageHeader({ title, description, actions, breadcrumbs }: PageHea
     </header>
   );
 }
-

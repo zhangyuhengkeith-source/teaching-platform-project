@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { TopNav } from "@/components/layout/top-nav";
 import { PUBLIC_NAV } from "@/lib/constants/nav";
 
@@ -10,11 +11,10 @@ export function PublicLayout({ children }: { children: ReactNode }) {
       <main>{children}</main>
       <footer className="border-t border-border bg-white/80">
         <div className="container-shell flex flex-col gap-3 py-8 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
-          <p>Built as a calm, trustworthy academic platform foundation.</p>
-          <p>Essay support, class operations, and student guidance in one workspace.</p>
+          <p><TranslationText translationKey="layout.publicFooterPrimary" /></p>
+          <p><TranslationText translationKey="layout.publicFooterSecondary" /></p>
         </div>
       </footer>
     </div>
   );
 }
-

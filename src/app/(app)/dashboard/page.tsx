@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { ExternalDashboard } from "@/components/dashboard/external-dashboard";
 import { StudentDashboard } from "@/components/dashboard/student-dashboard";
 import { TeacherDashboard } from "@/components/dashboard/teacher-dashboard";
@@ -30,18 +31,18 @@ export default async function DashboardPage({
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild size="sm" variant="outline">
-              <Link href="/dashboard?view=teacher">Teacher view</Link>
+              <Link href="/dashboard?view=teacher"><TranslationText translationKey="dashboard.teacherView" /></Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href="/dashboard?view=internal">Internal student view</Link>
+              <Link href="/dashboard?view=internal"><TranslationText translationKey="dashboard.internalStudentView" /></Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href="/dashboard?view=external">External student view</Link>
+              <Link href="/dashboard?view=external"><TranslationText translationKey="dashboard.externalStudentView" /></Link>
             </Button>
           </div>
         }
-        description={`Current account role is ${profile.role}. The post-login redirect target is ${redirectAfterLogin(profile)}.`}
-        title="Dashboard"
+        description={<TranslationText translationKey="dashboard.description" values={{ role: profile.role, target: redirectAfterLogin(profile) }} />}
+        title={<TranslationText translationKey="dashboard.title" />}
       />
       {view === "teacher" ? <TeacherDashboard /> : null}
       {view === "student" ? <StudentDashboard /> : null}

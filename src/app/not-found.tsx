@@ -1,9 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import { Compass } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/hooks/use-i18n";
 
 export default function NotFound() {
+  const { t } = useI18n();
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
       <div className="w-full max-w-xl rounded-3xl border border-border bg-white p-10 text-center shadow-panel">
@@ -11,20 +16,19 @@ export default function NotFound() {
           <Compass className="h-8 w-8" />
         </div>
         <p className="text-sm uppercase tracking-[0.28em] text-slate-400">404</p>
-        <h1 className="mt-3 text-4xl font-semibold text-slate-900">Page not found</h1>
+        <h1 className="mt-3 text-4xl font-semibold text-slate-900">{t("errors.pageNotFoundTitle")}</h1>
         <p className="mt-4 text-sm leading-7 text-muted-foreground">
-          The page you requested is not available in this teaching platform workspace, or the link may no longer be valid.
+          {t("errors.pageNotFoundDescription")}
         </p>
         <div className="mt-8 flex justify-center gap-3">
           <Button asChild>
-            <Link href="/">Return home</Link>
+            <Link href="/">{t("errors.returnHome")}</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/classes">Open classes</Link>
+            <Link href="/classes">{t("errors.openClasses")}</Link>
           </Button>
         </div>
       </div>
     </div>
   );
 }
-

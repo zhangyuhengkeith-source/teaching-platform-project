@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { retryWrongBookItemAction } from "@/lib/server/actions/retry-wrong-book-item";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/hooks/use-i18n";
 import type { WrongBookItemSummary } from "@/types/domain";
 
 export function WrongBookRetryPanel({ item }: { item: WrongBookItemSummary }) {
@@ -12,6 +13,7 @@ export function WrongBookRetryPanel({ item }: { item: WrongBookItemSummary }) {
   const [value, setValue] = useState("");
   const [selectedOptionId, setSelectedOptionId] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const { t } = useI18n();
 
   if (!item.sourceItem || item.status !== "active") {
     return null;
@@ -30,9 +32,9 @@ export function WrongBookRetryPanel({ item }: { item: WrongBookItemSummary }) {
           submitted_answer_json,
         });
 
-        setMessage(result.isCorrect ? "Retry correct. The item has been marked mastered." : "Retry recorded. The item remains active.");
+        setMessage(result.isCorrect ? t("wrongBook.retryCorrect") : t("wrongBook.retryRecorded"));
       } catch (error) {
-        setMessage(error instanceof Error ? error.message : "Unable to submit retry.");
+        setMessage(error instanceof Error ? error.message : t("wrongBook.unableToSubmitRetry"));
       }
     });
   };
@@ -53,7 +55,7 @@ export function WrongBookRetryPanel({ item }: { item: WrongBookItemSummary }) {
           ))}
         </div>
         <Button disabled={!selectedOptionId || isPending} onClick={onRetry} type="button">
-          {isPending ? "Retrying..." : "Retry item"}
+          {isPending ? t("wrongBook.retrying") : t("wrongBook.retryItem")}
         </Button>
         {message ? <p className="text-sm text-slate-600">{message}</p> : null}
       </div>
@@ -62,9 +64,9 @@ export function WrongBookRetryPanel({ item }: { item: WrongBookItemSummary }) {
 
   return (
     <div className="space-y-3">
-      <Input onChange={(event) => setValue(event.target.value)} placeholder="Type your retry answer" value={value} />
+      <Input onChange={(event) => setValue(event.target.value)} placeholder={t("forms.retryAnswerPlaceholder")} value={value} />
       <Button disabled={!value.trim() || isPending} onClick={onRetry} type="button">
-        {isPending ? "Retrying..." : "Retry item"}
+        {isPending ? t("wrongBook.retrying") : t("wrongBook.retryItem")}
       </Button>
       {message ? <p className="text-sm text-slate-600">{message}</p> : null}
     </div>
