@@ -20,7 +20,7 @@ import {
 import type { NavItem } from "@/types/nav";
 import type { AppUserProfile } from "@/types/auth";
 import { ROUTES } from "@/lib/constants/routes";
-import { canAccessAdminUsersPage } from "@/lib/auth/admin-users-access";
+import { canAccessAdminBackoffice, canAccessAdminUsersPage } from "@/lib/auth/admin-users-access";
 import { isExternalStudent, isTeacher } from "@/lib/permissions/profiles";
 
 export const PUBLIC_NAV: NavItem[] = [
@@ -58,8 +58,8 @@ export function getAppNavForProfile(profile: AppUserProfile): NavItem[] {
 }
 
 export function getAdminNavForProfile(profile: AppUserProfile): NavItem[] {
-  if (canAccessAdminUsersPage(profile) && !isTeacher(profile)) {
-    return ADMIN_NAV.filter((item) => item.href === "/admin/users");
+  if (canAccessAdminBackoffice(profile)) {
+    return ADMIN_NAV.filter((item) => !item.disabled);
   }
 
   return ADMIN_NAV.filter((item) => !item.disabled && (item.href !== "/admin/users" || canAccessAdminUsersPage(profile)));

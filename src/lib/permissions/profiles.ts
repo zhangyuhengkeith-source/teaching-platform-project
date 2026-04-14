@@ -1,7 +1,8 @@
 import type { AppUserProfile } from "@/types/auth";
+import { canAccessAdminBackoffice } from "@/lib/auth/admin-users-access";
 
 export function isSuperAdmin(profile: AppUserProfile | null | undefined) {
-  return profile?.role === "super_admin";
+  return profile?.role === "super_admin" || canAccessAdminBackoffice(profile);
 }
 
 export function isTeacher(profile: AppUserProfile | null | undefined) {
@@ -15,4 +16,3 @@ export function isInternalStudent(profile: AppUserProfile | null | undefined) {
 export function isExternalStudent(profile: AppUserProfile | null | undefined) {
   return profile?.role === "student" && profile.userType === "external";
 }
-

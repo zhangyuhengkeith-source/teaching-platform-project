@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
+import { canAccessAdminBackoffice } from "@/lib/auth/admin-users-access";
 import { WaitingAssignmentSignOutButton } from "@/components/domain/waiting-assignment-sign-out-button";
 import { getSession } from "@/lib/auth/get-session";
 import { ROUTES } from "@/lib/constants/routes";
@@ -17,6 +18,10 @@ export default async function WaitingAssignmentPage() {
 
   if (!session.isAuthenticated || !profile) {
     redirect(ROUTES.login);
+  }
+
+  if (canAccessAdminBackoffice(profile)) {
+    redirect(ROUTES.admin);
   }
 
   if (profile.role !== "student" || profile.userType !== "internal") {

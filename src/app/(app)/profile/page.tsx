@@ -1,14 +1,16 @@
 import { TranslationText } from "@/components/common/translation-text";
+import { canAccessAdminBackoffice } from "@/lib/auth/admin-users-access";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
 
 export default async function ProfilePage() {
   const profile = await requireAuth();
+  const effectiveRole = canAccessAdminBackoffice(profile) ? "super_admin" : profile.role;
   const roleKey =
-    profile.role === "super_admin"
+    effectiveRole === "super_admin"
       ? "profile.roles.superAdmin"
-      : profile.role === "teacher"
+      : effectiveRole === "teacher"
         ? "profile.roles.teacher"
         : "profile.roles.student";
   const userTypeKey = profile.userType === "external" ? "profile.userTypes.external" : "profile.userTypes.internal";
