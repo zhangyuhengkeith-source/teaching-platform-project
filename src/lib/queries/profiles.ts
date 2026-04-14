@@ -51,3 +51,18 @@ export async function listProfilesByIds(profileIds: string[]): Promise<ProfileSu
 
   return data.map(mapProfileRow);
 }
+
+export async function listAllProfiles(): Promise<ProfileSummary[]> {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return [...seedProfiles].sort((left, right) => left.fullName.localeCompare(right.fullName));
+  }
+
+  const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+  if (error || !data) {
+    return [];
+  }
+
+  return data.map(mapProfileRow);
+}

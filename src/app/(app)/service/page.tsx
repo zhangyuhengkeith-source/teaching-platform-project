@@ -1,10 +1,20 @@
+import { redirect } from "next/navigation";
 import { FilePenLine } from "lucide-react";
 
 import { TranslationText } from "@/components/common/translation-text";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
+import { requireAuth } from "@/lib/auth/require-auth";
+import { redirectAfterLogin } from "@/lib/auth/redirect-after-login";
+import { isExternalStudent } from "@/lib/permissions/profiles";
 
-export default function ServicePage() {
+export default async function ServicePage() {
+  const profile = await requireAuth();
+
+  if (!isExternalStudent(profile)) {
+    redirect(redirectAfterLogin(profile));
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader

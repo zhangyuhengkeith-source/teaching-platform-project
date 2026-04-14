@@ -174,6 +174,8 @@ export const zhCN = {
     email: "邮箱",
     password: "密码",
     fullName: "姓名",
+    accountIdentity: "账号身份",
+    selectIdentity: "请选择你的身份",
     confirmPassword: "确认密码",
     rememberMe: "记住我",
     forgotPassword: "忘记密码？",

@@ -176,6 +176,8 @@ export const en: TranslationDictionary = {
     email: "Email",
     password: "Password",
     fullName: "Full name",
+    accountIdentity: "Account identity",
+    selectIdentity: "Select your identity",
     confirmPassword: "Confirm password",
     rememberMe: "Remember me",
     forgotPassword: "Forgot password?",

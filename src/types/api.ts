@@ -20,6 +20,13 @@ export interface UpdateProfileInput {
   avatar_url?: string | null;
 }
 
+export interface UpdateProfileAccessInput {
+  id: string;
+  role: "super_admin" | "teacher" | "student";
+  user_type: "internal" | "external";
+  status: "active" | "inactive" | "suspended";
+}
+
 export interface CreateSpaceInput {
   title: string;
   slug: string;

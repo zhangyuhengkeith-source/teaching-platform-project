@@ -11,15 +11,17 @@ import { AuthLayout } from "@/components/layout/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/hooks/use-i18n";
+import { redirectAfterLogin } from "@/lib/auth/redirect-after-login";
 import { canUseDemoMode, SUPABASE_CONFIG_ERROR } from "@/lib/config/runtime";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { ROUTES } from "@/lib/constants/routes";
+import type { UserType } from "@/types/auth";
 
 type RegisterValues = {
   fullName: string;
   email: string;
   password: string;
   confirmPassword: string;
+  accountType: "internal_student" | "external_student";
 };
 
 export default function RegisterPage() {
@@ -35,6 +37,9 @@ export default function RegisterPage() {
           email: z.string().email(t("forms.validation.validEmail")),
           password: z.string().min(8, t("forms.validation.passwordMin")),
           confirmPassword: z.string().min(8, t("forms.validation.confirmPasswordMin")),
+          accountType: z.enum(["internal_student", "external_student"], {
+            message: "Please select your account identity.",
+          }),
         })
         .refine((values) => values.password === values.confirmPassword, {
           message: t("forms.validation.passwordMismatch"),
@@ -47,6 +52,8 @@ export default function RegisterPage() {
   });
 
   const onSubmit = handleSubmit(async (values) => {
+    const userType: UserType = values.accountType === "external_student" ? "external" : "internal";
+
     if (supabase) {
       const { error } = await supabase.auth.signUp({
         email: values.email,
@@ -54,6 +61,8 @@ export default function RegisterPage() {
         options: {
           data: {
             full_name: values.fullName,
+            role: "student",
+            user_type: userType,
           },
         },
       });
@@ -71,7 +80,15 @@ export default function RegisterPage() {
       setMessage(t("auth.demoRegisterMessage"));
     }
 
-    router.push(ROUTES.dashboard);
+    router.push(
+      redirectAfterLogin({
+        id: "pending-registration",
+        email: values.email,
+        fullName: values.fullName,
+        role: "student",
+        userType,
+      }),
+    );
   });
 
   return (
@@ -86,6 +103,22 @@ export default function RegisterPage() {
           <label className="text-sm font-medium" htmlFor="email">{t("auth.email")}</label>
           <Input id="email" placeholder={t("auth.email")} type="email" {...register("email")} />
           {formState.errors.email ? <p className="text-sm text-red-600">{formState.errors.email.message}</p> : null}
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium" htmlFor="accountType">{t("auth.accountIdentity")}</label>
+          <select
+            className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm"
+            defaultValue=""
+            id="accountType"
+            {...register("accountType")}
+          >
+            <option disabled value="">
+              {t("auth.selectIdentity")}
+            </option>
+            <option value="internal_student">{t("profile.userTypes.internal")}</option>
+            <option value="external_student">{t("profile.userTypes.external")}</option>
+          </select>
+          {formState.errors.accountType ? <p className="text-sm text-red-600">{formState.errors.accountType.message}</p> : null}
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="space-y-2">

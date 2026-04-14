@@ -1,6 +1,6 @@
 import { mapProfileRow } from "@/lib/db/mappers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { UpdateProfileInput } from "@/types/api";
+import type { UpdateProfileAccessInput, UpdateProfileInput } from "@/types/api";
 import type { AppUserProfile } from "@/types/auth";
 import type { ProfileSummary } from "@/types/domain";
 
@@ -85,3 +85,37 @@ export async function updateProfile(profileId: string, input: UpdateProfileInput
   return mapProfileRow(data);
 }
 
+export async function updateProfileAccess(input: UpdateProfileAccessInput): Promise<ProfileSummary> {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return {
+      id: input.id,
+      email: "mock@local.dev",
+      fullName: "Mock User",
+      displayName: null,
+      avatarUrl: null,
+      role: input.role,
+      userType: input.user_type,
+      gradeLevel: null,
+      status: input.status,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({
+      role: input.role,
+      user_type: input.user_type,
+      status: input.status,
+    })
+    .eq("id", input.id)
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Failed to update profile access.");
+  }
+
+  return mapProfileRow(data);
+}
