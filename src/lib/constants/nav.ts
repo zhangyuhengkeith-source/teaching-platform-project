@@ -25,7 +25,6 @@ import { isExternalStudent, isTeacher } from "@/lib/permissions/profiles";
 
 export const PUBLIC_NAV: NavItem[] = [
   { titleKey: "nav.home", href: ROUTES.home },
-  { titleKey: "nav.essayMarking", href: ROUTES.essayMarking },
   { titleKey: "nav.login", href: ROUTES.login },
   { titleKey: "nav.register", href: ROUTES.register },
 ];

@@ -46,9 +46,6 @@ export default function HomePage() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/essay-marking"><TranslationText translationKey="home.exploreEssayMarking" /></Link>
-              </Button>
             </div>
           </div>
           <Card className="bg-slate-900 text-slate-100">
