@@ -186,3 +186,48 @@ export async function listTeacherVisibleClasses(profile: AppUserProfile): Promis
 
   return listManageableClasses(profile);
 }
+
+export async function listAllClassSpaces(): Promise<SpaceSummary[]> {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return seedSpaces.filter((space) => space.type === "class");
+  }
+
+  const { data, error } = await supabase.from("spaces").select("*").eq("type", "class").order("created_at", { ascending: false });
+  if (error || !data) {
+    return [];
+  }
+
+  return data.map(mapSpaceRow);
+}
+
+export async function hasActiveClassMembership(profileId: string): Promise<boolean> {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return seedMemberships.some((membership) => {
+      if (membership.profileId !== profileId || membership.status !== "active" || membership.membershipRole !== "student") {
+        return false;
+      }
+
+      const space = seedSpaces.find((entry) => entry.id === membership.spaceId);
+      return space?.type === "class";
+    });
+  }
+
+  const { data, error } = await supabase
+    .from("space_memberships")
+    .select("space_id, spaces!inner(type)")
+    .eq("profile_id", profileId)
+    .eq("status", "active")
+    .eq("membership_role", "student")
+    .eq("spaces.type", "class")
+    .limit(1);
+
+  if (error) {
+    return false;
+  }
+
+  return Boolean(data && data.length > 0);
+}

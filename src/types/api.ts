@@ -27,6 +27,11 @@ export interface UpdateProfileAccessInput {
   status: "active" | "inactive" | "suspended";
 }
 
+export interface AssignStudentToClassInput {
+  profile_id: string;
+  space_id: string;
+}
+
 export interface CreateSpaceInput {
   title: string;
   slug: string;

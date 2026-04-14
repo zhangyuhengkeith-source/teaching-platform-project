@@ -1,7 +1,7 @@
 import { mapSpaceRow } from "@/lib/db/mappers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { CreateSpaceInput, UpdateSpaceInput } from "@/types/api";
-import type { SpaceSummary } from "@/types/domain";
+import type { AssignStudentToClassInput, CreateSpaceInput, UpdateSpaceInput } from "@/types/api";
+import type { SpaceMembershipSummary, SpaceSummary } from "@/types/domain";
 
 export async function createSpace(ownerId: string, input: CreateSpaceInput): Promise<SpaceSummary> {
   const supabase = await createSupabaseServerClient();
@@ -83,4 +83,46 @@ export async function updateSpace(input: UpdateSpaceInput): Promise<SpaceSummary
   }
 
   return mapSpaceRow(data);
+}
+
+export async function assignStudentToClass(input: AssignStudentToClassInput): Promise<SpaceMembershipSummary> {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return {
+      id: crypto.randomUUID(),
+      spaceId: input.space_id,
+      profileId: input.profile_id,
+      membershipRole: "student",
+      status: "active",
+      joinedAt: new Date().toISOString(),
+    };
+  }
+
+  const payload = {
+    space_id: input.space_id,
+    profile_id: input.profile_id,
+    membership_role: "student" as const,
+    status: "active" as const,
+    joined_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from("space_memberships")
+    .upsert(payload, { onConflict: "space_id,profile_id" })
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Failed to assign student to class.");
+  }
+
+  return {
+    id: data.id,
+    spaceId: data.space_id,
+    profileId: data.profile_id,
+    membershipRole: data.membership_role,
+    status: data.status,
+    joinedAt: data.joined_at,
+  };
 }

@@ -3,6 +3,7 @@ export const ROUTES = {
   essayMarking: "/essay-marking",
   login: "/login",
   register: "/register",
+  assignmentPending: "/waiting-assignment",
   dashboard: "/dashboard",
   classes: "/classes",
   electives: "/electives",
@@ -12,4 +13,3 @@ export const ROUTES = {
   wrongBook: "/wrong-book",
   admin: "/admin",
 } as const;
-

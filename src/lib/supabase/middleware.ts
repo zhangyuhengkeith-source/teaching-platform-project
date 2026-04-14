@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 
 import { canUseDemoMode, getSupabaseConfig } from "@/lib/config/runtime";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/classes", "/electives", "/service", "/notifications", "/profile", "/wrong-book", "/admin"];
+const PROTECTED_PREFIXES = ["/dashboard", "/classes", "/electives", "/service", "/notifications", "/profile", "/wrong-book", "/admin", "/waiting-assignment"];
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request });
@@ -63,5 +63,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/classes/:path*", "/electives/:path*", "/service/:path*", "/notifications/:path*", "/profile/:path*", "/wrong-book/:path*", "/admin/:path*"],
+  matcher: ["/dashboard/:path*", "/classes/:path*", "/electives/:path*", "/service/:path*", "/notifications/:path*", "/profile/:path*", "/wrong-book/:path*", "/admin/:path*", "/waiting-assignment/:path*"],
 };
