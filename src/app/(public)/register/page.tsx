@@ -86,7 +86,7 @@ export default function RegisterPage() {
   });
 
   return (
-    <AuthLayout description={t("auth.registerSubtitle")} title={t("auth.registerTitle")}>
+    <AuthLayout title={t("auth.registerTitle")}>
       <form className="space-y-5" onSubmit={onSubmit}>
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="fullName">{t("auth.fullName")}</label>

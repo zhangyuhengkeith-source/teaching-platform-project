@@ -62,7 +62,7 @@ function LoginForm() {
   });
 
   return (
-    <AuthLayout description={t("auth.loginSubtitle")} title={t("auth.loginTitle")}>
+    <AuthLayout title={t("auth.loginTitle")}>
       <form className="space-y-5" onSubmit={onSubmit}>
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="email">{t("auth.email")}</label>
@@ -96,7 +96,7 @@ function LoginForm() {
 function LoginFallback() {
   const { t } = useI18n();
 
-  return <AuthLayout description={t("auth.preparingLogin")} title={t("auth.loginTitle")}><div className="h-72" /></AuthLayout>;
+  return <AuthLayout title={t("auth.loginTitle")}><div className="h-56" /></AuthLayout>;
 }
 
 export default function LoginPage() {
