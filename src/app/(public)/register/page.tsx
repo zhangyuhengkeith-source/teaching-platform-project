@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { useI18n } from "@/hooks/use-i18n";
 import { redirectAfterLogin } from "@/lib/auth/redirect-after-login";
 import { canUseDemoMode, SUPABASE_CONFIG_ERROR } from "@/lib/config/runtime";
+import { ROUTES } from "@/lib/constants/routes";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { UserType } from "@/types/auth";
 
@@ -143,6 +144,9 @@ export default function RegisterPage() {
             {t("auth.signIn")}
           </Link>
         </p>
+        <Button asChild className="w-full" size="lg" type="button" variant="outline">
+          <Link href={ROUTES.home}>{t("auth.returnHome")}</Link>
+        </Button>
       </form>
     </AuthLayout>
   );

@@ -85,6 +85,9 @@ function LoginForm() {
             {t("auth.createAccount")}
           </Link>
         </p>
+        <Button asChild className="w-full" size="lg" type="button" variant="outline">
+          <Link href={ROUTES.home}>{t("auth.returnHome")}</Link>
+        </Button>
       </form>
     </AuthLayout>
   );

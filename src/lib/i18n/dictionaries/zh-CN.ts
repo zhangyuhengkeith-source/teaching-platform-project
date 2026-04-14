@@ -186,6 +186,7 @@ export const zhCN = {
     noAccount: "还没有账号？",
     hasAccount: "已经有账号了？",
     createAccount: "创建账号",
+    returnHome: "返回首页",
     demoLoginMessage: "Demo 模式已启用，正在继续进入本地环境。",
     demoRegisterMessage: "Demo 模式已启用，本地环境下不会创建持久账号。",
     preparingLogin: "正在准备登录流程。",

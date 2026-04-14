@@ -188,6 +188,7 @@ export const en: TranslationDictionary = {
     noAccount: "Don't have an account?",
     hasAccount: "Already have an account?",
     createAccount: "Create an account",
+    returnHome: "Return home",
     demoLoginMessage: "Demo mode is enabled. Continuing into the local shell.",
     demoRegisterMessage: "Demo mode is enabled. Creating a persistent account is disabled in the local shell.",
     preparingLogin: "Preparing the sign-in flow.",
