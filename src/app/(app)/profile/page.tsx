@@ -1,43 +1,77 @@
+import { TranslationText } from "@/components/common/translation-text";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
 
 export default async function ProfilePage() {
   const profile = await requireAuth();
+  const roleKey =
+    profile.role === "super_admin"
+      ? "profile.roles.superAdmin"
+      : profile.role === "teacher"
+        ? "profile.roles.teacher"
+        : "profile.roles.student";
+  const userTypeKey = profile.userType === "external" ? "profile.userTypes.external" : "profile.userTypes.internal";
 
   return (
     <div className="space-y-6">
-      <PageHeader description="A modest profile shell prepared for richer account settings and preferences." title="Profile" />
+      <PageHeader
+        description={<TranslationText translationKey="profile.description" />}
+        title={<TranslationText translationKey="profile.title" />}
+      />
       <div className="grid gap-6 lg:grid-cols-2">
-        <SectionCard description="Current user identity resolved by centralized auth helpers." title="Account">
+        <SectionCard
+          description={<TranslationText translationKey="profile.accountDescription" />}
+          title={<TranslationText translationKey="profile.accountTitle" />}
+        >
           <dl className="space-y-4 text-sm">
             <div className="flex justify-between gap-4 border-b border-border pb-3">
-              <dt className="text-muted-foreground">Full name</dt>
+              <dt className="text-muted-foreground">
+                <TranslationText translationKey="profile.fullName" />
+              </dt>
               <dd className="font-medium">{profile.fullName}</dd>
             </div>
             <div className="flex justify-between gap-4 border-b border-border pb-3">
-              <dt className="text-muted-foreground">Email</dt>
+              <dt className="text-muted-foreground">
+                <TranslationText translationKey="profile.email" />
+              </dt>
               <dd className="font-medium">{profile.email}</dd>
             </div>
             <div className="flex justify-between gap-4 border-b border-border pb-3">
-              <dt className="text-muted-foreground">Role</dt>
-              <dd className="font-medium capitalize">{profile.role.replace("_", " ")}</dd>
+              <dt className="text-muted-foreground">
+                <TranslationText translationKey="profile.role" />
+              </dt>
+              <dd className="font-medium">
+                <TranslationText translationKey={roleKey} />
+              </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">User type</dt>
-              <dd className="font-medium capitalize">{profile.userType}</dd>
+              <dt className="text-muted-foreground">
+                <TranslationText translationKey="profile.userType" />
+              </dt>
+              <dd className="font-medium">
+                <TranslationText translationKey={userTypeKey} />
+              </dd>
             </div>
           </dl>
         </SectionCard>
-        <SectionCard description="Future preferences can be layered here without changing the broader page shell." title="Preferences">
+        <SectionCard
+          description={<TranslationText translationKey="profile.preferencesDescription" />}
+          title={<TranslationText translationKey="profile.preferencesTitle" />}
+        >
           <div className="space-y-3 text-sm text-muted-foreground">
-            <p>Notification preferences</p>
-            <p>Language and timezone defaults</p>
-            <p>Profile onboarding completeness</p>
+            <p>
+              <TranslationText translationKey="profile.notificationPreferences" />
+            </p>
+            <p>
+              <TranslationText translationKey="profile.languageAndTimezone" />
+            </p>
+            <p>
+              <TranslationText translationKey="profile.onboardingCompleteness" />
+            </p>
           </div>
         </SectionCard>
       </div>
     </div>
   );
 }
-

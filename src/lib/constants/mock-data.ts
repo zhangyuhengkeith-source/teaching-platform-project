@@ -31,7 +31,19 @@ export const electivesMock = [
 ];
 
 export const notificationsMock = [
-  { title: "Term writing workshop updated", detail: "Materials for Week 3 are now available.", time: "Today" },
-  { title: "Essay service queue confirmed", detail: "Your next submission window opens on Monday.", time: "Yesterday" },
-  { title: "Elective feedback released", detail: "Annotated notes were added to your portfolio.", time: "Apr 9" },
-];
+  {
+    titleKey: "notificationsPage.items.workshopUpdated.title",
+    detailKey: "notificationsPage.items.workshopUpdated.detail",
+    timeKey: "notificationsPage.times.today",
+  },
+  {
+    titleKey: "notificationsPage.items.serviceQueueConfirmed.title",
+    detailKey: "notificationsPage.items.serviceQueueConfirmed.detail",
+    timeKey: "notificationsPage.times.yesterday",
+  },
+  {
+    titleKey: "notificationsPage.items.electiveFeedbackReleased.title",
+    detailKey: "notificationsPage.items.electiveFeedbackReleased.detail",
+    timeKey: "notificationsPage.times.apr9",
+  },
+] as const;
