@@ -339,6 +339,8 @@ export const zhCN = {
     notificationPreferences: "通知偏好",
     languageAndTimezone: "语言与时区默认值",
     onboardingCompleteness: "资料完善进度",
+    classMembership: "鎵€灞炵彮绾?",
+    unassignedClass: "鏆傛湭鍒嗛厤鐝骇",
     roles: {
       superAdmin: "超级管理员",
       teacher: "教师",

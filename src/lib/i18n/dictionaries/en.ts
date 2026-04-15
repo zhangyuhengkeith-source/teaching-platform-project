@@ -337,6 +337,8 @@ export const en: TranslationDictionary = {
     fullName: "Full name",
     email: "Email",
     role: "Role",
+    classMembership: "Class",
+    unassignedClass: "Not assigned yet",
     userType: "User type",
     notificationPreferences: "Notification preferences",
     languageAndTimezone: "Language and timezone defaults",
