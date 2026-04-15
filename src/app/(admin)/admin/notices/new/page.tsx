@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { NoticeForm } from "@/components/domain/notice-form";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
@@ -16,11 +17,10 @@ export default async function NewNoticePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Create a class notice for homework, deadlines, or broader class updates." title="Create Notice" />
-      <SectionCard description="Students will see published notices in their class home pages and section pages." title="Notice details">
+      <PageHeader description={<TranslationText translationKey="admin.notices.newDescription" />} title={<TranslationText translationKey="admin.notices.newTitle" />} />
+      <SectionCard description={<TranslationText translationKey="admin.notices.newDetailsDescription" />} title={<TranslationText translationKey="admin.notices.detailsTitle" />}>
         <NoticeForm mode="create" spaces={spaces} />
       </SectionCard>
     </div>
   );
 }
-

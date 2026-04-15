@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils/format";
@@ -12,13 +13,13 @@ export function AdminElectiveTable({ items }: { items: SpaceSummary[] }) {
         <table className="min-w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-500">
             <tr>
-              <th className="px-4 py-3 font-medium">Title</th>
-              <th className="px-4 py-3 font-medium">Slug</th>
-              <th className="px-4 py-3 font-medium">Academic Year</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Grouping</th>
-              <th className="px-4 py-3 font-medium">Updated</th>
-              <th className="px-4 py-3 font-medium">Action</th>
+              <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.title" /></th>
+              <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.slug" /></th>
+              <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.academicYear" /></th>
+              <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.status" /></th>
+              <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.grouping" /></th>
+              <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.updated" /></th>
+              <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.action" /></th>
             </tr>
           </thead>
           <tbody>
@@ -30,11 +31,13 @@ export function AdminElectiveTable({ items }: { items: SpaceSummary[] }) {
                 <td className="px-4 py-3">
                   <StatusBadge status={item.status} />
                 </td>
-                <td className="px-4 py-3 text-slate-500">{item.groupingLocked ? "Locked" : `Open (${item.maxGroupSize ?? 4})`}</td>
+                <td className="px-4 py-3 text-slate-500">
+                  {item.groupingLocked ? <TranslationText translationKey="admin.tables.groupingLocked" /> : <TranslationText translationKey="admin.tables.groupingOpen" values={{ count: item.maxGroupSize ?? 4 }} />}
+                </td>
                 <td className="px-4 py-3 text-slate-500">{formatDate(item.updatedAt)}</td>
                 <td className="px-4 py-3">
                   <Button asChild size="sm" variant="outline">
-                    <Link href={`/admin/electives/${item.id}/edit`}>Edit</Link>
+                    <Link href={`/admin/electives/${item.id}/edit`}><TranslationText translationKey="admin.tables.edit" /></Link>
                   </Button>
                 </td>
               </tr>

@@ -9,6 +9,7 @@ import type { Resolver } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/hooks/use-i18n";
 import { createTaskAction } from "@/lib/server/actions/create-task";
 import { updateTaskAction } from "@/lib/server/actions/update-task";
 import {
@@ -53,6 +54,7 @@ export function TaskForm({
   initialValues?: Partial<TaskSummary> & { id?: string };
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<CreateTaskSchema | UpdateTaskSchema>({
@@ -103,7 +105,7 @@ export function TaskForm({
 
         router.refresh();
       } catch (error) {
-        setFormError(error instanceof Error ? error.message : "Unable to save task.");
+        setFormError(error instanceof Error ? error.message : t("admin.userTable.saveFailed"));
       }
     });
   });
@@ -114,38 +116,38 @@ export function TaskForm({
       {mode === "edit" && initialValues?.id ? <input type="hidden" value={initialValues.id} {...form.register("id")} /> : null}
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Task title</label>
+          <label className="text-sm font-medium">{t("admin.forms.taskTitle")}</label>
           <Input {...form.register("title")} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Slug</label>
+          <label className="text-sm font-medium">{t("admin.forms.slug")}</label>
           <Input {...form.register("slug")} />
         </div>
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium">Brief</label>
+        <label className="text-sm font-medium">{t("admin.forms.brief")}</label>
         <Textarea {...form.register("brief")} />
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium">Instructions</label>
+        <label className="text-sm font-medium">{t("admin.forms.instructions")}</label>
         <Textarea {...form.register("body")} />
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Submission mode</label>
+          <label className="text-sm font-medium">{t("admin.forms.submissionMode")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("submission_mode")}>
-            <option value="group">Group</option>
-            <option value="individual">Individual</option>
+            <option value="group">{t("admin.forms.groupSubmission")}</option>
+            <option value="individual">{t("admin.forms.individualSubmission")}</option>
           </select>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Due at</label>
+          <label className="text-sm font-medium">{t("admin.forms.dueAt")}</label>
           <Input type="datetime-local" {...form.register("due_at")} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Template resource</label>
+          <label className="text-sm font-medium">{t("admin.forms.templateResource")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("template_resource_id")}>
-            <option value="">None</option>
+            <option value="">{t("admin.forms.none")}</option>
             {resources.map((resource) => (
               <option key={resource.id} value={resource.id}>
                 {resource.title}
@@ -154,20 +156,20 @@ export function TaskForm({
           </select>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Status</label>
+          <label className="text-sm font-medium">{t("admin.forms.status")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("status")}>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="archived">Archived</option>
+            <option value="draft">{t("status.draft")}</option>
+            <option value="published">{t("status.published")}</option>
+            <option value="archived">{t("status.archived")}</option>
           </select>
         </div>
       </div>
       <label className="flex items-center gap-3 rounded-xl border border-border bg-slate-50 px-4 py-3 text-sm">
         <input className="h-4 w-4 rounded border-border" type="checkbox" {...form.register("allow_resubmission")} />
-        Allow resubmission after teacher return
+        {t("admin.forms.allowResubmission")}
       </label>
       {formError ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}
-      <Button type="submit">{isPending ? "Saving..." : mode === "create" ? "Create task" : "Update task"}</Button>
+      <Button type="submit">{isPending ? t("forms.saving") : mode === "create" ? t("admin.forms.createTask") : t("admin.forms.updateTask")}</Button>
     </form>
   );
 }

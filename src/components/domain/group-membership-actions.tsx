@@ -4,12 +4,14 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/hooks/use-i18n";
 import { joinGroupAction } from "@/lib/server/actions/join-group";
 import { leaveGroupAction } from "@/lib/server/actions/leave-group";
 import { removeGroupMemberAction } from "@/lib/server/actions/remove-group-member";
 
 export function JoinGroupButton({ groupId }: { groupId: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -24,13 +26,13 @@ export function JoinGroupButton({ groupId }: { groupId: string }) {
               await joinGroupAction({ group_id: groupId });
               router.refresh();
             } catch (actionError) {
-              setError(actionError instanceof Error ? actionError.message : "Unable to join group.");
+              setError(actionError instanceof Error ? actionError.message : t("admin.groupActions.actionFailed"));
             }
           })
         }
         type="button"
       >
-        {isPending ? "Joining..." : "Join group"}
+        {isPending ? t("admin.groupActions.joining") : t("admin.groupActions.join")}
       </Button>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
     </div>
@@ -39,6 +41,7 @@ export function JoinGroupButton({ groupId }: { groupId: string }) {
 
 export function LeaveGroupButton({ groupId }: { groupId: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -53,14 +56,14 @@ export function LeaveGroupButton({ groupId }: { groupId: string }) {
               await leaveGroupAction({ group_id: groupId });
               router.refresh();
             } catch (actionError) {
-              setError(actionError instanceof Error ? actionError.message : "Unable to leave group.");
+              setError(actionError instanceof Error ? actionError.message : t("admin.groupActions.actionFailed"));
             }
           })
         }
         type="button"
         variant="outline"
       >
-        {isPending ? "Leaving..." : "Leave group"}
+        {isPending ? t("admin.groupActions.leaving") : t("admin.groupActions.leave")}
       </Button>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
     </div>
@@ -69,6 +72,7 @@ export function LeaveGroupButton({ groupId }: { groupId: string }) {
 
 export function RemoveGroupMemberButton({ groupId, profileId }: { groupId: string; profileId: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -83,7 +87,7 @@ export function RemoveGroupMemberButton({ groupId, profileId }: { groupId: strin
               await removeGroupMemberAction({ group_id: groupId, profile_id: profileId });
               router.refresh();
             } catch (actionError) {
-              setError(actionError instanceof Error ? actionError.message : "Unable to remove member.");
+              setError(actionError instanceof Error ? actionError.message : t("admin.groupActions.actionFailed"));
             }
           })
         }
@@ -91,7 +95,7 @@ export function RemoveGroupMemberButton({ groupId, profileId }: { groupId: strin
         type="button"
         variant="outline"
       >
-        {isPending ? "Removing..." : "Remove"}
+        {isPending ? t("admin.groupActions.removing") : t("admin.groupActions.remove")}
       </Button>
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
     </div>

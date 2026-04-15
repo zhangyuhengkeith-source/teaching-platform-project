@@ -1,5 +1,6 @@
 import { UserRound } from "lucide-react";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { AdminClassCreateForm } from "@/components/domain/admin-class-create-form";
 import { AdminUserTable } from "@/components/domain/admin-user-table";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -37,12 +38,12 @@ export default async function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        description={`Only ${ADMIN_USERS_EMAIL} can open this page and change user roles, user types, or account status.`}
-        title="Manage Users"
+        description={<TranslationText translationKey="admin.users.description" values={{ email: ADMIN_USERS_EMAIL }} />}
+        title={<TranslationText translationKey="admin.users.title" />}
       />
       <SectionCard
-        description="Create a new class directly from the super-admin console before assigning students."
-        title="Create Class"
+        description={<TranslationText translationKey="admin.users.createClassDescription" />}
+        title={<TranslationText translationKey="admin.users.createClassTitle" />}
       >
         <AdminClassCreateForm />
       </SectionCard>
@@ -50,9 +51,9 @@ export default async function AdminUsersPage() {
         <AdminUserTable classes={classes} items={enrichedUsers} />
       ) : (
         <EmptyState
-          description="No user profiles are available yet. New registered users will appear here after their first sign-in creates a profile row."
+          description={<TranslationText translationKey="admin.users.emptyDescription" />}
           icon={UserRound}
-          title="No users yet"
+          title={<TranslationText translationKey="admin.users.emptyTitle" />}
         />
       )}
     </div>

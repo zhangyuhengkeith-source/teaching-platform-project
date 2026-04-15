@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Users } from "lucide-react";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { GroupEditPanel } from "@/components/domain/group-edit-panel";
 import { GroupSummaryPanel } from "@/components/domain/group-summary-panel";
 import { RemoveGroupMemberButton } from "@/components/domain/group-membership-actions";
@@ -30,12 +31,12 @@ export default async function AdminGroupDetailPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Review the group profile, leader, and member list for this elective project team." title={group.name} />
+      <PageHeader description={<TranslationText translationKey="admin.groups.detailDescription" />} title={group.name} />
       <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <SectionCard description="Current group snapshot." title="Group summary">
+        <SectionCard description={<TranslationText translationKey="admin.groups.summaryDescription" />} title={<TranslationText translationKey="admin.groups.summaryTitle" />}>
           <GroupSummaryPanel group={group} />
         </SectionCard>
-        <SectionCard description="Teacher-managed group profile and status controls." title="Edit group">
+        <SectionCard description={<TranslationText translationKey="admin.groups.editDescription" />} title={<TranslationText translationKey="admin.groups.editTitle" />}>
           <GroupEditPanel
             initialValues={{
               id: group.id,
@@ -52,21 +53,23 @@ export default async function AdminGroupDetailPage({
         </SectionCard>
       </div>
 
-      <SectionCard description="Remove non-leader members here when the roster needs correction." title="Members">
+      <SectionCard description={<TranslationText translationKey="admin.groups.membersDescription" />} title={<TranslationText translationKey="admin.groups.membersTitle" />}>
         <div className="space-y-4">
           {group.members.map((member) => (
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-white p-4" key={member.id}>
               <div>
                 <p className="font-medium text-slate-900">{member.profileName ?? member.profileId}</p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <Badge variant={member.memberRole === "leader" ? "primary" : "muted"}>{member.memberRole}</Badge>
-                  <Badge variant="muted">{member.status}</Badge>
+                  <Badge variant={member.memberRole === "leader" ? "primary" : "muted"}>
+                    <TranslationText translationKey={member.memberRole === "leader" ? "admin.groupMembers.leader" : "admin.groupMembers.member"} />
+                  </Badge>
+                  <Badge variant="muted"><TranslationText translationKey={member.status === "active" ? "status.active" : "admin.groupMembers.removed"} /></Badge>
                 </div>
               </div>
               {member.memberRole !== "leader" && member.status === "active" ? (
                 <RemoveGroupMemberButton groupId={group.id} profileId={member.profileId} />
               ) : (
-                <div className="text-sm text-muted-foreground">Leader changes are handled separately.</div>
+                <div className="text-sm text-muted-foreground"><TranslationText translationKey="admin.groups.leaderLocked" /></div>
               )}
             </div>
           ))}

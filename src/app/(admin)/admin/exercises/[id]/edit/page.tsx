@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { ExerciseSetForm } from "@/components/domain/exercise-set-form";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
@@ -24,8 +25,8 @@ export default async function EditExerciseSetPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Update exercise metadata and rebuild the item sequence as needed." title={`Edit ${exerciseSet.title}`} />
-      <SectionCard description="Changes here affect the student-facing practice player immediately after publishing." title="Exercise builder">
+      <PageHeader description={<TranslationText translationKey="admin.exercises.editDescription" />} title={<TranslationText translationKey="admin.exercises.editTitle" values={{ title: exerciseSet.title }} />} />
+      <SectionCard description={<TranslationText translationKey="admin.exercises.builderDescription" />} title={<TranslationText translationKey="admin.exercises.builderTitle" />}>
         <ExerciseSetForm initialValues={exerciseSet} mode="edit" sections={sections} spaces={spaces} />
       </SectionCard>
     </div>

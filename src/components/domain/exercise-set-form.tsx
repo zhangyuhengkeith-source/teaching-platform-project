@@ -11,6 +11,7 @@ import { ExerciseItemBuilder } from "@/components/domain/exercise-item-builder";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/hooks/use-i18n";
 import { createExerciseSetAction } from "@/lib/server/actions/create-exercise-set";
 import { updateExerciseSetAction } from "@/lib/server/actions/update-exercise-set";
 import { exerciseSetEditorSchema, type ExerciseItemEditorSchema, type ExerciseSetEditorSchema } from "@/lib/validations/exercises";
@@ -131,6 +132,7 @@ export function ExerciseSetForm({
   initialValues?: ExerciseSetDetail;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<ExerciseSetEditorSchema>({
@@ -166,7 +168,7 @@ export function ExerciseSetForm({
         router.push("/admin/exercises");
         router.refresh();
       } catch (error) {
-        setFormError(error instanceof Error ? error.message : "Unable to save exercise set.");
+        setFormError(error instanceof Error ? error.message : t("admin.userTable.saveFailed"));
       }
     });
   });
@@ -175,38 +177,38 @@ export function ExerciseSetForm({
     <form className="space-y-6" onSubmit={onSubmit}>
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Title</label>
+          <label className="text-sm font-medium">{t("admin.tables.title")}</label>
           <Input {...form.register("title")} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Slug</label>
+          <label className="text-sm font-medium">{t("admin.forms.slug")}</label>
           <Input {...form.register("slug")} />
         </div>
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium">Instructions</label>
+        <label className="text-sm font-medium">{t("admin.forms.instructions")}</label>
         <Textarea {...form.register("instructions")} />
       </div>
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Exercise type</label>
+          <label className="text-sm font-medium">{t("admin.forms.exerciseType")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("exercise_type")}>
-            <option value="mcq">MCQ</option>
-            <option value="term_recall">Term recall</option>
-            <option value="flashcard">Flashcards</option>
+            <option value="mcq">{t("practice.types.mcq")}</option>
+            <option value="term_recall">{t("practice.types.termRecall")}</option>
+            <option value="flashcard">{t("practice.types.flashcard")}</option>
           </select>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Status</label>
+          <label className="text-sm font-medium">{t("admin.forms.status")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("status")}>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
+            <option value="draft">{t("status.draft")}</option>
+            <option value="published">{t("status.published")}</option>
           </select>
         </div>
       </div>
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Class</label>
+          <label className="text-sm font-medium">{t("admin.forms.class")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("space_id")}>
             {spaces.map((space) => (
               <option key={space.id} value={space.id}>
@@ -216,9 +218,9 @@ export function ExerciseSetForm({
           </select>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Section</label>
+          <label className="text-sm font-medium">{t("admin.forms.section")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("section_id")}>
-            <option value="">Class-wide</option>
+            <option value="">{t("admin.tables.classWide")}</option>
             {visibleSections.map((section) => (
               <option key={section.id} value={section.id}>
                 {section.title}
@@ -230,26 +232,26 @@ export function ExerciseSetForm({
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold">Exercise items</h2>
-            <p className="text-sm text-muted-foreground">Build the question flow with structured item types.</p>
+            <h2 className="text-lg font-semibold">{t("admin.forms.exerciseItemsTitle")}</h2>
+            <p className="text-sm text-muted-foreground">{t("admin.forms.exerciseItemsDescription")}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {selectedExerciseType === "mcq" ? (
               <Button onClick={() => itemsFieldArray.append(createDefaultItem("mcq"))} size="sm" type="button" variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
-                Add MCQ
+                {t("admin.forms.addMcq")}
               </Button>
             ) : null}
             {selectedExerciseType === "term_recall" ? (
               <Button onClick={() => itemsFieldArray.append(createDefaultItem("spelling"))} size="sm" type="button" variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
-                Add recall
+                {t("admin.forms.addRecall")}
               </Button>
             ) : null}
             {selectedExerciseType === "flashcard" ? (
               <Button onClick={() => itemsFieldArray.append(createDefaultItem("flashcard"))} size="sm" type="button" variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
-                Add flashcard
+                {t("admin.forms.addFlashcard")}
               </Button>
             ) : null}
           </div>
@@ -269,9 +271,9 @@ export function ExerciseSetForm({
       </div>
       {formError ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}
       <div className="flex gap-3">
-        <Button type="submit">{isPending ? "Saving..." : mode === "create" ? "Create exercise set" : "Update exercise set"}</Button>
+        <Button type="submit">{isPending ? t("forms.saving") : mode === "create" ? t("admin.forms.createExerciseSet") : t("admin.forms.updateExerciseSet")}</Button>
         <Button onClick={() => router.push("/admin/exercises")} type="button" variant="outline">
-          Cancel
+          {t("common.cancel")}
         </Button>
       </div>
     </form>

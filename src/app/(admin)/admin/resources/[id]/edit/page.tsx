@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { ResourceForm } from "@/components/domain/resource-form";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
@@ -24,8 +25,8 @@ export default async function EditResourcePage({
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Update teaching-resource metadata, visibility, and publishing state." title={`Edit ${resource.title}`} />
-      <SectionCard description="Resource files can be attached in the next storage-focused task." title="Resource details">
+      <PageHeader description={<TranslationText translationKey="admin.resources.editDescription" />} title={<TranslationText translationKey="admin.resources.editTitle" values={{ title: resource.title }} />} />
+      <SectionCard description={<TranslationText translationKey="admin.resources.detailsDescription" />} title={<TranslationText translationKey="admin.resources.detailsTitle" />}>
         <ResourceForm
           initialValues={{
             id: resource.id,

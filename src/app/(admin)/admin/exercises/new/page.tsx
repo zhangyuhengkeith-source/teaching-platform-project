@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { ExerciseSetForm } from "@/components/domain/exercise-set-form";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
@@ -18,8 +19,8 @@ export default async function NewExerciseSetPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Create a practice set and build the item sequence in the same workflow." title="Create Exercise Set" />
-      <SectionCard description="Supported item types in this MVP are MCQ, term recall, and flashcards." title="Exercise builder">
+      <PageHeader description={<TranslationText translationKey="admin.exercises.newDescription" />} title={<TranslationText translationKey="admin.exercises.newTitle" />} />
+      <SectionCard description={<TranslationText translationKey="admin.exercises.newBuilderDescription" />} title={<TranslationText translationKey="admin.exercises.builderTitle" />}>
         <ExerciseSetForm mode="create" sections={sections} spaces={spaces} />
       </SectionCard>
     </div>

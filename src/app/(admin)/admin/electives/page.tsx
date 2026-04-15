@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { AdminElectiveTable } from "@/components/domain/admin-elective-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FilterBar } from "@/components/shared/filter-bar";
@@ -19,19 +20,19 @@ export default async function AdminElectivesPage() {
       <PageHeader
         actions={
           <Button asChild>
-            <Link href="/admin/electives/new">Create elective</Link>
+            <Link href="/admin/electives/new"><TranslationText translationKey="admin.electives.createAction" /></Link>
           </Button>
         }
-        description="Manage elective spaces, grouping policy, and the task context used in collaborative project work."
-        title="Manage Electives"
+        description={<TranslationText translationKey="admin.electives.description" />}
+        title={<TranslationText translationKey="admin.electives.title" />}
       />
       <FilterBar>
-        <SearchInput placeholder="Search electives" />
+        <SearchInput placeholderKey="admin.electives.searchPlaceholder" />
       </FilterBar>
       {electives.length > 0 ? (
         <AdminElectiveTable items={electives} />
       ) : (
-        <EmptyState description="No elective spaces are manageable yet. Create the first elective to begin the Module B workflow." icon={BookOpen} title="No electives yet" />
+        <EmptyState description={<TranslationText translationKey="admin.electives.emptyDescription" />} icon={BookOpen} title={<TranslationText translationKey="admin.electives.emptyTitle" />} />
       )}
     </div>
   );

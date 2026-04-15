@@ -6,6 +6,7 @@ import type { Control, UseFormRegister } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/hooks/use-i18n";
 import type { ExerciseSetEditorSchema } from "@/lib/validations/exercises";
 
 export function FlashcardItemBuilder({
@@ -18,37 +19,38 @@ export function FlashcardItemBuilder({
   index: number;
   onRemove: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="space-y-4 rounded-2xl border border-border bg-slate-50 p-5">
       <div className="flex items-start justify-between gap-4">
-        <h3 className="text-base font-semibold">Flashcard Item {index + 1}</h3>
+        <h3 className="text-base font-semibold">{t("admin.forms.flashcardItem", { index: index + 1 })}</h3>
         <Button onClick={onRemove} size="sm" type="button" variant="ghost">
           <Trash2 className="mr-2 h-4 w-4" />
-          Remove
+          {t("admin.forms.remove")}
         </Button>
       </div>
       <input type="hidden" value="flashcard" {...register(`items.${index}.item_type` as const)} />
       <div className="space-y-2">
-        <label className="text-sm font-medium">Prompt</label>
+        <label className="text-sm font-medium">{t("admin.forms.prompt")}</label>
         <Textarea {...register(`items.${index}.prompt` as const)} />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Front</label>
+          <label className="text-sm font-medium">{t("admin.forms.front")}</label>
           <Textarea {...register(`items.${index}.answer_key_json.front` as const)} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Back</label>
+          <label className="text-sm font-medium">{t("admin.forms.back")}</label>
           <Textarea {...register(`items.${index}.answer_key_json.back` as const)} />
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Sort order</label>
+          <label className="text-sm font-medium">{t("admin.forms.sortOrder")}</label>
           <Input type="number" {...register(`items.${index}.sort_order` as const, { valueAsNumber: true })} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Explanation</label>
+          <label className="text-sm font-medium">{t("admin.forms.explanation")}</label>
           <Textarea {...register(`items.${index}.explanation` as const)} />
         </div>
       </div>

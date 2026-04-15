@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { ResourceForm } from "@/components/domain/resource-form";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
@@ -18,11 +19,10 @@ export default async function NewResourcePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Create a learning resource and assign it to a class and optional section." title="Create Resource" />
-      <SectionCard description="File uploads are intentionally deferred, but the metadata is ready for them." title="Resource details">
+      <PageHeader description={<TranslationText translationKey="admin.resources.newDescription" />} title={<TranslationText translationKey="admin.resources.newTitle" />} />
+      <SectionCard description={<TranslationText translationKey="admin.resources.newDetailsDescription" />} title={<TranslationText translationKey="admin.resources.detailsTitle" />}>
         <ResourceForm mode="create" sections={sections} spaces={spaces} />
       </SectionCard>
     </div>
   );
 }
-

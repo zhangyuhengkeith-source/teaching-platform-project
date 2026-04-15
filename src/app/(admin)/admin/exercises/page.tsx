@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ClipboardList } from "lucide-react";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { AdminExerciseTable } from "@/components/domain/admin-exercise-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FilterBar } from "@/components/shared/filter-bar";
@@ -19,19 +20,19 @@ export default async function AdminExercisesPage() {
       <PageHeader
         actions={
           <Button asChild>
-            <Link href="/admin/exercises/new">Create exercise set</Link>
+            <Link href="/admin/exercises/new"><TranslationText translationKey="admin.exercises.createAction" /></Link>
           </Button>
         }
-        description="Manage practice sets, their linked classes, and the item-builder flow used for auto-graded study."
-        title="Manage Exercises"
+        description={<TranslationText translationKey="admin.exercises.description" />}
+        title={<TranslationText translationKey="admin.exercises.title" />}
       />
       <FilterBar>
-        <SearchInput placeholder="Search exercise sets" />
+        <SearchInput placeholderKey="admin.exercises.searchPlaceholder" />
       </FilterBar>
       {items.length > 0 ? (
         <AdminExerciseTable items={items} />
       ) : (
-        <EmptyState description="No exercise sets are available yet. Create the first practice set for a class section." icon={ClipboardList} title="No exercise sets yet" />
+        <EmptyState description={<TranslationText translationKey="admin.exercises.emptyDescription" />} icon={ClipboardList} title={<TranslationText translationKey="admin.exercises.emptyTitle" />} />
       )}
     </div>
   );

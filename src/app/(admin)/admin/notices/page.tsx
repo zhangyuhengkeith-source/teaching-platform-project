@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BellRing } from "lucide-react";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { AdminNoticeTable } from "@/components/domain/admin-notice-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FilterBar } from "@/components/shared/filter-bar";
@@ -21,21 +22,20 @@ export default async function AdminNoticesPage() {
       <PageHeader
         actions={
           <Button asChild>
-            <Link href="/admin/notices/new">Create notice</Link>
+            <Link href="/admin/notices/new"><TranslationText translationKey="admin.notices.createAction" /></Link>
           </Button>
         }
-        description="Publish homework reminders, deadlines, and class updates for active teaching spaces."
-        title="Manage Notices"
+        description={<TranslationText translationKey="admin.notices.description" />}
+        title={<TranslationText translationKey="admin.notices.title" />}
       />
       <FilterBar>
-        <SearchInput placeholder="Search notices" />
+        <SearchInput placeholderKey="admin.notices.searchPlaceholder" />
       </FilterBar>
       {notices.length > 0 ? (
         <AdminNoticeTable items={notices} spaceTitles={spaceTitles} />
       ) : (
-        <EmptyState description="No notices have been created yet. Publish a notice to support the first class workflow." icon={BellRing} title="No notices yet" />
+        <EmptyState description={<TranslationText translationKey="admin.notices.emptyDescription" />} icon={BellRing} title={<TranslationText translationKey="admin.notices.emptyTitle" />} />
       )}
     </div>
   );
 }
-

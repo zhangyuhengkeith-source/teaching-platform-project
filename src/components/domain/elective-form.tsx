@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/hooks/use-i18n";
 import { createElectiveAction } from "@/lib/server/actions/create-elective";
 import { updateElectiveAction } from "@/lib/server/actions/update-elective";
 import {
@@ -25,6 +26,7 @@ export function ElectiveForm({
   initialValues?: Partial<UpdateElectiveSchema>;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<CreateElectiveSchema | UpdateElectiveSchema>({
@@ -53,7 +55,7 @@ export function ElectiveForm({
         router.push("/admin/electives");
         router.refresh();
       } catch (error) {
-        setFormError(error instanceof Error ? error.message : "Unable to save elective.");
+        setFormError(error instanceof Error ? error.message : t("admin.userTable.saveFailed"));
       }
     });
   });
@@ -62,46 +64,46 @@ export function ElectiveForm({
     <form className="space-y-6" onSubmit={onSubmit}>
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Elective title</label>
+          <label className="text-sm font-medium">{t("admin.forms.electiveTitle")}</label>
           <Input {...form.register("title")} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Slug</label>
+          <label className="text-sm font-medium">{t("admin.forms.slug")}</label>
           <Input {...form.register("slug")} />
         </div>
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium">Description</label>
+        <label className="text-sm font-medium">{t("admin.forms.description")}</label>
         <Textarea {...form.register("description")} />
       </div>
       <div className="grid gap-6 md:grid-cols-3">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Academic year</label>
+          <label className="text-sm font-medium">{t("admin.forms.academicYear")}</label>
           <Input placeholder="2025-2026" {...form.register("academic_year")} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Status</label>
+          <label className="text-sm font-medium">{t("admin.forms.status")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("status")}>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="archived">Archived</option>
+            <option value="draft">{t("status.draft")}</option>
+            <option value="published">{t("status.published")}</option>
+            <option value="archived">{t("status.archived")}</option>
           </select>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Max group size</label>
+          <label className="text-sm font-medium">{t("admin.forms.maxGroupSize")}</label>
           <Input type="number" {...form.register("max_group_size", { valueAsNumber: true })} />
         </div>
       </div>
       <label className="flex items-center gap-3 rounded-xl border border-border bg-slate-50 px-4 py-3 text-sm">
         <input className="h-4 w-4 rounded border-border" type="checkbox" {...form.register("grouping_locked")} />
-        Lock grouping for students
+        {t("admin.forms.lockGrouping")}
       </label>
       {mode === "edit" && initialValues?.id ? <input type="hidden" value={initialValues.id} {...form.register("id")} /> : null}
       {formError ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}
       <div className="flex gap-3">
-        <Button type="submit">{isPending ? "Saving..." : mode === "create" ? "Create elective" : "Update elective"}</Button>
+        <Button type="submit">{isPending ? t("forms.saving") : mode === "create" ? t("admin.forms.createElective") : t("admin.forms.updateElective")}</Button>
         <Button onClick={() => router.push("/admin/electives")} type="button" variant="outline">
-          Cancel
+          {t("common.cancel")}
         </Button>
       </div>
     </form>

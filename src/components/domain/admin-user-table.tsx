@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/hooks/use-i18n";
 import { assignStudentToClassAction } from "@/lib/server/actions/assign-student-to-class";
 import { updateProfileAccessAction } from "@/lib/server/actions/update-profile-access";
 import type { ProfileSummary, SpaceSummary } from "@/types/domain";
@@ -13,37 +14,39 @@ type AdminUserRowData = ProfileSummary & {
 };
 
 const ROLE_OPTIONS = [
-  { value: "super_admin", label: "Super Admin" },
-  { value: "teacher", label: "Teacher" },
-  { value: "student", label: "Student" },
+  { value: "super_admin", labelKey: "profile.roles.superAdmin" },
+  { value: "teacher", labelKey: "profile.roles.teacher" },
+  { value: "student", labelKey: "profile.roles.student" },
 ] as const;
 
 const USER_TYPE_OPTIONS = [
-  { value: "internal", label: "Internal" },
-  { value: "external", label: "External" },
+  { value: "internal", labelKey: "profile.userTypes.internal" },
+  { value: "external", labelKey: "profile.userTypes.external" },
 ] as const;
 
 const STATUS_OPTIONS = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-  { value: "suspended", label: "Suspended" },
+  { value: "active", labelKey: "admin.userTable.statuses.active" },
+  { value: "inactive", labelKey: "admin.userTable.statuses.inactive" },
+  { value: "suspended", labelKey: "admin.userTable.statuses.suspended" },
 ] as const;
 
 export function AdminUserTable({ items, classes }: { items: AdminUserRowData[]; classes: SpaceSummary[] }) {
+  const { t } = useI18n();
+
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-panel">
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-500">
             <tr>
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium">Email</th>
-              <th className="px-4 py-3 font-medium">Role</th>
-              <th className="px-4 py-3 font-medium">User Type</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Assigned Classes</th>
-              <th className="px-4 py-3 font-medium">Assign to Class</th>
-              <th className="px-4 py-3 font-medium">Action</th>
+              <th className="px-4 py-3 font-medium">{t("admin.tables.name")}</th>
+              <th className="px-4 py-3 font-medium">{t("admin.tables.email")}</th>
+              <th className="px-4 py-3 font-medium">{t("admin.tables.role")}</th>
+              <th className="px-4 py-3 font-medium">{t("admin.tables.userType")}</th>
+              <th className="px-4 py-3 font-medium">{t("admin.tables.status")}</th>
+              <th className="px-4 py-3 font-medium">{t("admin.tables.assignedClasses")}</th>
+              <th className="px-4 py-3 font-medium">{t("admin.tables.assignToClass")}</th>
+              <th className="px-4 py-3 font-medium">{t("admin.tables.action")}</th>
             </tr>
           </thead>
           <tbody>
@@ -58,6 +61,7 @@ export function AdminUserTable({ items, classes }: { items: AdminUserRowData[]; 
 }
 
 function AdminUserRow({ item, classes }: { item: AdminUserRowData; classes: SpaceSummary[] }) {
+  const { t } = useI18n();
   const [role, setRole] = useState<ProfileSummary["role"]>(item.role);
   const [userType, setUserType] = useState<ProfileSummary["userType"]>(item.userType);
   const [status, setStatus] = useState<ProfileSummary["status"]>(item.status);
@@ -84,7 +88,7 @@ function AdminUserRow({ item, classes }: { item: AdminUserRowData; classes: Spac
         >
           {ROLE_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {t(option.labelKey)}
             </option>
           ))}
         </select>
@@ -98,7 +102,7 @@ function AdminUserRow({ item, classes }: { item: AdminUserRowData; classes: Spac
         >
           {USER_TYPE_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {t(option.labelKey)}
             </option>
           ))}
         </select>
@@ -112,13 +116,13 @@ function AdminUserRow({ item, classes }: { item: AdminUserRowData; classes: Spac
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {t(option.labelKey)}
             </option>
           ))}
         </select>
       </td>
       <td className="px-4 py-3 text-slate-600">
-        {item.activeClassTitles.length > 0 ? item.activeClassTitles.join(", ") : "Unassigned"}
+        {item.activeClassTitles.length > 0 ? item.activeClassTitles.join(", ") : t("admin.tables.unassigned")}
       </td>
       <td className="px-4 py-3">
         <div className="space-y-2">
@@ -128,7 +132,7 @@ function AdminUserRow({ item, classes }: { item: AdminUserRowData; classes: Spac
             onChange={(event) => setSelectedClassId(event.target.value)}
             value={selectedClassId}
           >
-            {classes.length === 0 ? <option value="">No classes available</option> : null}
+            {classes.length === 0 ? <option value="">{t("admin.tables.noClassesAvailable")}</option> : null}
             {classes.map((space) => (
               <option key={space.id} value={space.id}>
                 {space.title}
@@ -146,9 +150,9 @@ function AdminUserRow({ item, classes }: { item: AdminUserRowData; classes: Spac
                       profile_id: item.id,
                       space_id: selectedClassId,
                     });
-                    setAssignmentMessage(role === "teacher" ? "Teacher assigned to class" : "Student assigned to class");
+                    setAssignmentMessage(role === "teacher" ? t("admin.userTable.teacherAssigned") : t("admin.userTable.studentAssigned"));
                   } catch (error) {
-                    setAssignmentMessage(error instanceof Error ? error.message : "Assignment failed");
+                    setAssignmentMessage(error instanceof Error ? error.message : t("admin.userTable.assignmentFailed"));
                   }
                 });
               }}
@@ -156,7 +160,7 @@ function AdminUserRow({ item, classes }: { item: AdminUserRowData; classes: Spac
               type="button"
               variant="outline"
             >
-              {isPending ? "Processing..." : "Assign"}
+              {isPending ? t("admin.userTable.processing") : t("admin.userTable.assign")}
             </Button>
             {assignmentMessage ? <span className="text-xs text-slate-500">{assignmentMessage}</span> : null}
           </div>
@@ -176,16 +180,16 @@ function AdminUserRow({ item, classes }: { item: AdminUserRowData; classes: Spac
                     user_type: userType,
                     status,
                   });
-                  setMessage("Saved");
+                  setMessage(t("admin.userTable.saved"));
                 } catch (error) {
-                  setMessage(error instanceof Error ? error.message : "Save failed");
+                  setMessage(error instanceof Error ? error.message : t("admin.userTable.saveFailed"));
                 }
               });
             }}
             size="sm"
             type="button"
           >
-            {isPending ? "Saving..." : "Save"}
+            {isPending ? t("admin.userTable.saving") : t("admin.userTable.save")}
           </Button>
           {message ? <span className="text-xs text-slate-500">{message}</span> : null}
         </div>

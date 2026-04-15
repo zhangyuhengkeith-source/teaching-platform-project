@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { SubmissionFeedbackPanel } from "@/components/domain/submission-feedback-panel";
 import { SubmissionReviewPanel } from "@/components/domain/submission-review-panel";
 import { SubmissionStatusStepper } from "@/components/domain/submission-status-stepper";
@@ -24,34 +25,34 @@ export default async function AdminSubmissionDetailPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Review the submitted work, return revision notes, or mark the task complete." title={submission.taskTitle ?? "Submission review"} />
-      <SectionCard description="Current submission workflow state." title="Status">
+      <PageHeader description={<TranslationText translationKey="admin.submissions.detailDescription" />} title={submission.taskTitle ?? <TranslationText translationKey="admin.submissions.detailDefaultTitle" />} />
+      <SectionCard description={<TranslationText translationKey="admin.submissions.statusDescription" />} title={<TranslationText translationKey="admin.submissions.statusTitle" />}>
         <div className="space-y-4">
           <SubmissionStatusStepper status={submission.effectiveStatus ?? submission.status} />
           <div className="grid gap-4 md:grid-cols-3 text-sm">
             <div className="rounded-xl bg-slate-50 p-4">
-              <p className="text-slate-500">Submitter</p>
+              <p className="text-slate-500"><TranslationText translationKey="admin.submissions.submitter" /></p>
               <p className="mt-2 font-semibold text-slate-900">{submission.groupName ?? submission.submitterName ?? submission.submitterProfileId ?? "-"}</p>
             </div>
             <div className="rounded-xl bg-slate-50 p-4">
-              <p className="text-slate-500">Submitted</p>
+              <p className="text-slate-500"><TranslationText translationKey="admin.submissions.submitted" /></p>
               <p className="mt-2 font-semibold text-slate-900">{formatDateTime(submission.submittedAt)}</p>
             </div>
             <div className="rounded-xl bg-slate-50 p-4">
-              <p className="text-slate-500">Due</p>
+              <p className="text-slate-500"><TranslationText translationKey="admin.submissions.due" /></p>
               <p className="mt-2 font-semibold text-slate-900">{formatDateTime(submission.taskDueAt)}</p>
             </div>
           </div>
         </div>
       </SectionCard>
 
-      <SectionCard description="Student-submitted written content." title="Submission content">
+      <SectionCard description={<TranslationText translationKey="admin.submissions.contentDescription" />} title={<TranslationText translationKey="admin.submissions.contentTitle" />}>
         <div className="whitespace-pre-wrap rounded-2xl border border-border bg-slate-50/70 p-4 text-sm leading-7 text-muted-foreground">
-          {submission.textContent ?? "No written response was provided in this submission."}
+          {submission.textContent ?? <TranslationText translationKey="admin.submissions.emptyContent" />}
         </div>
       </SectionCard>
 
-      <SectionCard description="Return revision requests or finalize the workflow." title="Feedback and status">
+      <SectionCard description={<TranslationText translationKey="admin.submissions.reviewDescription" />} title={<TranslationText translationKey="admin.submissions.reviewTitle" />}>
         <SubmissionReviewPanel submission={submission} />
       </SectionCard>
 

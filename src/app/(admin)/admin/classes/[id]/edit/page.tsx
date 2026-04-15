@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { ClassForm } from "@/components/domain/class-form";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
@@ -21,8 +22,8 @@ export default async function EditClassPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Update class metadata and publishing state." title={`Edit ${item.title}`} />
-      <SectionCard description="Changes here will affect class discovery and access across the teaching slice." title="Class details">
+      <PageHeader description={<TranslationText translationKey="admin.classes.editDescription" />} title={<TranslationText translationKey="admin.classes.editTitle" values={{ title: item.title }} />} />
+      <SectionCard description={<TranslationText translationKey="admin.classes.detailsDescription" />} title={<TranslationText translationKey="admin.classes.detailsTitle" />}>
         <ClassForm
           initialValues={{
             id: item.id,
@@ -39,4 +40,3 @@ export default async function EditClassPage({
     </div>
   );
 }
-

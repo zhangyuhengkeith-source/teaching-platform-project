@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { CalendarClock, Users } from "lucide-react";
+import type { ReactNode } from "react";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,11 +12,11 @@ import type { TaskSummary } from "@/types/domain";
 export function TaskCard({
   task,
   href,
-  actionLabel = "Open task",
+  actionLabel = <TranslationText translationKey="admin.taskCard.open" />,
 }: {
   task: TaskSummary;
   href?: string;
-  actionLabel?: string;
+  actionLabel?: ReactNode;
 }) {
   const content = (
     <>
@@ -24,7 +26,7 @@ export function TaskCard({
             <CardTitle className="text-base">{task.title}</CardTitle>
             <div className="flex flex-wrap gap-2">
               <Badge variant="muted" className="capitalize">
-                {task.submissionMode}
+                {task.submissionMode === "group" ? <TranslationText translationKey="admin.forms.groupSubmission" /> : <TranslationText translationKey="admin.forms.individualSubmission" />}
               </Badge>
               <StatusBadge status={task.status} />
             </div>
@@ -35,10 +37,10 @@ export function TaskCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm leading-6 text-muted-foreground">{task.brief ?? "Task brief will appear here once the teacher writes it."}</p>
+        <p className="text-sm leading-6 text-muted-foreground">{task.brief ?? <TranslationText translationKey="admin.taskCard.emptyBrief" />}</p>
         <p className="inline-flex items-center gap-2 text-xs text-slate-400">
           <CalendarClock className="h-4 w-4" />
-          Due {formatDateTime(task.dueAt)}
+          <TranslationText translationKey="admin.taskCard.due" values={{ value: formatDateTime(task.dueAt) }} />
         </p>
         {href ? <span className="text-sm font-medium text-primary">{actionLabel}</span> : null}
       </CardContent>

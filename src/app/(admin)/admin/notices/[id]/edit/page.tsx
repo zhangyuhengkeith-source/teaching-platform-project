@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { NoticeForm } from "@/components/domain/notice-form";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
@@ -22,8 +23,8 @@ export default async function EditNoticePage({
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Update notice content, timing, and publishing state." title={`Edit ${notice.title}`} />
-      <SectionCard description="Pinned notices will stand out more clearly in the class learning flow." title="Notice details">
+      <PageHeader description={<TranslationText translationKey="admin.notices.editDescription" />} title={<TranslationText translationKey="admin.notices.editTitle" values={{ title: notice.title }} />} />
+      <SectionCard description={<TranslationText translationKey="admin.notices.detailsDescription" />} title={<TranslationText translationKey="admin.notices.detailsTitle" />}>
         <NoticeForm
           initialValues={{
             id: notice.id,

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FolderKanban } from "lucide-react";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { AdminResourceTable } from "@/components/domain/admin-resource-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FilterBar } from "@/components/shared/filter-bar";
@@ -23,21 +24,20 @@ export default async function AdminResourcesPage() {
       <PageHeader
         actions={
           <Button asChild>
-            <Link href="/admin/resources/new">Create resource</Link>
+            <Link href="/admin/resources/new"><TranslationText translationKey="admin.resources.createAction" /></Link>
           </Button>
         }
-        description="Manage teaching resources across classes, including type, visibility, and publishing state."
-        title="Manage Resources"
+        description={<TranslationText translationKey="admin.resources.description" />}
+        title={<TranslationText translationKey="admin.resources.title" />}
       />
       <FilterBar>
-        <SearchInput placeholder="Search resources" />
+        <SearchInput placeholderKey="admin.resources.searchPlaceholder" />
       </FilterBar>
       {resources.length > 0 ? (
         <AdminResourceTable items={resources} sectionTitles={sectionTitles} spaceTitles={spaceTitles} />
       ) : (
-        <EmptyState description="No resources are available yet. Create the first teaching material for one of your classes." icon={FolderKanban} title="No resources yet" />
+        <EmptyState description={<TranslationText translationKey="admin.resources.emptyDescription" />} icon={FolderKanban} title={<TranslationText translationKey="admin.resources.emptyTitle" />} />
       )}
     </div>
   );
 }
-

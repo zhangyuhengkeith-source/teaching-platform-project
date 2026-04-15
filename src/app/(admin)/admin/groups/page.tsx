@@ -1,5 +1,6 @@
 import { Users } from "lucide-react";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { AdminGroupTable } from "@/components/domain/admin-group-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FilterBar } from "@/components/shared/filter-bar";
@@ -14,14 +15,14 @@ export default async function AdminGroupsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Review elective groups, identify leaders, and correct membership issues when needed." title="Manage Groups" />
+      <PageHeader description={<TranslationText translationKey="admin.groups.description" />} title={<TranslationText translationKey="admin.groups.title" />} />
       <FilterBar>
-        <SearchInput placeholder="Search groups" />
+        <SearchInput placeholderKey="admin.groups.searchPlaceholder" />
       </FilterBar>
       {groups.length > 0 ? (
         <AdminGroupTable items={groups} />
       ) : (
-        <EmptyState description="No groups have been formed in your electives yet." icon={Users} title="No groups yet" />
+        <EmptyState description={<TranslationText translationKey="admin.groups.emptyDescription" />} icon={Users} title={<TranslationText translationKey="admin.groups.emptyTitle" />} />
       )}
     </div>
   );

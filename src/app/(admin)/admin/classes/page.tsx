@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GraduationCap } from "lucide-react";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { AdminClassTable } from "@/components/domain/admin-class-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FilterBar } from "@/components/shared/filter-bar";
@@ -23,21 +24,20 @@ export default async function AdminClassesPage() {
       <PageHeader
         actions={
           <Button asChild>
-            <Link href="/admin/classes/new">Create class</Link>
+            <Link href="/admin/classes/new"><TranslationText translationKey="admin.classes.createAction" /></Link>
           </Button>
         }
-        description="Manage class spaces, academic-year metadata, and publishing state for the teaching workflow."
-        title="Manage Classes"
+        description={<TranslationText translationKey="admin.classes.description" />}
+        title={<TranslationText translationKey="admin.classes.title" />}
       />
       <FilterBar>
-        <SearchInput placeholder="Search classes" />
+        <SearchInput placeholderKey="admin.classes.searchPlaceholder" />
       </FilterBar>
       {enriched.length > 0 ? (
         <AdminClassTable items={enriched} />
       ) : (
-        <EmptyState description="No class spaces are manageable yet. Create your first class to begin Module A." icon={GraduationCap} title="No classes yet" />
+        <EmptyState description={<TranslationText translationKey="admin.classes.emptyDescription" />} icon={GraduationCap} title={<TranslationText translationKey="admin.classes.emptyTitle" />} />
       )}
     </div>
   );
 }
-

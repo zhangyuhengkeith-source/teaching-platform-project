@@ -12,6 +12,7 @@ import { createResourceSchema, type CreateResourceSchema, type UpdateResourceSch
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/hooks/use-i18n";
 import type { SpaceSectionSummary, SpaceSummary } from "@/types/domain";
 
 type ResourceFormValues = CreateResourceSchema & { id?: string };
@@ -28,6 +29,7 @@ export function ResourceForm({
   initialValues?: Partial<UpdateResourceSchema>;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<ResourceFormValues>({
@@ -64,7 +66,7 @@ export function ResourceForm({
         router.push("/admin/resources");
         router.refresh();
       } catch (error) {
-        setFormError(error instanceof Error ? error.message : "Unable to save resource.");
+        setFormError(error instanceof Error ? error.message : t("admin.userTable.saveFailed"));
       }
     });
   });
@@ -73,79 +75,81 @@ export function ResourceForm({
     <form className="space-y-6" onSubmit={onSubmit}>
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="title">Resource title</label>
+          <label className="text-sm font-medium" htmlFor="title">{t("admin.forms.resourceTitle")}</label>
           <Input id="title" {...form.register("title")} />
           {form.formState.errors.title ? <p className="text-sm text-red-600">{form.formState.errors.title.message}</p> : null}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="slug">Slug</label>
+          <label className="text-sm font-medium" htmlFor="slug">{t("admin.forms.slug")}</label>
           <Input id="slug" {...form.register("slug")} />
           {form.formState.errors.slug ? <p className="text-sm text-red-600">{form.formState.errors.slug.message}</p> : null}
         </div>
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium" htmlFor="description">Description</label>
+        <label className="text-sm font-medium" htmlFor="description">{t("admin.forms.description")}</label>
         <Textarea id="description" {...form.register("description")} />
       </div>
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="space_id">Class</label>
+          <label className="text-sm font-medium" htmlFor="space_id">{t("admin.forms.class")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" id="space_id" {...form.register("space_id")}>
             {spaces.map((space) => <option key={space.id} value={space.id}>{space.title}</option>)}
           </select>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="section_id">Section</label>
+          <label className="text-sm font-medium" htmlFor="section_id">{t("admin.forms.section")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" id="section_id" {...form.register("section_id")}>
-            <option value="">No section</option>
+            <option value="">{t("admin.forms.noSection")}</option>
             {sectionOptions.map((section) => <option key={section.id} value={section.id}>{section.title}</option>)}
           </select>
         </div>
       </div>
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="resource_type">Resource type</label>
+          <label className="text-sm font-medium" htmlFor="resource_type">{t("admin.forms.resourceType")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" id="resource_type" {...form.register("resource_type")}>
             {["ppt","case_analysis","revision","extension","worksheet","model_answer","mock_paper","mark_scheme","other"].map((option) => (
-              <option key={option} value={option}>{option.replace("_", " ")}</option>
+              <option key={option} value={option}>
+                {t(option === "case_analysis" ? "admin.forms.resourceTypes.caseAnalysis" : option === "model_answer" ? "admin.forms.resourceTypes.modelAnswer" : option === "mock_paper" ? "admin.forms.resourceTypes.mockPaper" : option === "mark_scheme" ? "admin.forms.resourceTypes.markScheme" : option === "revision" ? "admin.forms.resourceTypes.revision" : option === "extension" ? "admin.forms.resourceTypes.extension" : option === "worksheet" ? "admin.forms.resourceTypes.worksheet" : option === "other" ? "admin.forms.resourceTypes.other" : "admin.forms.resourceTypes.ppt")}
+              </option>
             ))}
           </select>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="visibility">Visibility</label>
+          <label className="text-sm font-medium" htmlFor="visibility">{t("admin.forms.visibility")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" id="visibility" {...form.register("visibility")}>
-            <option value="space">Space</option>
-            <option value="selected_members">Selected members</option>
-            <option value="public">Public</option>
+            <option value="space">{t("admin.forms.visibilityOptions.space")}</option>
+            <option value="selected_members">{t("admin.forms.visibilityOptions.selectedMembers")}</option>
+            <option value="public">{t("admin.forms.visibilityOptions.public")}</option>
           </select>
         </div>
       </div>
       <div className="grid gap-6 md:grid-cols-3">
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="status">Status</label>
+          <label className="text-sm font-medium" htmlFor="status">{t("admin.forms.status")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" id="status" {...form.register("status")}>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="archived">Archived</option>
+            <option value="draft">{t("status.draft")}</option>
+            <option value="published">{t("status.published")}</option>
+            <option value="archived">{t("status.archived")}</option>
           </select>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="published_at">Published at</label>
+          <label className="text-sm font-medium" htmlFor="published_at">{t("admin.forms.publishedAt")}</label>
           <Input id="published_at" placeholder="2025-09-15T00:00:00.000Z" {...form.register("published_at")} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="sort_order">Sort order</label>
+          <label className="text-sm font-medium" htmlFor="sort_order">{t("admin.forms.sortOrder")}</label>
           <Input id="sort_order" type="number" {...form.register("sort_order", { valueAsNumber: true })} />
         </div>
       </div>
       <div className="rounded-2xl border border-dashed border-border bg-slate-50 p-4 text-sm text-muted-foreground">
-        File upload is intentionally deferred. Resource files will attach here in the next storage-focused slice.
+        {t("admin.forms.fileUploadDeferred")}
       </div>
       {mode === "edit" && initialValues?.id ? <input type="hidden" value={initialValues.id} {...form.register("id")} /> : null}
       {formError ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}
       <div className="flex gap-3">
-        <Button type="submit">{isPending ? "Saving..." : mode === "create" ? "Create resource" : "Update resource"}</Button>
-        <Button onClick={() => router.push("/admin/resources")} type="button" variant="outline">Cancel</Button>
+        <Button type="submit">{isPending ? t("forms.saving") : mode === "create" ? t("admin.forms.createResource") : t("admin.forms.updateResource")}</Button>
+        <Button onClick={() => router.push("/admin/resources")} type="button" variant="outline">{t("common.cancel")}</Button>
       </div>
     </form>
   );

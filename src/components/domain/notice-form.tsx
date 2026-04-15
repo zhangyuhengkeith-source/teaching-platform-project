@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/hooks/use-i18n";
 import type { SpaceSummary } from "@/types/domain";
 
 type NoticeFormValues = CreateNoticeSchema & { id?: string };
@@ -27,6 +28,7 @@ export function NoticeForm({
   initialValues?: Partial<UpdateNoticeSchema>;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<NoticeFormValues>({
@@ -58,7 +60,7 @@ export function NoticeForm({
         router.push("/admin/notices");
         router.refresh();
       } catch (error) {
-        setFormError(error instanceof Error ? error.message : "Unable to save notice.");
+        setFormError(error instanceof Error ? error.message : t("admin.userTable.saveFailed"));
       }
     });
   });
@@ -67,45 +69,47 @@ export function NoticeForm({
     <form className="space-y-6" onSubmit={onSubmit}>
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="title">Notice title</label>
+          <label className="text-sm font-medium" htmlFor="title">{t("admin.forms.noticeTitle")}</label>
           <Input id="title" {...form.register("title")} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="space_id">Class</label>
+          <label className="text-sm font-medium" htmlFor="space_id">{t("admin.forms.class")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" id="space_id" {...form.register("space_id")}>
             {spaces.map((space) => <option key={space.id} value={space.id}>{space.title}</option>)}
           </select>
         </div>
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium" htmlFor="body">Body</label>
+        <label className="text-sm font-medium" htmlFor="body">{t("admin.forms.body")}</label>
         <Textarea id="body" {...form.register("body")} />
       </div>
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="notice_type">Notice type</label>
+          <label className="text-sm font-medium" htmlFor="notice_type">{t("admin.forms.noticeType")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" id="notice_type" {...form.register("notice_type")}>
             {["homework","deadline","mock_exam","general","grouping","service_update"].map((option) => (
-              <option key={option} value={option}>{option.replace("_", " ")}</option>
+              <option key={option} value={option}>
+                {t(option === "mock_exam" ? "admin.forms.noticeTypes.mockExam" : option === "service_update" ? "admin.forms.noticeTypes.serviceUpdate" : option === "homework" ? "admin.forms.noticeTypes.homework" : option === "deadline" ? "admin.forms.noticeTypes.deadline" : option === "grouping" ? "admin.forms.noticeTypes.grouping" : "admin.forms.noticeTypes.general")}
+              </option>
             ))}
           </select>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="status">Status</label>
+          <label className="text-sm font-medium" htmlFor="status">{t("admin.forms.status")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" id="status" {...form.register("status")}>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="archived">Archived</option>
+            <option value="draft">{t("status.draft")}</option>
+            <option value="published">{t("status.published")}</option>
+            <option value="archived">{t("status.archived")}</option>
           </select>
         </div>
       </div>
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="publish_at">Publish at</label>
+          <label className="text-sm font-medium" htmlFor="publish_at">{t("admin.forms.publishAt")}</label>
           <Input id="publish_at" placeholder="2025-09-15T00:00:00.000Z" {...form.register("publish_at")} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="expire_at">Expire at</label>
+          <label className="text-sm font-medium" htmlFor="expire_at">{t("admin.forms.expireAt")}</label>
           <Input id="expire_at" placeholder="2025-10-01T00:00:00.000Z" {...form.register("expire_at")} />
         </div>
       </div>
@@ -116,15 +120,15 @@ export function NoticeForm({
           render={({ field }) => <Checkbox checked={field.value} onCheckedChange={field.onChange} />}
         />
         <div>
-          <p className="text-sm font-medium">Pin this notice</p>
-          <p className="text-xs text-muted-foreground">Pinned notices appear more prominently in the class space.</p>
+          <p className="text-sm font-medium">{t("admin.forms.pinNotice")}</p>
+          <p className="text-xs text-muted-foreground">{t("admin.forms.pinNoticeHint")}</p>
         </div>
       </div>
       {mode === "edit" && initialValues?.id ? <input type="hidden" value={initialValues.id} {...form.register("id")} /> : null}
       {formError ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}
       <div className="flex gap-3">
-        <Button type="submit">{isPending ? "Saving..." : mode === "create" ? "Create notice" : "Update notice"}</Button>
-        <Button onClick={() => router.push("/admin/notices")} type="button" variant="outline">Cancel</Button>
+        <Button type="submit">{isPending ? t("forms.saving") : mode === "create" ? t("admin.forms.createNotice") : t("admin.forms.updateNotice")}</Button>
+        <Button onClick={() => router.push("/admin/notices")} type="button" variant="outline">{t("common.cancel")}</Button>
       </div>
     </form>
   );

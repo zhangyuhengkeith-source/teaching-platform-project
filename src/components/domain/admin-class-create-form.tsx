@@ -8,11 +8,13 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/hooks/use-i18n";
 import { createManagedClassAction } from "@/lib/server/actions/create-managed-class";
 import { createSpaceSchema, type CreateSpaceSchema } from "@/lib/validations/spaces";
 
 export function AdminClassCreateForm() {
   const router = useRouter();
+  const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<CreateSpaceSchema>({
@@ -43,7 +45,7 @@ export function AdminClassCreateForm() {
         });
         router.refresh();
       } catch (error) {
-        setFormError(error instanceof Error ? error.message : "Unable to create class.");
+        setFormError(error instanceof Error ? error.message : t("forms.unableToSaveSubmission"));
       }
     });
   });
@@ -52,36 +54,36 @@ export function AdminClassCreateForm() {
     <form className="space-y-4" onSubmit={onSubmit}>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="managed-class-title">Class title</label>
+          <label className="text-sm font-medium" htmlFor="managed-class-title">{t("admin.forms.classTitle")}</label>
           <Input id="managed-class-title" {...form.register("title")} />
           {form.formState.errors.title ? <p className="text-sm text-red-600">{form.formState.errors.title.message}</p> : null}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="managed-class-slug">Slug</label>
+          <label className="text-sm font-medium" htmlFor="managed-class-slug">{t("admin.forms.slug")}</label>
           <Input id="managed-class-slug" {...form.register("slug")} />
           {form.formState.errors.slug ? <p className="text-sm text-red-600">{form.formState.errors.slug.message}</p> : null}
         </div>
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium" htmlFor="managed-class-description">Description</label>
+        <label className="text-sm font-medium" htmlFor="managed-class-description">{t("admin.forms.description")}</label>
         <Textarea id="managed-class-description" rows={3} {...form.register("description")} />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="managed-class-year">Academic year</label>
+          <label className="text-sm font-medium" htmlFor="managed-class-year">{t("admin.forms.academicYear")}</label>
           <Input id="managed-class-year" placeholder="2026-2027" {...form.register("academic_year")} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="managed-class-status">Status</label>
+          <label className="text-sm font-medium" htmlFor="managed-class-status">{t("admin.forms.status")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" id="managed-class-status" {...form.register("status")}>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="archived">Archived</option>
+            <option value="draft">{t("status.draft")}</option>
+            <option value="published">{t("status.published")}</option>
+            <option value="archived">{t("status.archived")}</option>
           </select>
         </div>
       </div>
       {formError ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}
-      <Button type="submit">{isPending ? "Creating..." : "Create class"}</Button>
+      <Button type="submit">{isPending ? t("forms.saving") : t("admin.forms.createClass")}</Button>
     </form>
   );
 }

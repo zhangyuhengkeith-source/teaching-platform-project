@@ -1,5 +1,6 @@
 import { ScrollText } from "lucide-react";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { AdminSubmissionTable } from "@/components/domain/admin-submission-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FilterBar } from "@/components/shared/filter-bar";
@@ -14,14 +15,14 @@ export default async function AdminSubmissionsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Track draft, submitted, returned, and completed elective submissions across managed tasks." title="Manage Submissions" />
+      <PageHeader description={<TranslationText translationKey="admin.submissions.description" />} title={<TranslationText translationKey="admin.submissions.title" />} />
       <FilterBar>
-        <SearchInput placeholder="Search submissions" />
+        <SearchInput placeholderKey="admin.submissions.searchPlaceholder" />
       </FilterBar>
       {submissions.length > 0 ? (
         <AdminSubmissionTable items={submissions} />
       ) : (
-        <EmptyState description="No submissions are available yet for the electives you manage." icon={ScrollText} title="No submissions yet" />
+        <EmptyState description={<TranslationText translationKey="admin.submissions.emptyDescription" />} icon={ScrollText} title={<TranslationText translationKey="admin.submissions.emptyTitle" />} />
       )}
     </div>
   );

@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+import { FolderKanban } from "lucide-react";
 
+import { TranslationText } from "@/components/common/translation-text";
 import { ElectiveForm } from "@/components/domain/elective-form";
 import { TaskCard } from "@/components/domain/task-card";
 import { TaskForm } from "@/components/domain/task-form";
@@ -9,7 +11,6 @@ import { SectionCard } from "@/components/shared/section-card";
 import { requireRole } from "@/lib/auth/require-role";
 import { getManageableElectiveById, listManageableTasksForElective } from "@/lib/queries/electives";
 import { listResourcesForSpace } from "@/lib/queries/resources";
-import { FolderKanban } from "lucide-react";
 
 export default async function EditElectivePage({
   params,
@@ -28,8 +29,8 @@ export default async function EditElectivePage({
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Update elective settings, grouping policy, and the published task list used by students." title={`Edit ${elective.title}`} />
-      <SectionCard description="Core elective metadata and grouping rules." title="Elective settings">
+      <PageHeader description={<TranslationText translationKey="admin.electives.editDescription" />} title={<TranslationText translationKey="admin.electives.editTitle" values={{ title: elective.title }} />} />
+      <SectionCard description={<TranslationText translationKey="admin.electives.settingsDescription" />} title={<TranslationText translationKey="admin.electives.settingsTitle" />}>
         <ElectiveForm
           initialValues={{
             id: elective.id,
@@ -45,11 +46,11 @@ export default async function EditElectivePage({
         />
       </SectionCard>
 
-      <SectionCard description="Create the next milestone or assignment for this elective." title="Add task">
+      <SectionCard description={<TranslationText translationKey="admin.electives.addTaskDescription" />} title={<TranslationText translationKey="admin.electives.addTaskTitle" />}>
         <TaskForm mode="create" resources={resources} spaceId={elective.id} />
       </SectionCard>
 
-      <SectionCard description="Existing task workflow for this elective." title="Manage tasks">
+      <SectionCard description={<TranslationText translationKey="admin.electives.tasksDescription" />} title={<TranslationText translationKey="admin.electives.tasksTitle" />}>
         {tasks.length > 0 ? (
           <div className="space-y-6">
             {tasks.map((task) => (
@@ -60,7 +61,7 @@ export default async function EditElectivePage({
             ))}
           </div>
         ) : (
-          <EmptyState description="No tasks have been created for this elective yet." icon={FolderKanban} title="No tasks yet" />
+          <EmptyState description={<TranslationText translationKey="admin.electives.emptyTasksDescription" />} icon={FolderKanban} title={<TranslationText translationKey="admin.electives.emptyTasksTitle" />} />
         )}
       </SectionCard>
     </div>
