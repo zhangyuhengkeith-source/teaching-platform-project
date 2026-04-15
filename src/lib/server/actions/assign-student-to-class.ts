@@ -19,15 +19,24 @@ export async function assignStudentToClassAction(input: unknown) {
 
   const [profile, space] = await Promise.all([getProfileByUserId(parsed.profile_id), getSpaceById(parsed.space_id)]);
 
-  if (!profile || profile.role !== "student" || profile.userType !== "internal") {
-    throw new Error("Only internal student accounts can be assigned to classes.");
+  if (!profile) {
+    throw new Error("The selected user does not exist.");
+  }
+
+  const membershipRole = profile.role === "teacher" ? "teacher" : profile.role === "student" && profile.userType === "internal" ? "student" : null;
+
+  if (!membershipRole) {
+    throw new Error("Only teacher accounts or internal student accounts can be assigned to classes.");
   }
 
   if (!space || space.type !== "class") {
     throw new Error("The selected class does not exist.");
   }
 
-  const membership = await assignStudentToClass(parsed);
+  const membership = await assignStudentToClass({
+    ...parsed,
+    membership_role: membershipRole,
+  });
 
   revalidatePath("/admin/users");
   revalidatePath("/waiting-assignment");

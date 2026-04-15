@@ -93,7 +93,7 @@ export async function assignStudentToClass(input: AssignStudentToClassInput): Pr
       id: crypto.randomUUID(),
       spaceId: input.space_id,
       profileId: input.profile_id,
-      membershipRole: "student",
+      membershipRole: input.membership_role,
       status: "active",
       joinedAt: new Date().toISOString(),
     };
@@ -102,7 +102,7 @@ export async function assignStudentToClass(input: AssignStudentToClassInput): Pr
   const payload = {
     space_id: input.space_id,
     profile_id: input.profile_id,
-    membership_role: "student" as const,
+    membership_role: input.membership_role,
     status: "active" as const,
     joined_at: new Date().toISOString(),
   };
@@ -114,7 +114,7 @@ export async function assignStudentToClass(input: AssignStudentToClassInput): Pr
     .single();
 
   if (error || !data) {
-    throw new Error(error?.message ?? "Failed to assign student to class.");
+    throw new Error(error?.message ?? "Failed to assign user to class.");
   }
 
   return {

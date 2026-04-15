@@ -14,12 +14,14 @@ export default async function AdminUsersPage() {
   const memberships = (await Promise.all(classes.map((space) => listMembershipsForSpace(space.id)))).flat();
   const classMap = new Map(classes.map((space) => [space.id, space]));
   const membershipsByProfile = memberships.reduce<Record<string, string[]>>((accumulator, membership) => {
-    if (membership.membershipRole !== "student" || membership.status !== "active") {
+    if (membership.status !== "active") {
       return accumulator;
     }
 
     accumulator[membership.profileId] ??= [];
-    accumulator[membership.profileId].push(membership.spaceId);
+    if (!accumulator[membership.profileId].includes(membership.spaceId)) {
+      accumulator[membership.profileId].push(membership.spaceId);
+    }
     return accumulator;
   }, {});
   const enrichedUsers = users.map((user) => {

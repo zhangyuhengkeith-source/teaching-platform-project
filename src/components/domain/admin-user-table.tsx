@@ -66,7 +66,7 @@ function AdminUserRow({ item, classes }: { item: AdminUserRowData; classes: Spac
   const [assignmentMessage, setAssignmentMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const canAssignClass = role === "student" && userType === "internal" && classes.length > 0;
+  const canAssignClass = (role === "teacher" || (role === "student" && userType === "internal")) && classes.length > 0;
 
   return (
     <tr className="border-t border-border">
@@ -146,7 +146,7 @@ function AdminUserRow({ item, classes }: { item: AdminUserRowData; classes: Spac
                       profile_id: item.id,
                       space_id: selectedClassId,
                     });
-                    setAssignmentMessage("Class assigned");
+                    setAssignmentMessage(role === "teacher" ? "Teacher assigned to class" : "Student assigned to class");
                   } catch (error) {
                     setAssignmentMessage(error instanceof Error ? error.message : "Assignment failed");
                   }

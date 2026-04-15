@@ -30,6 +30,7 @@ export interface UpdateProfileAccessInput {
 export interface AssignStudentToClassInput {
   profile_id: string;
   space_id: string;
+  membership_role: "teacher" | "student";
 }
 
 export interface CreateSpaceInput {
