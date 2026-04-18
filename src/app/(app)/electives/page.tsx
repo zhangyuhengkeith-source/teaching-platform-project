@@ -4,7 +4,8 @@ import { ElectiveCard } from "@/components/domain/elective-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { requireElectiveViewer } from "@/lib/auth/require-elective-access";
-import { listElectiveSpacesForUser, listGroupsForElective, listTasksForElective } from "@/lib/queries/electives";
+import { listElectiveSpacesForUser, listGroupsForElective } from "@/lib/queries/electives";
+import { listTasksForElective } from "@/lib/queries/tasks";
 
 export default async function ElectivesPage() {
   const profile = await requireElectiveViewer();

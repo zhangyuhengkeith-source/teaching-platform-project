@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 
 import { requireAuth } from "@/lib/auth/require-auth";
-import { getElectiveSpaceBySlugForUser, getTaskBySlugForUser } from "@/lib/queries/electives";
+import { getElectiveSpaceBySlugForUser } from "@/lib/queries/electives";
+import { getTaskBySlugForElective } from "@/lib/queries/tasks";
 import { isExternalStudent } from "@/lib/permissions/profiles";
 
 export async function requireElectiveViewer() {
@@ -27,7 +28,7 @@ export async function requireAccessibleElectiveBySlug(spaceSlug: string) {
 
 export async function requireAccessibleElectiveTask(spaceSlug: string, taskSlug: string) {
   const profile = await requireElectiveViewer();
-  const task = await getTaskBySlugForUser(spaceSlug, taskSlug, profile);
+  const task = await getTaskBySlugForElective(spaceSlug, taskSlug, profile);
 
   if (!task) {
     notFound();

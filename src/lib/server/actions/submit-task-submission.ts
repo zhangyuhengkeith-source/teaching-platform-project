@@ -2,15 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireElectiveViewer } from "@/lib/auth/require-elective-access";
+import { requireAuth } from "@/lib/auth/require-auth";
 import { submitTaskSubmission } from "@/lib/mutations/electives";
-import { canEditSubmission } from "@/lib/permissions/electives";
-import { getGroupForUserInElective, getSubmissionForTaskAndUserOrGroup, getTaskById } from "@/lib/queries/electives";
+import { canEditSubmission } from "@/lib/permissions/tasks";
+import { getGroupForUserInElective } from "@/lib/queries/electives";
 import { getSpaceById, listMembershipsForSpace } from "@/lib/queries/spaces";
+import { getSubmissionForTaskAndUserOrGroup, getTaskById } from "@/lib/queries/tasks";
 import { submissionDraftSchema } from "@/lib/validations/electives";
 
 export async function submitTaskSubmissionAction(input: unknown) {
-  const profile = await requireElectiveViewer();
+  const profile = await requireAuth();
   const parsed = submissionDraftSchema.parse(input);
   const task = await getTaskById(parsed.task_id);
 
@@ -19,12 +20,12 @@ export async function submitTaskSubmissionAction(input: unknown) {
   }
 
   const space = await getSpaceById(task.spaceId);
-  if (!space || space.type !== "elective") {
-    throw new Error("Elective not found.");
+  if (!space || (space.type !== "elective" && space.type !== "class")) {
+    throw new Error("Space not found.");
   }
 
   const memberships = await listMembershipsForSpace(space.id);
-  const group = await getGroupForUserInElective(space.id, profile.id);
+  const group = space.type === "elective" ? await getGroupForUserInElective(space.id, profile.id) : null;
   const submission = await getSubmissionForTaskAndUserOrGroup(task, profile, group);
 
   if (task.submissionMode === "group" && !group) {
@@ -36,8 +37,10 @@ export async function submitTaskSubmissionAction(input: unknown) {
   }
 
   const saved = await submitTaskSubmission(profile, { task, group }, parsed);
-  revalidatePath(`/electives/${space.slug}`);
-  revalidatePath(`/electives/${space.slug}/tasks/${task.slug}`);
+  const learnerRootPath = space.type === "class" ? `/classes/${space.slug}` : `/electives/${space.slug}`;
+
+  revalidatePath(learnerRootPath);
+  revalidatePath(`${learnerRootPath}/tasks/${task.slug}`);
   revalidatePath("/admin/submissions");
 
   return saved;

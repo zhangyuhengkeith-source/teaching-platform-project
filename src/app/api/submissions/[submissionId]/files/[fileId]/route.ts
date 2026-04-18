@@ -4,9 +4,10 @@ import { getSession } from "@/lib/auth/get-session";
 import { ROUTES } from "@/lib/constants/routes";
 import { mapTaskSubmissionFileRow, mapTaskSubmissionRow } from "@/lib/db/mappers";
 import { SUBMISSION_FILE_SIGNED_URL_TTL_SECONDS, splitStorageFilePath } from "@/lib/db/storage";
-import { canViewSubmission } from "@/lib/permissions/electives";
-import { getGroupForUserInElective, getTaskById } from "@/lib/queries/electives";
+import { canViewSubmission } from "@/lib/permissions/tasks";
 import { getSpaceById, listMembershipsForSpace } from "@/lib/queries/spaces";
+import { getGroupForUserInElective } from "@/lib/queries/electives";
+import { getTaskById } from "@/lib/queries/tasks";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -54,7 +55,7 @@ export async function GET(
   }
 
   const memberships = await listMembershipsForSpace(space.id);
-  const group = submission.submitterGroupId ? await getGroupForUserInElective(space.id, session.profile.id) : null;
+  const group = space.type === "elective" && submission.submitterGroupId ? await getGroupForUserInElective(space.id, session.profile.id) : null;
   if (!canViewSubmission(session.profile, submission, group, { space, memberships })) {
     return NextResponse.json({ message: "Submission file not found." }, { status: 404 });
   }

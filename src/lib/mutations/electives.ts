@@ -1,6 +1,7 @@
 import { mapGroupMemberRow, mapGroupRow, mapTaskRow, mapTaskSubmissionFileRow, mapTaskSubmissionRow } from "@/lib/db/mappers";
 import { splitStorageFilePath } from "@/lib/db/storage";
-import { getGroupById, getManageableSubmissionById } from "@/lib/queries/electives";
+import { getGroupById } from "@/lib/queries/electives";
+import { getManageableSubmissionById } from "@/lib/queries/tasks";
 import {
   seedGroupMembers,
   seedGroups,
@@ -432,6 +433,54 @@ export async function updateTask(input: UpdateTaskInput): Promise<TaskSummary> {
   }
 
   return mapTaskRow(data);
+}
+
+export async function deleteTask(taskId: string): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    for (let index = seedSubmissionFiles.length - 1; index >= 0; index -= 1) {
+      const file = seedSubmissionFiles[index];
+      if (!file) {
+        continue;
+      }
+
+      const submission = seedTaskSubmissions.find((entry) => entry.id === file.submissionId);
+      if (submission?.taskId === taskId) {
+        seedSubmissionFiles.splice(index, 1);
+      }
+    }
+
+    for (let index = seedTaskSubmissions.length - 1; index >= 0; index -= 1) {
+      if (seedTaskSubmissions[index]?.taskId === taskId) {
+        seedTaskSubmissions.splice(index, 1);
+      }
+    }
+
+    for (let index = seedTasks.length - 1; index >= 0; index -= 1) {
+      if (seedTasks[index]?.id === taskId) {
+        seedTasks.splice(index, 1);
+      }
+    }
+
+    return;
+  }
+
+  const { data: submissionFiles, error: submissionFilesError } = await supabase
+    .from("task_submission_files")
+    .select("file_path, task_submissions!inner(task_id)")
+    .eq("task_submissions.task_id", taskId);
+
+  if (submissionFilesError) {
+    throw new Error(submissionFilesError.message);
+  }
+
+  await removeStoredSubmissionFiles((submissionFiles ?? []).map((file) => file.file_path));
+
+  const { error } = await supabase.from("tasks").delete().eq("id", taskId);
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 async function syncSubmissionFiles(submissionId: string, files: CreateTaskSubmissionInput["file_metadata"]) {

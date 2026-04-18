@@ -1,49 +1,39 @@
 import { notFound } from "next/navigation";
 import { FileText } from "lucide-react";
 
+import { ResourceCard } from "@/components/domain/resource-card";
 import { SubmissionFeedbackPanel } from "@/components/domain/submission-feedback-panel";
 import { SubmissionPanel } from "@/components/domain/submission-panel";
 import { TaskDetailPanel } from "@/components/domain/task-detail-panel";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
-import { requireAccessibleElectiveBySlug } from "@/lib/auth/require-elective-access";
+import { requireAccessibleClassBySlug } from "@/lib/auth/require-class-access";
 import { canEditSubmission } from "@/lib/permissions/tasks";
-import { getGroupForUserInElective } from "@/lib/queries/electives";
 import { getResourceById } from "@/lib/queries/resources";
-import { getTaskBySlugForElective } from "@/lib/queries/tasks";
-import { ResourceCard } from "@/components/domain/resource-card";
+import { getTaskBySlugForClass } from "@/lib/queries/tasks";
 
-export default async function ElectiveTaskPage({
+export default async function ClassTaskPage({
   params,
 }: {
   params: Promise<{ spaceSlug: string; taskSlug: string }>;
 }) {
   const { spaceSlug, taskSlug } = await params;
-  const { profile, space } = await requireAccessibleElectiveBySlug(spaceSlug);
-  const task = await getTaskBySlugForElective(spaceSlug, taskSlug, profile);
+  const { profile, space } = await requireAccessibleClassBySlug(spaceSlug);
+  const task = await getTaskBySlugForClass(spaceSlug, taskSlug, profile);
 
   if (!task) {
     notFound();
   }
 
-  const [group, templateResource] = await Promise.all([
-    getGroupForUserInElective(space.id, profile.id),
-    task.templateResourceId ? getResourceById(task.templateResourceId) : Promise.resolve(null),
-  ]);
-
+  const templateResource = task.templateResourceId ? await getResourceById(task.templateResourceId) : null;
   const memberships = space.memberships ?? [];
-  const editable = canEditSubmission(profile, task.submission ?? null, group, task, { space, memberships });
-  const contextLabel =
-    task.submissionMode === "group"
-      ? group
-        ? `Group submission for ${group.name}${group.leaderProfileId === profile.id ? " as group leader" : ""}.`
-        : "This is a group task. Join a group before submitting work."
-      : `Individual submission for ${profile.fullName}.`;
+  const editable = canEditSubmission(profile, task.submission ?? null, null, task, { space, memberships });
+  const contextLabel = `Individual submission for ${profile.fullName}.`;
 
   return (
     <div className="space-y-6">
-      <PageHeader description={task.brief ?? "Complete the task, save drafts, and submit work for teacher review."} title={task.title} />
+      <PageHeader description={task.brief ?? "Complete the class task, attach supporting files, and submit work for review."} title={task.title} />
       <TaskDetailPanel task={task} />
 
       {templateResource ? (
@@ -61,10 +51,10 @@ export default async function ElectiveTaskPage({
         </SectionCard>
       ) : null}
 
-      {task.submissionMode === "group" && !group && !editable ? (
-        <EmptyState description="Join a group in this elective before you can start the submission workflow for this task." icon={FileText} title="Group required" />
+      {task.submissionMode === "group" ? (
+        <EmptyState description="This class task is configured for group submission, which is not supported in the class workflow." icon={FileText} title="Unsupported task configuration" />
       ) : (
-        <SectionCard description="Save a draft, submit, and review returned feedback here." title="Submission">
+        <SectionCard description="Save a draft, upload attachments, and submit your work here." title="Submission">
           <SubmissionPanel canEdit={editable} contextLabel={contextLabel} submission={task.submission ?? null} task={task} />
         </SectionCard>
       )}

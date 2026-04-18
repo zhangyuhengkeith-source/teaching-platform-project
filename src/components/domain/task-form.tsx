@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useI18n } from "@/hooks/use-i18n";
 import { createTaskAction } from "@/lib/server/actions/create-task";
+import { deleteTaskAction } from "@/lib/server/actions/delete-task";
 import { updateTaskAction } from "@/lib/server/actions/update-task";
 import {
   createTaskSchema,
@@ -45,11 +46,13 @@ function fromDateTimeInputValue(value?: string | null) {
 export function TaskForm({
   mode,
   spaceId,
+  spaceType,
   resources,
   initialValues,
 }: {
   mode: "create" | "edit";
   spaceId: string;
+  spaceType: "class" | "elective";
   resources: ResourceSummary[];
   initialValues?: Partial<TaskSummary> & { id?: string };
 }) {
@@ -65,7 +68,7 @@ export function TaskForm({
       slug: initialValues?.slug ?? "",
       brief: initialValues?.brief ?? "",
       body: initialValues?.body ?? "",
-      submission_mode: initialValues?.submissionMode ?? "group",
+      submission_mode: initialValues?.submissionMode ?? (spaceType === "class" ? "individual" : "group"),
       due_at: toDateTimeInputValue(initialValues?.dueAt),
       allow_resubmission: initialValues?.allowResubmission ?? true,
       template_resource_id: initialValues?.templateResourceId ?? "",
@@ -93,7 +96,7 @@ export function TaskForm({
             slug: "",
             brief: "",
             body: "",
-            submission_mode: "group",
+            submission_mode: spaceType === "class" ? "individual" : "group",
             due_at: "",
             allow_resubmission: true,
             template_resource_id: "",
@@ -109,6 +112,22 @@ export function TaskForm({
       }
     });
   });
+
+  const onDelete = () => {
+    if (mode !== "edit" || !initialValues?.id || isPending || !window.confirm("Delete this task? Existing submissions will be removed as well.")) {
+      return;
+    }
+
+    setFormError(null);
+    startTransition(async () => {
+      try {
+        await deleteTaskAction(initialValues.id!);
+        router.refresh();
+      } catch (error) {
+        setFormError(error instanceof Error ? error.message : t("admin.userTable.saveFailed"));
+      }
+    });
+  };
 
   return (
     <form className="space-y-5" onSubmit={onSubmit}>
@@ -136,7 +155,7 @@ export function TaskForm({
         <div className="space-y-2">
           <label className="text-sm font-medium">{t("admin.forms.submissionMode")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("submission_mode")}>
-            <option value="group">{t("admin.forms.groupSubmission")}</option>
+            {spaceType === "elective" ? <option value="group">{t("admin.forms.groupSubmission")}</option> : null}
             <option value="individual">{t("admin.forms.individualSubmission")}</option>
           </select>
         </div>
@@ -169,7 +188,14 @@ export function TaskForm({
         {t("admin.forms.allowResubmission")}
       </label>
       {formError ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}
-      <Button type="submit">{isPending ? t("forms.saving") : mode === "create" ? t("admin.forms.createTask") : t("admin.forms.updateTask")}</Button>
+      <div className="flex flex-wrap gap-3">
+        <Button type="submit">{isPending ? t("forms.saving") : mode === "create" ? t("admin.forms.createTask") : t("admin.forms.updateTask")}</Button>
+        {mode === "edit" && initialValues?.id ? (
+          <Button onClick={onDelete} type="button" variant="outline">
+            {t("common.delete")}
+          </Button>
+        ) : null}
+      </div>
     </form>
   );
 }

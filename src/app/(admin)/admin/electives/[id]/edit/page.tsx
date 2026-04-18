@@ -9,8 +9,9 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
 import { requireRole } from "@/lib/auth/require-role";
-import { getManageableElectiveById, listManageableTasksForElective } from "@/lib/queries/electives";
+import { getManageableElectiveById } from "@/lib/queries/electives";
 import { listResourcesForSpace } from "@/lib/queries/resources";
+import { listManageableTasksForElective } from "@/lib/queries/tasks";
 
 export default async function EditElectivePage({
   params,
@@ -47,7 +48,7 @@ export default async function EditElectivePage({
       </SectionCard>
 
       <SectionCard description={<TranslationText translationKey="admin.electives.addTaskDescription" />} title={<TranslationText translationKey="admin.electives.addTaskTitle" />}>
-        <TaskForm mode="create" resources={resources} spaceId={elective.id} />
+        <TaskForm mode="create" resources={resources} spaceId={elective.id} spaceType="elective" />
       </SectionCard>
 
       <SectionCard description={<TranslationText translationKey="admin.electives.tasksDescription" />} title={<TranslationText translationKey="admin.electives.tasksTitle" />}>
@@ -56,7 +57,7 @@ export default async function EditElectivePage({
             {tasks.map((task) => (
               <div className="space-y-4 rounded-2xl border border-border bg-slate-50/60 p-5" key={task.id}>
                 <TaskCard task={task} />
-                <TaskForm initialValues={{ ...task, id: task.id }} mode="edit" resources={resources} spaceId={elective.id} />
+                <TaskForm initialValues={{ ...task, id: task.id }} mode="edit" resources={resources} spaceId={elective.id} spaceType="elective" />
               </div>
             ))}
           </div>

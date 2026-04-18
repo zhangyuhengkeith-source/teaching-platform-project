@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
 import { formatDateTime } from "@/lib/utils/format";
 import { requireRole } from "@/lib/auth/require-role";
-import { getManageableSubmissionById } from "@/lib/queries/electives";
+import { getManageableSubmissionById } from "@/lib/queries/tasks";
 
 export default async function AdminSubmissionDetailPage({
   params,

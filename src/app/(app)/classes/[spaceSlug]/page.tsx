@@ -1,9 +1,10 @@
-import { BellRing, BookOpen, Layers3 } from "lucide-react";
+import { BellRing, BookOpen, FolderKanban, Layers3 } from "lucide-react";
 
 import { ChapterCard } from "@/components/domain/chapter-card";
 import { ExerciseSetCard } from "@/components/domain/exercise-set-card";
 import { NoticeCard } from "@/components/domain/notice-card";
 import { ResourceCard } from "@/components/domain/resource-card";
+import { TaskCard } from "@/components/domain/task-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
@@ -11,6 +12,7 @@ import { requireAccessibleClassBySlug } from "@/lib/auth/require-class-access";
 import { listExerciseSetsForSpace } from "@/lib/queries/exercises";
 import { listNoticesForSpace } from "@/lib/queries/notices";
 import { listResourcesForSpace } from "@/lib/queries/resources";
+import { listTasksForClass } from "@/lib/queries/tasks";
 import { isTeacher } from "@/lib/permissions/profiles";
 
 export default async function ClassDetailPage({
@@ -20,14 +22,16 @@ export default async function ClassDetailPage({
 }) {
   const { spaceSlug } = await params;
   const { profile, space } = await requireAccessibleClassBySlug(spaceSlug);
-  const [resources, notices, exerciseSets] = await Promise.all([
+  const [resources, notices, exerciseSets, tasks] = await Promise.all([
     listResourcesForSpace(space.id),
     listNoticesForSpace(space.id),
     listExerciseSetsForSpace(space.id, profile),
+    listTasksForClass(space.id, profile),
   ]);
 
   const visibleResources = isTeacher(profile) ? resources : resources.filter((resource) => resource.status === "published");
   const visibleNotices = isTeacher(profile) ? notices : notices.filter((notice) => notice.status === "published");
+  const visibleTasks = isTeacher(profile) ? tasks : tasks.filter((task) => task.status === "published");
 
   const resourceCountBySection = new Map<string, number>();
   visibleResources.forEach((resource) => {
@@ -41,7 +45,7 @@ export default async function ClassDetailPage({
   return (
     <div className="space-y-6">
       <PageHeader description={space.description ?? "A calm home for class materials, section-based learning, and current notices."} title={space.title} />
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <SectionCard description="Structured teaching chapters or weekly blocks" title="Total sections">
           <div className="flex items-center justify-between">
             <p className="text-3xl font-semibold">{space.sections.length}</p>
@@ -52,6 +56,12 @@ export default async function ClassDetailPage({
           <div className="flex items-center justify-between">
             <p className="text-3xl font-semibold">{visibleResources.length}</p>
             <BookOpen className="h-5 w-5 text-primary" />
+          </div>
+        </SectionCard>
+        <SectionCard description="Assignments and submission tasks in this class" title="Tasks">
+          <div className="flex items-center justify-between">
+            <p className="text-3xl font-semibold">{visibleTasks.length}</p>
+            <FolderKanban className="h-5 w-5 text-primary" />
           </div>
         </SectionCard>
         <SectionCard description={latestNotice} title="Latest notice">
@@ -124,6 +134,18 @@ export default async function ClassDetailPage({
               </div>
             ) : (
               <EmptyState description="Practice sets will appear here once the teacher publishes them." icon={BookOpen} title="No practice yet" />
+            )}
+          </SectionCard>
+
+          <SectionCard description="Teacher-published class tasks and submission checkpoints." title="Tasks">
+            {visibleTasks.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {visibleTasks.map((task) => (
+                  <TaskCard href={`/classes/${space.slug}/tasks/${task.slug}`} key={task.id} task={task} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState description="Tasks will appear here once the teacher publishes them." icon={FolderKanban} title="No tasks yet" />
             )}
           </SectionCard>
         </div>

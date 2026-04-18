@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/auth/require-role";
 import { returnTaskSubmissionWithFeedback } from "@/lib/mutations/electives";
-import { getTaskById } from "@/lib/queries/electives";
 import { getSpaceById } from "@/lib/queries/spaces";
+import { getTaskById } from "@/lib/queries/tasks";
 import { submissionReviewSchema } from "@/lib/validations/electives";
 
 export async function reviewTaskSubmissionAction(input: unknown) {
@@ -19,8 +19,9 @@ export async function reviewTaskSubmissionAction(input: unknown) {
   revalidatePath(`/admin/submissions/${updated.id}`);
 
   if (space?.slug && task?.slug) {
-    revalidatePath(`/electives/${space.slug}`);
-    revalidatePath(`/electives/${space.slug}/tasks/${task.slug}`);
+    const learnerRootPath = space.type === "class" ? `/classes/${space.slug}` : `/electives/${space.slug}`;
+    revalidatePath(learnerRootPath);
+    revalidatePath(`${learnerRootPath}/tasks/${task.slug}`);
   }
 
   return updated;

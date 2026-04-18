@@ -10,9 +10,10 @@ import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
 import { Button } from "@/components/ui/button";
 import { requireAccessibleElectiveBySlug } from "@/lib/auth/require-elective-access";
-import { listGroupsForElective, getGroupForUserInElective, listTasksForElective } from "@/lib/queries/electives";
+import { listGroupsForElective, getGroupForUserInElective } from "@/lib/queries/electives";
 import { listNoticesForSpace } from "@/lib/queries/notices";
 import { listResourcesForSpace } from "@/lib/queries/resources";
+import { listTasksForElective } from "@/lib/queries/tasks";
 
 export default async function ElectiveDetailPage({
   params,

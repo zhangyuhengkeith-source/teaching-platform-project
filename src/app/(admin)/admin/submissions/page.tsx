@@ -7,7 +7,7 @@ import { FilterBar } from "@/components/shared/filter-bar";
 import { PageHeader } from "@/components/shared/page-header";
 import { SearchInput } from "@/components/shared/search-input";
 import { requireRole } from "@/lib/auth/require-role";
-import { listManageableSubmissions } from "@/lib/queries/electives";
+import { listManageableSubmissions } from "@/lib/queries/tasks";
 
 export default async function AdminSubmissionsPage() {
   const profile = await requireRole(["super_admin", "teacher"]);
