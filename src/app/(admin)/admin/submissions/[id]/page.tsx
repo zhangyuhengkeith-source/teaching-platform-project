@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { TranslationText } from "@/components/common/translation-text";
+import { SubmissionFileList } from "@/components/domain/submission-file-list";
 import { SubmissionFeedbackPanel } from "@/components/domain/submission-feedback-panel";
 import { SubmissionReviewPanel } from "@/components/domain/submission-review-panel";
 import { SubmissionStatusStepper } from "@/components/domain/submission-status-stepper";
@@ -50,6 +51,10 @@ export default async function AdminSubmissionDetailPage({
         <div className="whitespace-pre-wrap rounded-2xl border border-border bg-slate-50/70 p-4 text-sm leading-7 text-muted-foreground">
           {submission.textContent ?? <TranslationText translationKey="admin.submissions.emptyContent" />}
         </div>
+      </SectionCard>
+
+      <SectionCard description="Attachments submitted with this work." title="Attachments">
+        <SubmissionFileList files={submission.files ?? []} submissionId={submission.id} showCreatedAt />
       </SectionCard>
 
       <SectionCard description={<TranslationText translationKey="admin.submissions.reviewDescription" />} title={<TranslationText translationKey="admin.submissions.reviewTitle" />}>

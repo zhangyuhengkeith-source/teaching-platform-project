@@ -1,19 +1,45 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
+import { SubmissionFileList } from "@/components/domain/submission-file-list";
 import { SubmissionStatusStepper } from "@/components/domain/submission-status-stepper";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useI18n } from "@/hooks/use-i18n";
+import {
+  MAX_SUBMISSION_FILE_SIZE_BYTES,
+  STORAGE_BUCKETS,
+  buildSubmissionObjectPath,
+} from "@/lib/db/storage";
 import { saveTaskSubmissionDraftAction } from "@/lib/server/actions/save-task-submission-draft";
 import { submitTaskSubmissionAction } from "@/lib/server/actions/submit-task-submission";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { submissionDraftSchema, type SubmissionDraftSchema } from "@/lib/validations/electives";
-import { formatDateTime } from "@/lib/utils/format";
-import type { TaskDetail, TaskSubmissionSummary } from "@/types/domain";
+import { formatDateTime, formatFileSize } from "@/lib/utils/format";
+import type { SubmissionFileSummary, TaskDetail, TaskSubmissionSummary } from "@/types/domain";
+
+interface PendingSubmissionFile {
+  clientId: string;
+  file: File;
+  fileName: string;
+  mimeType: string | null;
+  fileSize: number | null;
+}
+
+function createPendingSubmissionFile(file: File): PendingSubmissionFile {
+  return {
+    clientId: crypto.randomUUID(),
+    file,
+    fileName: file.name,
+    mimeType: file.type || null,
+    fileSize: file.size,
+  };
+}
 
 export function SubmissionPanel({
   task,
@@ -29,6 +55,8 @@ export function SubmissionPanel({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
+  const [existingFiles, setExistingFiles] = useState<SubmissionFileSummary[]>(submission?.files ?? []);
+  const [pendingFiles, setPendingFiles] = useState<PendingSubmissionFile[]>([]);
   const { t } = useI18n();
   const form = useForm<SubmissionDraftSchema>({
     resolver: zodResolver(submissionDraftSchema),
@@ -37,22 +65,130 @@ export function SubmissionPanel({
       task_id: task.id,
       text_content: submission?.textContent ?? "",
       content_json: submission?.contentJson ?? null,
-      file_metadata: null,
+      file_metadata: (submission?.files ?? []).map((file) => ({
+        id: file.id,
+        file_path: file.filePath,
+        file_name: file.fileName,
+        mime_type: file.mimeType,
+        file_size: file.fileSize,
+      })),
     },
   });
+
+  async function cleanupUploadedObjects(uploadedObjects: Array<{ bucket: string; objectPath: string }>) {
+    const supabase = createSupabaseBrowserClient();
+
+    if (!supabase || uploadedObjects.length === 0) {
+      return;
+    }
+
+    const groupedPaths = new Map<string, string[]>();
+    uploadedObjects.forEach(({ bucket, objectPath }) => {
+      groupedPaths.set(bucket, [...(groupedPaths.get(bucket) ?? []), objectPath]);
+    });
+
+    for (const [bucket, objectPaths] of groupedPaths.entries()) {
+      await supabase.storage.from(bucket).remove(objectPaths);
+    }
+  }
+
+  function handleFileSelection(event: ChangeEvent<HTMLInputElement>) {
+    setFormError(null);
+
+    const selectedFiles = Array.from(event.target.files ?? []);
+    if (selectedFiles.length === 0) {
+      return;
+    }
+
+    const oversizedFile = selectedFiles.find((file) => file.size > MAX_SUBMISSION_FILE_SIZE_BYTES);
+    if (oversizedFile) {
+      setFormError(`File ${oversizedFile.name} exceeds the ${formatFileSize(MAX_SUBMISSION_FILE_SIZE_BYTES)} limit.`);
+      event.target.value = "";
+      return;
+    }
+
+    setPendingFiles((current) => [...current, ...selectedFiles.map(createPendingSubmissionFile)]);
+    event.target.value = "";
+  }
+
+  function removeExistingFile(fileId: string) {
+    setExistingFiles((current) => current.filter((file) => file.id !== fileId));
+  }
+
+  function removePendingFile(clientId: string) {
+    setPendingFiles((current) => current.filter((file) => file.clientId !== clientId));
+  }
 
   const runAction = (mode: "draft" | "submit") =>
     form.handleSubmit((values) => {
       setFormError(null);
       startTransition(async () => {
+        let uploadedObjects: Array<{ bucket: string; objectPath: string }> = [];
+
         try {
-          if (mode === "draft") {
-            await saveTaskSubmissionDraftAction(values);
-          } else {
-            await submitTaskSubmissionAction(values);
+          const uploadedMetadata: Array<{
+            file_path: string;
+            file_name: string;
+            mime_type: string | null;
+            file_size: number | null;
+          }> = [];
+
+          if (pendingFiles.length > 0) {
+            const supabase = createSupabaseBrowserClient();
+            if (!supabase) {
+              throw new Error("Supabase storage is not configured.");
+            }
+
+            const spacePathSegment = task.spaceSlug ?? task.spaceId;
+            for (const pendingFile of pendingFiles) {
+              const objectPath = buildSubmissionObjectPath(spacePathSegment, task.slug, pendingFile.fileName);
+              const { error } = await supabase.storage.from(STORAGE_BUCKETS.submissionFiles).upload(objectPath, pendingFile.file, {
+                cacheControl: "3600",
+                upsert: false,
+                contentType: pendingFile.mimeType ?? undefined,
+              });
+
+              if (error) {
+                throw new Error(error.message);
+              }
+
+              uploadedObjects = [...uploadedObjects, { bucket: STORAGE_BUCKETS.submissionFiles, objectPath }];
+              uploadedMetadata.push({
+                file_path: `${STORAGE_BUCKETS.submissionFiles}/${objectPath}`,
+                file_name: pendingFile.fileName,
+                mime_type: pendingFile.mimeType,
+                file_size: pendingFile.fileSize,
+              });
+            }
           }
+
+          const payload = {
+            ...values,
+            file_metadata: [
+              ...existingFiles.map((file) => ({
+                id: file.id,
+                file_path: file.filePath,
+                file_name: file.fileName,
+                mime_type: file.mimeType,
+                file_size: file.fileSize,
+              })),
+              ...uploadedMetadata,
+            ],
+          };
+
+          if (mode === "draft") {
+            await saveTaskSubmissionDraftAction(payload);
+          } else {
+            await submitTaskSubmissionAction(payload);
+          }
+
           router.refresh();
         } catch (error) {
+          try {
+            await cleanupUploadedObjects(uploadedObjects);
+          } catch {
+            // Best-effort cleanup; surface the original error instead.
+          }
           setFormError(error instanceof Error ? error.message : t("forms.unableToSaveSubmission"));
         }
       });
@@ -79,9 +215,42 @@ export function SubmissionPanel({
         <div className="space-y-2">
           <label className="text-sm font-medium">{t("forms.writtenResponse")}</label>
           <Textarea disabled={!canEdit || isPending} minLength={10} rows={12} {...form.register("text_content")} />
-          <p className="text-xs text-muted-foreground">{t("forms.attachmentsHint")}</p>
+          <p className="text-xs text-muted-foreground">
+            Upload optional supporting files. Each file can be up to {formatFileSize(MAX_SUBMISSION_FILE_SIZE_BYTES)}.
+          </p>
           {form.formState.errors.text_content ? <p className="text-sm text-red-600">{form.formState.errors.text_content.message}</p> : null}
         </div>
+
+        <div className="space-y-3 rounded-2xl border border-dashed border-border bg-slate-50 p-4">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-slate-900">Attachments</p>
+            <p className="text-sm text-muted-foreground">Submitted files stay permission-protected and open through signed download links.</p>
+          </div>
+          {canEdit ? <Input disabled={isPending} multiple onChange={handleFileSelection} type="file" /> : null}
+          <SubmissionFileList
+            emptyText={canEdit ? "No uploaded attachments yet. Add files above if needed." : "No attachments were submitted."}
+            files={existingFiles}
+            onRemove={canEdit ? removeExistingFile : undefined}
+            submissionId={submission?.id}
+            showCreatedAt
+          />
+          {pendingFiles.length > 0 ? (
+            <div className="space-y-2 rounded-xl border border-border bg-white p-3">
+              {pendingFiles.map((file) => (
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-2 last:border-b-0 last:pb-0" key={file.clientId}>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-900">{file.fileName}</p>
+                    <p className="text-xs text-muted-foreground">Queued for upload{formatFileSize(file.fileSize) ? ` · ${formatFileSize(file.fileSize)}` : ""}</p>
+                  </div>
+                  <Button onClick={() => removePendingFile(file.clientId)} size="sm" type="button" variant="ghost">
+                    Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
         {formError ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}
         {canEdit ? (
           <div className="flex flex-wrap gap-3">

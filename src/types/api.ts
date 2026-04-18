@@ -227,6 +227,7 @@ export interface CreateTaskSubmissionInput {
   text_content?: string | null;
   content_json?: Record<string, unknown> | null;
   file_metadata?: Array<{
+    id?: string;
     file_path: string;
     file_name: string;
     mime_type?: string | null;

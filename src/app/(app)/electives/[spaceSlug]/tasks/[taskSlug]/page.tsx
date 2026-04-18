@@ -49,6 +49,8 @@ export default async function ElectiveTaskPage({
         <SectionCard description="Optional teacher-provided template or starting resource." title="Template resource">
           <ResourceCard
             description={templateResource.description}
+            files={templateResource.files}
+            resourceId={templateResource.id}
             resourceType={templateResource.resourceType}
             status={templateResource.status}
             title={templateResource.title}

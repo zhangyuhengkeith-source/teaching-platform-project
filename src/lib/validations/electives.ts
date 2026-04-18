@@ -65,6 +65,7 @@ export const updateTaskSchema = createTaskSchema.partial().extend({
 });
 
 export const submissionFileSchema = z.object({
+  id: uuidField.optional(),
   file_path: z.string().trim().min(1),
   file_name: z.string().trim().min(1),
   mime_type: z.string().trim().optional().nullable(),

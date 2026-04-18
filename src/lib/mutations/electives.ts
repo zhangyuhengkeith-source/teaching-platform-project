@@ -1,4 +1,5 @@
 import { mapGroupMemberRow, mapGroupRow, mapTaskRow, mapTaskSubmissionFileRow, mapTaskSubmissionRow } from "@/lib/db/mappers";
+import { splitStorageFilePath } from "@/lib/db/storage";
 import { getGroupById, getManageableSubmissionById } from "@/lib/queries/electives";
 import {
   seedGroupMembers,
@@ -22,7 +23,7 @@ import type {
   UpdateTaskSubmissionDraftInput,
 } from "@/types/api";
 import type { AppUserProfile } from "@/types/auth";
-import type { GroupDetail, GroupMemberSummary, GroupSummary, SpaceSummary, TaskSubmissionSummary, TaskSummary } from "@/types/domain";
+import type { GroupDetail, GroupMemberSummary, GroupSummary, SpaceSummary, SubmissionFileSummary, TaskSubmissionSummary, TaskSummary } from "@/types/domain";
 import type { Json } from "@/types/database";
 import { createSpace, updateSpace } from "@/lib/mutations/spaces";
 
@@ -35,6 +36,60 @@ function deriveSubmissionStatusForSubmit(currentStatus: TaskSubmissionSummary["s
     return "resubmitted" as const;
   }
   return "submitted" as const;
+}
+
+type NormalizedSubmissionFileInput = {
+  id?: string;
+  file_path: string;
+  file_name: string;
+  mime_type: string | null;
+  file_size: number | null;
+};
+
+function normalizeSubmissionFileMetadata(files: CreateTaskSubmissionInput["file_metadata"]): NormalizedSubmissionFileInput[] {
+  return (files ?? []).map((file) => ({
+    ...file,
+    mime_type: file.mime_type ?? null,
+    file_size: file.file_size ?? null,
+  }));
+}
+
+function mapSubmissionFileInput(submissionId: string, file: NormalizedSubmissionFileInput): SubmissionFileSummary {
+  return {
+    id: file.id ?? crypto.randomUUID(),
+    submissionId,
+    filePath: file.file_path,
+    fileName: file.file_name,
+    mimeType: file.mime_type ?? null,
+    fileSize: file.file_size ?? null,
+    createdAt: nowIso(),
+  };
+}
+
+async function removeStoredSubmissionFiles(filePaths: string[]) {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase || filePaths.length === 0) {
+    return;
+  }
+
+  const groupedPaths = new Map<string, string[]>();
+
+  filePaths.forEach((filePath) => {
+    const parsed = splitStorageFilePath(filePath);
+    if (!parsed) {
+      return;
+    }
+
+    groupedPaths.set(parsed.bucket, [...(groupedPaths.get(parsed.bucket) ?? []), parsed.objectPath]);
+  });
+
+  for (const [bucket, objectPaths] of groupedPaths.entries()) {
+    const { error } = await supabase.storage.from(bucket).remove(objectPaths);
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
 }
 
 export async function createElectiveSpace(ownerId: string, input: CreateElectiveInput) {
@@ -379,40 +434,100 @@ export async function updateTask(input: UpdateTaskInput): Promise<TaskSummary> {
   return mapTaskRow(data);
 }
 
-async function upsertSubmissionFiles(submissionId: string, files: CreateTaskSubmissionInput["file_metadata"]) {
+async function syncSubmissionFiles(submissionId: string, files: CreateTaskSubmissionInput["file_metadata"]) {
   const supabase = await createSupabaseServerClient();
-  if (!files || files.length === 0) {
-    return [];
-  }
 
   if (!supabase) {
-    const created = files.map((file) => ({
-      id: crypto.randomUUID(),
-      submissionId,
-      filePath: file.file_path,
-      fileName: file.file_name,
-      mimeType: file.mime_type ?? null,
-      fileSize: file.file_size ?? null,
-      createdAt: nowIso(),
+    if (typeof files === "undefined") {
+      return seedSubmissionFiles.filter((file) => file.submissionId === submissionId);
+    }
+
+    const normalizedFiles = normalizeSubmissionFileMetadata(files);
+    const nextFiles = normalizedFiles.map((file) => mapSubmissionFileInput(submissionId, file));
+
+    for (let index = seedSubmissionFiles.length - 1; index >= 0; index -= 1) {
+      if (seedSubmissionFiles[index]?.submissionId === submissionId) {
+        seedSubmissionFiles.splice(index, 1);
+      }
+    }
+
+    seedSubmissionFiles.push(...nextFiles);
+    return nextFiles;
+  }
+
+  const { data: existingFiles, error: existingFilesError } = await supabase
+    .from("task_submission_files")
+    .select("*")
+    .eq("submission_id", submissionId)
+    .order("created_at");
+
+  if (existingFilesError) {
+    throw new Error(existingFilesError.message);
+  }
+
+  if (typeof files === "undefined") {
+    return (existingFiles ?? []).map(mapTaskSubmissionFileRow);
+  }
+
+  const normalizedFiles = normalizeSubmissionFileMetadata(files);
+  const keepFileIds = new Set(normalizedFiles.flatMap((file) => (file.id ? [file.id] : [])));
+  const filesToDelete = (existingFiles ?? []).filter((file) => !keepFileIds.has(file.id));
+
+  if (filesToDelete.length > 0) {
+    await removeStoredSubmissionFiles(filesToDelete.map((file) => file.file_path));
+
+    const { error: deleteError } = await supabase.from("task_submission_files").delete().in("id", filesToDelete.map((file) => file.id));
+    if (deleteError) {
+      throw new Error(deleteError.message);
+    }
+  }
+
+  const filesToKeep = normalizedFiles.filter((file): file is NormalizedSubmissionFileInput & { id: string } => typeof file.id === "string");
+  for (const file of filesToKeep) {
+    const { error: updateError } = await supabase
+      .from("task_submission_files")
+      .update({
+        file_path: file.file_path,
+        file_name: file.file_name,
+        mime_type: file.mime_type ?? null,
+        file_size: file.file_size ?? null,
+      })
+      .eq("id", file.id)
+      .eq("submission_id", submissionId);
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+  }
+
+  const filesToInsert = normalizedFiles
+    .filter((file) => !file.id)
+    .map((file) => ({
+      submission_id: submissionId,
+      file_path: file.file_path,
+      file_name: file.file_name,
+      mime_type: file.mime_type ?? null,
+      file_size: file.file_size ?? null,
     }));
-    seedSubmissionFiles.push(...created);
-    return created;
+
+  if (filesToInsert.length > 0) {
+    const { error: insertError } = await supabase.from("task_submission_files").insert(filesToInsert);
+    if (insertError) {
+      throw new Error(insertError.message);
+    }
   }
 
-  const payload = files.map((file) => ({
-    submission_id: submissionId,
-    file_path: file.file_path,
-    file_name: file.file_name,
-    mime_type: file.mime_type ?? null,
-    file_size: file.file_size ?? null,
-  }));
+  const { data: syncedFiles, error: syncedFilesError } = await supabase
+    .from("task_submission_files")
+    .select("*")
+    .eq("submission_id", submissionId)
+    .order("created_at");
 
-  const { data, error } = await supabase.from("task_submission_files").insert(payload).select("*");
-  if (error || !data) {
-    throw new Error(error?.message ?? "Failed to attach submission files.");
+  if (syncedFilesError || !syncedFiles) {
+    throw new Error(syncedFilesError?.message ?? "Failed to load submission files.");
   }
 
-  return data.map(mapTaskSubmissionFileRow);
+  return syncedFiles.map(mapTaskSubmissionFileRow);
 }
 
 export async function updateTaskSubmissionDraft(
@@ -420,25 +535,28 @@ export async function updateTaskSubmissionDraft(
   context: { task: TaskSummary; group: GroupDetail | null },
   input: UpdateTaskSubmissionDraftInput,
 ): Promise<TaskSubmissionSummary> {
-  const existing = seedTaskSubmissions.find((entry) => entry.id === input.id) ?? null;
   const supabase = await createSupabaseServerClient();
   const submitterProfileId = context.task.submissionMode === "individual" ? profile.id : null;
   const submitterGroupId = context.task.submissionMode === "group" ? context.group?.id ?? null : null;
+  let existing: TaskSubmissionSummary | null = seedTaskSubmissions.find((entry) => entry.id === input.id) ?? null;
 
   if (!submitterProfileId && !submitterGroupId) {
     throw new Error("A valid submission context is required.");
   }
 
+  if (supabase && input.id) {
+    const { data } = await supabase.from("task_submissions").select("*, task_submission_files(*)").eq("id", input.id).maybeSingle();
+    existing = data ? mapTaskSubmissionRow(data, data.task_submission_files?.map(mapTaskSubmissionFileRow)) : null;
+  }
+
   if (!supabase) {
     if (existing) {
       Object.assign(existing, {
-        textContent: input.text_content ?? existing.textContent,
-        contentJson: input.content_json ?? existing.contentJson,
+        textContent: input.text_content ?? null,
+        contentJson: input.content_json ?? null,
         updatedAt: nowIso(),
       });
-      if (input.file_metadata?.length) {
-        existing.files = await upsertSubmissionFiles(existing.id, input.file_metadata);
-      }
+      existing.files = await syncSubmissionFiles(existing.id, input.file_metadata);
       return existing;
     }
 
@@ -465,9 +583,7 @@ export async function updateTaskSubmissionDraft(
       files: [],
     };
     seedTaskSubmissions.unshift(created);
-    if (input.file_metadata?.length) {
-      created.files = await upsertSubmissionFiles(created.id, input.file_metadata);
-    }
+    created.files = await syncSubmissionFiles(created.id, input.file_metadata);
     return created;
   }
 
@@ -489,7 +605,7 @@ export async function updateTaskSubmissionDraft(
     throw new Error(error?.message ?? "Failed to save submission draft.");
   }
 
-  const files = input.file_metadata?.length ? await upsertSubmissionFiles(data.id, input.file_metadata) : [];
+  const files = await syncSubmissionFiles(data.id, input.file_metadata);
   return {
     ...mapTaskSubmissionRow(data, files),
     taskTitle: context.task.title,

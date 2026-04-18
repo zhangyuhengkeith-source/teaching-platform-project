@@ -6,7 +6,9 @@ export const STORAGE_BUCKETS = {
 } as const;
 
 export const MAX_RESOURCE_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+export const MAX_SUBMISSION_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 export const RESOURCE_FILE_SIGNED_URL_TTL_SECONDS = 60;
+export const SUBMISSION_FILE_SIGNED_URL_TTL_SECONDS = 60;
 
 export interface StorageObjectRef {
   bucket: string;
@@ -34,6 +36,15 @@ export function buildResourceObjectPath(spaceSlug: string, fileName: string) {
 
 export function buildResourceFilePath(spaceSlug: string, fileName: string) {
   return `${STORAGE_BUCKETS.resourceFiles}/${buildResourceObjectPath(spaceSlug, fileName)}`;
+}
+
+export function buildSubmissionObjectPath(spaceSlug: string, taskSlug: string, fileName: string) {
+  const safeFileName = sanitizeStorageFileName(fileName) || `submission-file.${getFileExtension(fileName) ?? "bin"}`;
+  return `${spaceSlug}/${taskSlug}/${crypto.randomUUID()}-${safeFileName}`;
+}
+
+export function buildSubmissionFilePath(spaceSlug: string, taskSlug: string, fileName: string) {
+  return `${STORAGE_BUCKETS.submissionFiles}/${buildSubmissionObjectPath(spaceSlug, taskSlug, fileName)}`;
 }
 
 export function buildAvatarPath(profileId: string, fileName: string) {
