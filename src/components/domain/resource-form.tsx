@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -8,30 +8,67 @@ import type { Resolver } from "react-hook-form";
 
 import { createResourceAction } from "@/lib/server/actions/create-resource";
 import { updateResourceAction } from "@/lib/server/actions/update-resource";
-import { createResourceSchema, type CreateResourceSchema, type UpdateResourceSchema, updateResourceSchema } from "@/lib/validations/resources";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import {
+  MAX_RESOURCE_FILE_SIZE_BYTES,
+  STORAGE_BUCKETS,
+  buildResourceObjectPath,
+  getFileExtension,
+} from "@/lib/db/storage";
+import {
+  createResourceSchema,
+  type CreateResourceSchema,
+  type UpdateResourceSchema,
+  updateResourceSchema,
+} from "@/lib/validations/resources";
+import { formatFileSize } from "@/lib/utils/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useI18n } from "@/hooks/use-i18n";
-import type { SpaceSectionSummary, SpaceSummary } from "@/types/domain";
+import type { ResourceFileSummary, SpaceSectionSummary, SpaceSummary } from "@/types/domain";
 
 type ResourceFormValues = CreateResourceSchema & { id?: string };
+
+interface PendingFileDraft {
+  clientId: string;
+  file: File;
+  fileName: string;
+  fileExt: string | null;
+  mimeType: string | null;
+  fileSize: number | null;
+}
+
+function createPendingFileDraft(file: File): PendingFileDraft {
+  return {
+    clientId: crypto.randomUUID(),
+    file,
+    fileName: file.name,
+    fileExt: getFileExtension(file.name),
+    mimeType: file.type || null,
+    fileSize: file.size,
+  };
+}
 
 export function ResourceForm({
   mode,
   spaces,
   sections,
   initialValues,
+  initialFiles = [],
 }: {
   mode: "create" | "edit";
   spaces: SpaceSummary[];
   sections: SpaceSectionSummary[];
   initialValues?: Partial<UpdateResourceSchema>;
+  initialFiles?: ResourceFileSummary[];
 }) {
   const router = useRouter();
   const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
+  const [existingFiles, setExistingFiles] = useState<ResourceFileSummary[]>(initialFiles);
+  const [pendingFiles, setPendingFiles] = useState<PendingFileDraft[]>([]);
   const form = useForm<ResourceFormValues>({
     resolver: zodResolver(mode === "create" ? createResourceSchema : updateResourceSchema) as Resolver<ResourceFormValues>,
     defaultValues: {
@@ -52,20 +89,139 @@ export function ResourceForm({
   const selectedSpaceId = form.watch("space_id");
   const sectionOptions = useMemo(() => sections.filter((section) => section.spaceId === selectedSpaceId), [sections, selectedSpaceId]);
 
+  async function cleanupUploadedObjects(uploadedObjects: Array<{ bucket: string; objectPath: string }>) {
+    const supabase = createSupabaseBrowserClient();
+
+    if (!supabase || uploadedObjects.length === 0) {
+      return;
+    }
+
+    const groupedPaths = new Map<string, string[]>();
+    uploadedObjects.forEach(({ bucket, objectPath }) => {
+      groupedPaths.set(bucket, [...(groupedPaths.get(bucket) ?? []), objectPath]);
+    });
+
+    for (const [bucket, objectPaths] of groupedPaths.entries()) {
+      await supabase.storage.from(bucket).remove(objectPaths);
+    }
+  }
+
+  function handleFileSelection(event: ChangeEvent<HTMLInputElement>) {
+    setFormError(null);
+
+    const selectedFiles = Array.from(event.target.files ?? []);
+    if (selectedFiles.length === 0) {
+      return;
+    }
+
+    const oversizedFile = selectedFiles.find((file) => file.size > MAX_RESOURCE_FILE_SIZE_BYTES);
+    if (oversizedFile) {
+      setFormError(`文件 ${oversizedFile.name} 超过 25 MB 限制。`);
+      event.target.value = "";
+      return;
+    }
+
+    setPendingFiles((current) => [...current, ...selectedFiles.map(createPendingFileDraft)]);
+    event.target.value = "";
+  }
+
+  function removeExistingFile(fileId: string) {
+    setExistingFiles((current) => current.filter((file) => file.id !== fileId));
+  }
+
+  function removePendingFile(clientId: string) {
+    setPendingFiles((current) => current.filter((file) => file.clientId !== clientId));
+  }
+
   const onSubmit = form.handleSubmit((values) => {
     setFormError(null);
 
     startTransition(async () => {
+      let uploadedObjects: Array<{ bucket: string; objectPath: string }> = [];
+
       try {
+        const selectedSpace = spaces.find((space) => space.id === values.space_id);
+        if (!selectedSpace) {
+          throw new Error("Selected space not found.");
+        }
+
+        const supabase = createSupabaseBrowserClient();
+        const uploadedMetadata: Array<{
+          file_path: string;
+          file_name: string;
+          file_ext: string | null;
+          mime_type: string | null;
+          file_size: number | null;
+          preview_url: null;
+          sort_order: number;
+        }> = [];
+
+        if (pendingFiles.length > 0) {
+          if (!supabase) {
+            throw new Error("Supabase storage is not configured.");
+          }
+
+          for (const pendingFile of pendingFiles) {
+            const objectPath = buildResourceObjectPath(selectedSpace.slug, pendingFile.fileName);
+            const { error } = await supabase.storage.from(STORAGE_BUCKETS.resourceFiles).upload(objectPath, pendingFile.file, {
+              cacheControl: "3600",
+              upsert: false,
+              contentType: pendingFile.mimeType ?? undefined,
+            });
+
+            if (error) {
+              throw new Error(error.message);
+            }
+
+            uploadedObjects = [...uploadedObjects, { bucket: STORAGE_BUCKETS.resourceFiles, objectPath }];
+            uploadedMetadata.push({
+              file_path: `${STORAGE_BUCKETS.resourceFiles}/${objectPath}`,
+              file_name: pendingFile.fileName,
+              file_ext: pendingFile.fileExt,
+              mime_type: pendingFile.mimeType,
+              file_size: pendingFile.fileSize,
+              preview_url: null,
+              sort_order: 0,
+            });
+          }
+        }
+
+        const fileMetadata = [
+          ...existingFiles.map((file) => ({
+            id: file.id,
+            file_path: file.filePath,
+            file_name: file.fileName,
+            file_ext: file.fileExt,
+            mime_type: file.mimeType,
+            file_size: file.fileSize,
+            preview_url: file.previewUrl,
+            sort_order: 0,
+          })),
+          ...uploadedMetadata,
+        ].map((file, index) => ({
+          ...file,
+          sort_order: index,
+        }));
+
+        const payload = {
+          ...values,
+          file_metadata: fileMetadata,
+        };
+
         if (mode === "create") {
-          await createResourceAction(values);
+          await createResourceAction(payload);
         } else {
-          await updateResourceAction(values);
+          await updateResourceAction(payload);
         }
 
         router.push("/admin/resources");
         router.refresh();
       } catch (error) {
+        try {
+          await cleanupUploadedObjects(uploadedObjects);
+        } catch {
+          // Best-effort cleanup; surface the original submission error to the user.
+        }
         setFormError(error instanceof Error ? error.message : t("admin.userTable.saveFailed"));
       }
     });
@@ -142,8 +298,47 @@ export function ResourceForm({
           <Input id="sort_order" type="number" {...form.register("sort_order", { valueAsNumber: true })} />
         </div>
       </div>
-      <div className="rounded-2xl border border-dashed border-border bg-slate-50 p-4 text-sm text-muted-foreground">
-        {t("admin.forms.fileUploadDeferred")}
+      <div className="space-y-4 rounded-2xl border border-dashed border-border bg-slate-50 p-4">
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-slate-900">资源文件</p>
+          <p className="text-sm text-muted-foreground">支持多文件上传，单个文件不超过 25 MB。文件保存在受保护存储中，访问时会按当前登录用户权限生成签名下载链接。</p>
+        </div>
+        <Input disabled={isPending} multiple onChange={handleFileSelection} type="file" />
+        {existingFiles.length > 0 || pendingFiles.length > 0 ? (
+          <div className="space-y-2 rounded-xl border border-border bg-white p-3">
+            {existingFiles.map((file) => (
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-2 last:border-b-0 last:pb-0" key={file.id}>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-900">{file.fileName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    已保存{formatFileSize(file.fileSize) ? ` · ${formatFileSize(file.fileSize)}` : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <a className="text-xs text-primary underline-offset-4 hover:underline" href={`/api/resources/${initialValues?.id ?? ""}/files/${file.id}`}>
+                    下载
+                  </a>
+                  <Button onClick={() => removeExistingFile(file.id)} size="sm" type="button" variant="ghost">
+                    {t("admin.forms.remove")}
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {pendingFiles.map((file) => (
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-2 last:border-b-0 last:pb-0" key={file.clientId}>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-900">{file.fileName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    待上传{formatFileSize(file.fileSize) ? ` · ${formatFileSize(file.fileSize)}` : ""}
+                  </p>
+                </div>
+                <Button onClick={() => removePendingFile(file.clientId)} size="sm" type="button" variant="ghost">
+                  {t("admin.forms.remove")}
+                </Button>
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
       {mode === "edit" && initialValues?.id ? <input type="hidden" value={initialValues.id} {...form.register("id")} /> : null}
       {formError ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}

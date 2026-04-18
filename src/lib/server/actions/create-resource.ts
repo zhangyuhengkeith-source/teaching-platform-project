@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createResource } from "@/lib/mutations/resources";
-import { getSpaceById, listMembershipsForSpace } from "@/lib/queries/spaces";
+import { getSpaceById, listMembershipsForSpace, listSectionsForSpace } from "@/lib/queries/spaces";
 import { createResourceSchema } from "@/lib/validations/resources";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { canManageSpace } from "@/lib/permissions/spaces";
@@ -20,6 +20,13 @@ export async function createResourceAction(input: unknown) {
   const memberships = await listMembershipsForSpace(space.id);
   if (!canManageSpace(profile, { space, memberships })) {
     throw new Error("You do not have permission to create resources in this space.");
+  }
+
+  if (parsed.section_id) {
+    const sections = await listSectionsForSpace(space.id);
+    if (!sections.some((section) => section.id === parsed.section_id)) {
+      throw new Error("Selected section does not belong to the chosen space.");
+    }
   }
 
   const resource = await createResource(profile.id, parsed);

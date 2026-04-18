@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 
 import { updateResource } from "@/lib/mutations/resources";
 import { getResourceById } from "@/lib/queries/resources";
-import { getSpaceById, listMembershipsForSpace } from "@/lib/queries/spaces";
+import { getSpaceById, listMembershipsForSpace, listSectionsForSpace } from "@/lib/queries/spaces";
 import { updateResourceSchema } from "@/lib/validations/resources";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { canManageResource } from "@/lib/permissions/resources";
+import { canManageSpace } from "@/lib/permissions/spaces";
 
 export async function updateResourceAction(input: unknown) {
   const profile = await requireAuth();
@@ -28,9 +29,29 @@ export async function updateResourceAction(input: unknown) {
     throw new Error("You do not have permission to update this resource.");
   }
 
+  const targetSpaceId = parsed.space_id ?? resource.spaceId;
+  if (targetSpaceId !== resource.spaceId) {
+    const targetSpace = await getSpaceById(targetSpaceId);
+    if (!targetSpace) {
+      throw new Error("Target space not found.");
+    }
+
+    const targetMemberships = await listMembershipsForSpace(targetSpace.id);
+    if (!canManageSpace(profile, { space: targetSpace, memberships: targetMemberships })) {
+      throw new Error("You do not have permission to move this resource into the selected space.");
+    }
+  }
+
+  if (parsed.section_id) {
+    const sections = await listSectionsForSpace(targetSpaceId);
+    if (!sections.some((section) => section.id === parsed.section_id)) {
+      throw new Error("Selected section does not belong to the chosen space.");
+    }
+  }
+
   const updated = await updateResource(profile.id, {
     ...parsed,
-    space_id: parsed.space_id ?? resource.spaceId,
+    space_id: targetSpaceId,
   });
   revalidatePath("/admin/resources");
   revalidatePath("/classes");

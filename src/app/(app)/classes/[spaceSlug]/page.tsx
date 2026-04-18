@@ -89,7 +89,9 @@ export default async function ClassDetailPage({
                 {visibleResources.slice(0, 4).map((resource) => (
                   <ResourceCard
                     description={resource.description}
+                    files={resource.files}
                     key={resource.id}
+                    resourceId={resource.id}
                     resourceType={resource.resourceType}
                     status={resource.status}
                     title={resource.title}

@@ -54,7 +54,9 @@ export default async function SectionDetailPage({
                       {group.items.map((resource) => (
                         <ResourceCard
                           description={resource.description}
+                          files={resource.files}
                           key={resource.id}
+                          resourceId={resource.id}
                           resourceType={resource.resourceType}
                           status={resource.status}
                           title={resource.title}

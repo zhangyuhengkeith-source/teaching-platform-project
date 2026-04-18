@@ -26,8 +26,9 @@ export default async function EditResourcePage({
   return (
     <div className="space-y-6">
       <PageHeader description={<TranslationText translationKey="admin.resources.editDescription" />} title={<TranslationText translationKey="admin.resources.editTitle" values={{ title: resource.title }} />} />
-      <SectionCard description={<TranslationText translationKey="admin.resources.detailsDescription" />} title={<TranslationText translationKey="admin.resources.detailsTitle" />}>
+      <SectionCard description="你可以继续追加文件，或移除不再开放的附件；下载仍会经过服务端鉴权。" title={<TranslationText translationKey="admin.resources.detailsTitle" />}>
         <ResourceForm
+          initialFiles={resource.files ?? []}
           initialValues={{
             id: resource.id,
             space_id: resource.spaceId,

@@ -3,6 +3,17 @@ import { z } from "zod";
 import { RESOURCE_TYPES } from "@/lib/constants/resource-types";
 import { RESOURCE_STATUSES } from "@/lib/constants/statuses";
 
+const resourceFileSchema = z.object({
+  id: z.string().uuid().optional(),
+  file_path: z.string().trim().min(1, "File path is required."),
+  file_name: z.string().trim().min(1, "File name is required."),
+  file_ext: z.string().trim().optional().nullable(),
+  mime_type: z.string().trim().optional().nullable(),
+  file_size: z.number().int().min(0).optional().nullable(),
+  preview_url: z.string().trim().optional().nullable(),
+  sort_order: z.number().int().min(0).optional(),
+});
+
 export const createResourceSchema = z.object({
   space_id: z.string().uuid("Space id must be a valid UUID."),
   section_id: z.preprocess((value) => (value === "" ? null : value), z.string().uuid("Section id must be a valid UUID.").optional().nullable()),
@@ -14,6 +25,7 @@ export const createResourceSchema = z.object({
   status: z.enum(RESOURCE_STATUSES).optional(),
   published_at: z.preprocess((value) => (value === "" ? null : value), z.string().datetime().optional().nullable()),
   sort_order: z.number().int().min(0).optional(),
+  file_metadata: z.array(resourceFileSchema).optional().nullable(),
 });
 
 export const updateResourceSchema = createResourceSchema.partial().extend({

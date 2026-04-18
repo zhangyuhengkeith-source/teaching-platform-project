@@ -73,10 +73,22 @@ export interface CreateResourceInput {
   status?: ResourceStatus;
   published_at?: string | null;
   sort_order?: number;
+  file_metadata?: ResourceFileInput[] | null;
 }
 
 export interface UpdateResourceInput extends Partial<CreateResourceInput> {
   id: string;
+}
+
+export interface ResourceFileInput {
+  id?: string;
+  file_path: string;
+  file_name: string;
+  file_ext?: string | null;
+  mime_type?: string | null;
+  file_size?: number | null;
+  preview_url?: string | null;
+  sort_order?: number;
 }
 
 export interface CreateNoticeInput {

@@ -20,7 +20,7 @@ export default async function NewResourcePage() {
   return (
     <div className="space-y-6">
       <PageHeader description={<TranslationText translationKey="admin.resources.newDescription" />} title={<TranslationText translationKey="admin.resources.newTitle" />} />
-      <SectionCard description={<TranslationText translationKey="admin.resources.newDetailsDescription" />} title={<TranslationText translationKey="admin.resources.detailsTitle" />}>
+      <SectionCard description="上传资源文件后，学生访问时会按班级成员权限生成短时下载链接。" title={<TranslationText translationKey="admin.resources.detailsTitle" />}>
         <ResourceForm mode="create" sections={sections} spaces={spaces} />
       </SectionCard>
     </div>

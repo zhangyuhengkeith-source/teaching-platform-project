@@ -1,10 +1,152 @@
-import { mapResourceRow } from "@/lib/db/mappers";
+import { splitStorageFilePath } from "@/lib/db/storage";
+import { mapResourceFileRow, mapResourceRow } from "@/lib/db/mappers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { CreateResourceInput, UpdateResourceInput } from "@/types/api";
-import type { ResourceSummary } from "@/types/domain";
+import type { CreateResourceInput, ResourceFileInput, UpdateResourceInput } from "@/types/api";
+import type { ResourceFileSummary, ResourceSummary } from "@/types/domain";
+
+function normalizeFileMetadata(files: CreateResourceInput["file_metadata"]): ResourceFileInput[] {
+  return (files ?? []).map((file, index) => ({
+    ...file,
+    sort_order: file.sort_order ?? index,
+    preview_url: file.preview_url ?? null,
+    file_ext: file.file_ext ?? null,
+    mime_type: file.mime_type ?? null,
+    file_size: file.file_size ?? null,
+  }));
+}
+
+function mapResourceFileInput(file: ResourceFileInput): ResourceFileSummary {
+  return {
+    id: file.id ?? crypto.randomUUID(),
+    filePath: file.file_path,
+    fileName: file.file_name,
+    fileExt: file.file_ext ?? null,
+    mimeType: file.mime_type ?? null,
+    fileSize: file.file_size ?? null,
+    previewUrl: file.preview_url ?? null,
+    sortOrder: file.sort_order ?? 0,
+  };
+}
+
+async function removeStoredFiles(filePaths: string[]) {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase || filePaths.length === 0) {
+    return;
+  }
+
+  const groupedPaths = new Map<string, string[]>();
+
+  filePaths.forEach((filePath) => {
+    const parsed = splitStorageFilePath(filePath);
+    if (!parsed) {
+      return;
+    }
+
+    groupedPaths.set(parsed.bucket, [...(groupedPaths.get(parsed.bucket) ?? []), parsed.objectPath]);
+  });
+
+  for (const [bucket, objectPaths] of groupedPaths.entries()) {
+    const { error } = await supabase.storage.from(bucket).remove(objectPaths);
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+}
+
+async function syncResourceFiles(resourceId: string, files: CreateResourceInput["file_metadata"]): Promise<ResourceFileSummary[]> {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    const normalizedFiles = normalizeFileMetadata(files);
+    return normalizedFiles.map(mapResourceFileInput);
+  }
+
+  const { data: existingFiles, error: existingFilesError } = await supabase
+    .from("resource_files")
+    .select("*")
+    .eq("resource_id", resourceId)
+    .order("sort_order");
+
+  if (existingFilesError) {
+    throw new Error(existingFilesError.message);
+  }
+
+  if (typeof files === "undefined") {
+    return (existingFiles ?? []).map(mapResourceFileRow);
+  }
+
+  const normalizedFiles = normalizeFileMetadata(files);
+
+  const keepFileIds = new Set(normalizedFiles.flatMap((file) => (file.id ? [file.id] : [])));
+  const filesToDelete = (existingFiles ?? []).filter((file) => !keepFileIds.has(file.id));
+
+  if (filesToDelete.length > 0) {
+    await removeStoredFiles(filesToDelete.map((file) => file.file_path));
+
+    const { error: deleteError } = await supabase.from("resource_files").delete().in("id", filesToDelete.map((file) => file.id));
+    if (deleteError) {
+      throw new Error(deleteError.message);
+    }
+  }
+
+  const filesToUpdate = normalizedFiles.filter((file): file is ResourceFileInput & { id: string } => typeof file.id === "string");
+  for (const file of filesToUpdate) {
+    const { error: updateError } = await supabase
+      .from("resource_files")
+      .update({
+        file_path: file.file_path,
+        file_name: file.file_name,
+        file_ext: file.file_ext ?? null,
+        mime_type: file.mime_type ?? null,
+        file_size: file.file_size ?? null,
+        preview_url: file.preview_url ?? null,
+        sort_order: file.sort_order ?? 0,
+      })
+      .eq("id", file.id)
+      .eq("resource_id", resourceId);
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+  }
+
+  const filesToInsert = normalizedFiles
+    .filter((file) => !file.id)
+    .map((file) => ({
+      resource_id: resourceId,
+      file_path: file.file_path,
+      file_name: file.file_name,
+      file_ext: file.file_ext ?? null,
+      mime_type: file.mime_type ?? null,
+      file_size: file.file_size ?? null,
+      preview_url: file.preview_url ?? null,
+      sort_order: file.sort_order ?? 0,
+    }));
+
+  if (filesToInsert.length > 0) {
+    const { error: insertError } = await supabase.from("resource_files").insert(filesToInsert);
+    if (insertError) {
+      throw new Error(insertError.message);
+    }
+  }
+
+  const { data: syncedFiles, error: syncedFilesError } = await supabase
+    .from("resource_files")
+    .select("*")
+    .eq("resource_id", resourceId)
+    .order("sort_order");
+
+  if (syncedFilesError || !syncedFiles) {
+    throw new Error(syncedFilesError?.message ?? "Failed to load resource files.");
+  }
+
+  return syncedFiles.map(mapResourceFileRow);
+}
 
 export async function createResource(profileId: string, input: CreateResourceInput): Promise<ResourceSummary> {
   const supabase = await createSupabaseServerClient();
+  const normalizedFiles = normalizeFileMetadata(input.file_metadata);
 
   if (!supabase) {
     return {
@@ -19,7 +161,7 @@ export async function createResource(profileId: string, input: CreateResourceInp
       visibility: input.visibility,
       publishedAt: input.published_at ?? null,
       sortOrder: input.sort_order ?? 0,
-      files: [],
+      files: normalizedFiles.map(mapResourceFileInput),
     };
   }
 
@@ -39,27 +181,25 @@ export async function createResource(profileId: string, input: CreateResourceInp
       created_by: profileId,
       updated_by: profileId,
     })
-    .select("*, resource_files(*)")
+    .select("*")
     .single();
 
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to create resource.");
   }
 
-  return mapResourceRow(data, data.resource_files?.map((file) => ({
-    id: file.id,
-    filePath: file.file_path,
-    fileName: file.file_name,
-    fileExt: file.file_ext,
-    mimeType: file.mime_type,
-    fileSize: file.file_size,
-    previewUrl: file.preview_url,
-    sortOrder: file.sort_order,
-  })));
+  try {
+    const files = await syncResourceFiles(data.id, normalizedFiles);
+    return mapResourceRow(data, files);
+  } catch (syncError) {
+    await supabase.from("resources").delete().eq("id", data.id);
+    throw syncError;
+  }
 }
 
 export async function updateResource(profileId: string, input: UpdateResourceInput): Promise<ResourceSummary> {
   const supabase = await createSupabaseServerClient();
+  const normalizedFiles = normalizeFileMetadata(input.file_metadata);
 
   if (!supabase) {
     return {
@@ -74,7 +214,7 @@ export async function updateResource(profileId: string, input: UpdateResourceInp
       visibility: input.visibility ?? "space",
       publishedAt: input.published_at ?? null,
       sortOrder: input.sort_order ?? 0,
-      files: [],
+      files: normalizedFiles.map(mapResourceFileInput),
     };
   }
 
@@ -94,22 +234,13 @@ export async function updateResource(profileId: string, input: UpdateResourceInp
       updated_by: profileId,
     })
     .eq("id", input.id)
-    .select("*, resource_files(*)")
+    .select("*")
     .single();
 
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to update resource.");
   }
 
-  return mapResourceRow(data, data.resource_files?.map((file) => ({
-    id: file.id,
-    filePath: file.file_path,
-    fileName: file.file_name,
-    fileExt: file.file_ext,
-    mimeType: file.mime_type,
-    fileSize: file.file_size,
-    previewUrl: file.preview_url,
-    sortOrder: file.sort_order,
-  })));
+  const files = await syncResourceFiles(data.id, normalizedFiles);
+  return mapResourceRow(data, files);
 }
-
