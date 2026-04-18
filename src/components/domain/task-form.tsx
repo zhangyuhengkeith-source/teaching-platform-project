@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -19,7 +19,7 @@ import {
   type UpdateTaskSchema,
   updateTaskSchema,
 } from "@/lib/validations/electives";
-import type { ResourceSummary, TaskSummary } from "@/types/domain";
+import type { ResourceSummary, SpaceSummary, TaskSummary } from "@/types/domain";
 
 function toDateTimeInputValue(value?: string | null) {
   if (!value) {
@@ -48,12 +48,14 @@ export function TaskForm({
   spaceId,
   spaceType,
   resources,
+  spaces,
   initialValues,
 }: {
   mode: "create" | "edit";
   spaceId: string;
   spaceType: "class" | "elective";
   resources: ResourceSummary[];
+  spaces?: SpaceSummary[];
   initialValues?: Partial<TaskSummary> & { id?: string };
 }) {
   const router = useRouter();
@@ -76,6 +78,11 @@ export function TaskForm({
       ...(mode === "edit" && initialValues?.id ? { id: initialValues.id } : {}),
     },
   });
+  const selectedSpaceId = form.watch("space_id");
+  const resourceOptions = useMemo(
+    () => resources.filter((resource) => resource.spaceId === selectedSpaceId),
+    [resources, selectedSpaceId],
+  );
 
   const onSubmit = form.handleSubmit((values) => {
     setFormError(null);
@@ -83,15 +90,16 @@ export function TaskForm({
       try {
         const payload = {
           ...values,
-          space_id: spaceId,
+          space_id: values.space_id,
           due_at: fromDateTimeInputValue(values.due_at ?? null),
           template_resource_id: values.template_resource_id || null,
         };
 
         if (mode === "create") {
           await createTaskAction(payload);
+          const resetSpaceId = values.space_id;
           form.reset({
-            space_id: spaceId,
+            space_id: resetSpaceId,
             title: "",
             slug: "",
             brief: "",
@@ -114,7 +122,7 @@ export function TaskForm({
   });
 
   const onDelete = () => {
-    if (mode !== "edit" || !initialValues?.id || isPending || !window.confirm("Delete this task? Existing submissions will be removed as well.")) {
+    if (mode !== "edit" || !initialValues?.id || isPending || !window.confirm(t("admin.tasks.deleteConfirm"))) {
       return;
     }
 
@@ -131,7 +139,20 @@ export function TaskForm({
 
   return (
     <form className="space-y-5" onSubmit={onSubmit}>
-      <input type="hidden" value={spaceId} {...form.register("space_id")} />
+      {mode === "create" && spaces && spaces.length > 0 ? (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{t("admin.forms.class")}</label>
+          <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("space_id")}>
+            {spaces.map((space) => (
+              <option key={space.id} value={space.id}>
+                {space.title}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : (
+        <input type="hidden" value={spaceId} {...form.register("space_id")} />
+      )}
       {mode === "edit" && initialValues?.id ? <input type="hidden" value={initialValues.id} {...form.register("id")} /> : null}
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
@@ -167,7 +188,7 @@ export function TaskForm({
           <label className="text-sm font-medium">{t("admin.forms.templateResource")}</label>
           <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" {...form.register("template_resource_id")}>
             <option value="">{t("admin.forms.none")}</option>
-            {resources.map((resource) => (
+            {resourceOptions.map((resource) => (
               <option key={resource.id} value={resource.id}>
                 {resource.title}
               </option>

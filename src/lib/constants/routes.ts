@@ -12,4 +12,5 @@ export const ROUTES = {
   profile: "/profile",
   wrongBook: "/wrong-book",
   admin: "/admin",
+  adminTasks: "/admin/tasks",
 } as const;
