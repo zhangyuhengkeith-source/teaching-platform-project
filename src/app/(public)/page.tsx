@@ -5,6 +5,7 @@ import { TranslationText } from "@/components/common/translation-text";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ROUTES } from "@/lib/constants/routes";
 
 const modules = [
   {
@@ -41,7 +42,7 @@ export default function HomePage() {
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg">
-                <Link href="/register">
+                <Link href={ROUTES.login}>
                   <TranslationText translationKey="home.beginPlatform" />
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
