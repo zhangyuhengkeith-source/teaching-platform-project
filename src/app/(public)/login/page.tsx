@@ -11,9 +11,9 @@ import { AuthLayout } from "@/components/layout/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/hooks/use-i18n";
-import { canUseDemoMode, SUPABASE_CONFIG_ERROR } from "@/lib/config/runtime";
+import { canUseDemoMode, isSupabaseConfigured, SUPABASE_CONFIG_ERROR } from "@/lib/config/runtime";
 import { ROUTES } from "@/lib/constants/routes";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { signInWithPassword } from "@/services/auth-service";
 
 type LoginValues = {
   email: string;
@@ -24,8 +24,8 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [message, setMessage] = useState<string | null>(null);
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const { t } = useI18n();
+  const isAuthConfigured = isSupabaseConfigured();
   const loginSchema = useMemo(
     () =>
       z.object({
@@ -39,23 +39,20 @@ function LoginForm() {
   });
 
   const onSubmit = handleSubmit(async (values) => {
-    if (supabase) {
-      const { error } = await supabase.auth.signInWithPassword({
+    setMessage(null);
+
+    try {
+      const result = await signInWithPassword({
         email: values.email,
         password: values.password,
       });
 
-      if (error) {
-        setMessage(error.message);
-        return;
+      if (result.mode === "demo") {
+        setMessage(t("auth.demoLoginMessage"));
       }
-    } else {
-      if (!canUseDemoMode()) {
-        setMessage(SUPABASE_CONFIG_ERROR);
-        return;
-      }
-
-      setMessage(t("auth.demoLoginMessage"));
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : SUPABASE_CONFIG_ERROR);
+      return;
     }
 
     router.push(searchParams?.get("next") ?? ROUTES.dashboard);
@@ -74,7 +71,7 @@ function LoginForm() {
           <Input id="password" placeholder={t("auth.password")} type="password" {...register("password")} />
           {formState.errors.password ? <p className="text-sm text-red-600">{formState.errors.password.message}</p> : null}
         </div>
-        {!supabase && !canUseDemoMode() ? <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">{SUPABASE_CONFIG_ERROR}</p> : null}
+        {!isAuthConfigured && !canUseDemoMode() ? <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">{SUPABASE_CONFIG_ERROR}</p> : null}
         {message ? <p className="rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-600">{message}</p> : null}
         <Button className="w-full" size="lg" type="submit">
           {formState.isSubmitting ? t("auth.signInLoading") : t("auth.signIn")}

@@ -12,9 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/hooks/use-i18n";
-import { canUseDemoMode, SUPABASE_CONFIG_ERROR } from "@/lib/config/runtime";
+import { canUseDemoMode, isSupabaseConfigured, SUPABASE_CONFIG_ERROR } from "@/lib/config/runtime";
 import { ROUTES } from "@/lib/constants/routes";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { signUpWithPassword } from "@/services/auth-service";
 
 type RegisterValues = {
   fullName: string;
@@ -27,8 +27,8 @@ export default function RegisterPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [activationEmail, setActivationEmail] = useState<string | null>(null);
   const [activationDialogOpen, setActivationDialogOpen] = useState(false);
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const { t } = useI18n();
+  const isAuthConfigured = isSupabaseConfigured();
   const registerSchema = useMemo(
     () =>
       z
@@ -51,30 +51,23 @@ export default function RegisterPage() {
   const onSubmit = handleSubmit(async (values) => {
     setMessage(null);
 
-    if (supabase) {
-      const { error } = await supabase.auth.signUp({
+    try {
+      const result = await signUpWithPassword({
         email: values.email,
         password: values.password,
-        options: {
-          data: {
-            full_name: values.fullName,
-            role: "student",
-            user_type: "internal",
-          },
+        metadata: {
+          full_name: values.fullName,
+          role: "student",
+          user_type: "internal",
         },
       });
 
-      if (error) {
-        setMessage(error.message);
-        return;
+      if (result.mode === "demo") {
+        setMessage(t("auth.demoRegisterMessage"));
       }
-    } else {
-      if (!canUseDemoMode()) {
-        setMessage(SUPABASE_CONFIG_ERROR);
-        return;
-      }
-
-      setMessage(t("auth.demoRegisterMessage"));
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : SUPABASE_CONFIG_ERROR);
+      return;
     }
 
     setActivationEmail(values.email);
@@ -113,7 +106,7 @@ export default function RegisterPage() {
               {formState.errors.confirmPassword ? <p className="text-sm text-red-600">{formState.errors.confirmPassword.message}</p> : null}
             </div>
           </div>
-          {!supabase && !canUseDemoMode() ? <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">{SUPABASE_CONFIG_ERROR}</p> : null}
+          {!isAuthConfigured && !canUseDemoMode() ? <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">{SUPABASE_CONFIG_ERROR}</p> : null}
           {message ? <p className="rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-600">{message}</p> : null}
           <Button className="w-full" size="lg" type="submit">
             {formState.isSubmitting ? t("auth.signUpLoading") : t("auth.signUp")}

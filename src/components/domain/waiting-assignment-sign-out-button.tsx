@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants/routes";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { signOutCurrentUser } from "@/services/auth-service";
 
 export function WaitingAssignmentSignOutButton() {
   const router = useRouter();
@@ -20,15 +20,7 @@ export function WaitingAssignmentSignOutButton() {
 
           startTransition(async () => {
             try {
-              const supabase = createSupabaseBrowserClient();
-
-              if (supabase) {
-                const { error } = await supabase.auth.signOut();
-
-                if (error) {
-                  throw error;
-                }
-              }
+              await signOutCurrentUser();
 
               router.replace(ROUTES.login);
               router.refresh();
