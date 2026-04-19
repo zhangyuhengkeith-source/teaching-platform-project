@@ -5,8 +5,7 @@ import { NoticeForm } from "@/components/domain/notice-form";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
 import { requireAuth } from "@/lib/auth/require-auth";
-import { getManageableNoticeById } from "@/lib/queries/notices";
-import { listManageableClasses } from "@/lib/queries/spaces";
+import { getManageableNoticeById, listManageableNoticeSpaces } from "@/lib/queries/notices";
 
 export default async function EditNoticePage({
   params,
@@ -15,7 +14,7 @@ export default async function EditNoticePage({
 }) {
   const { id } = await params;
   const profile = await requireAuth();
-  const [notice, spaces] = await Promise.all([getManageableNoticeById(id, profile), listManageableClasses(profile)]);
+  const [notice, spaces] = await Promise.all([getManageableNoticeById(id, profile), listManageableNoticeSpaces(profile)]);
 
   if (!notice) {
     notFound();

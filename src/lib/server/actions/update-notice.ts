@@ -34,5 +34,7 @@ export async function updateNoticeAction(input: unknown) {
   });
   revalidatePath("/admin/notices");
   revalidatePath("/classes");
+  revalidatePath("/electives");
+  revalidatePath(space.type === "class" ? `/classes/${space.slug}` : `/electives/${space.slug}`);
   return updated;
 }

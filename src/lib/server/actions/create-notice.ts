@@ -25,5 +25,7 @@ export async function createNoticeAction(input: unknown) {
   const notice = await createNotice(profile.id, parsed);
   revalidatePath("/admin/notices");
   revalidatePath("/classes");
+  revalidatePath("/electives");
+  revalidatePath(space.type === "class" ? `/classes/${space.slug}` : `/electives/${space.slug}`);
   return notice;
 }

@@ -5,11 +5,11 @@ import { NoticeForm } from "@/components/domain/notice-form";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
 import { requireAuth } from "@/lib/auth/require-auth";
-import { listManageableClasses } from "@/lib/queries/spaces";
+import { listManageableNoticeSpaces } from "@/lib/queries/notices";
 
 export default async function NewNoticePage() {
   const profile = await requireAuth();
-  const spaces = await listManageableClasses(profile);
+  const spaces = await listManageableNoticeSpaces(profile);
 
   if (spaces.length === 0) {
     notFound();

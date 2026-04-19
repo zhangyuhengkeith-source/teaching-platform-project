@@ -9,12 +9,11 @@ import { PageHeader } from "@/components/shared/page-header";
 import { SearchInput } from "@/components/shared/search-input";
 import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth/require-auth";
-import { listManageableNotices } from "@/lib/queries/notices";
-import { listManageableClasses } from "@/lib/queries/spaces";
+import { listManageableNoticeSpaces, listManageableNotices } from "@/lib/queries/notices";
 
 export default async function AdminNoticesPage() {
   const profile = await requireAuth();
-  const [notices, spaces] = await Promise.all([listManageableNotices(profile), listManageableClasses(profile)]);
+  const [notices, spaces] = await Promise.all([listManageableNotices(profile), listManageableNoticeSpaces(profile)]);
   const spaceTitles = Object.fromEntries(spaces.map((space) => [space.id, space.title]));
 
   return (
