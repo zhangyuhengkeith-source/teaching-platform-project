@@ -4,6 +4,39 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { AssignStudentToClassInput, CreateSpaceInput, UpdateSpaceInput } from "@/types/api";
 import type { SpaceMembershipSummary, SpaceSectionSummary, SpaceSummary } from "@/types/domain";
 
+async function ensureUniqueClassSlug(baseSlug: string, excludeId?: string): Promise<string> {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return baseSlug;
+  }
+
+  let query = supabase.from("spaces").select("id, slug").eq("type", "class").like("slug", `${baseSlug}%`);
+
+  if (excludeId) {
+    query = query.neq("id", excludeId);
+  }
+
+  const { data, error } = await query;
+  if (error || !data) {
+    return baseSlug;
+  }
+
+  const existingSlugs = new Set(data.map((item) => item.slug));
+  if (!existingSlugs.has(baseSlug)) {
+    return baseSlug;
+  }
+
+  let counter = 2;
+  let candidate = `${baseSlug}-${counter}`;
+  while (existingSlugs.has(candidate)) {
+    counter += 1;
+    candidate = `${baseSlug}-${counter}`;
+  }
+
+  return candidate;
+}
+
 export async function listMembershipsByProfileId(profileId: string): Promise<SpaceMembershipSummary[]> {
   const supabase = await createSupabaseServerClient();
 
@@ -166,13 +199,14 @@ export async function profileHasActiveClassMembership(profileId: string): Promis
 
 export async function createSpaceRecord(ownerId: string, input: CreateSpaceInput): Promise<SpaceSummary> {
   const supabase = await createSupabaseServerClient();
+  const slug = input.type === "class" ? await ensureUniqueClassSlug(input.slug) : input.slug;
 
   if (!supabase) {
     return {
       id: crypto.randomUUID(),
       ownerId,
       title: input.title,
-      slug: input.slug,
+      slug,
       type: input.type,
       description: input.description ?? null,
       academicYear: input.academic_year ?? null,
@@ -187,7 +221,7 @@ export async function createSpaceRecord(ownerId: string, input: CreateSpaceInput
     .insert({
       owner_id: ownerId,
       title: input.title,
-      slug: input.slug,
+      slug,
       type: input.type,
       description: input.description ?? null,
       academic_year: input.academic_year ?? null,
@@ -207,13 +241,14 @@ export async function createSpaceRecord(ownerId: string, input: CreateSpaceInput
 
 export async function updateSpaceRecord(input: UpdateSpaceInput): Promise<SpaceSummary> {
   const supabase = await createSupabaseServerClient();
+  const slug = input.type === "class" && input.slug ? await ensureUniqueClassSlug(input.slug, input.id) : input.slug;
 
   if (!supabase) {
     return {
       id: input.id,
       ownerId: "mock-owner",
       title: input.title ?? "Untitled Space",
-      slug: input.slug ?? "untitled-space",
+      slug: slug ?? "untitled-space",
       type: input.type ?? "class",
       description: input.description ?? null,
       academicYear: input.academic_year ?? null,
@@ -227,7 +262,7 @@ export async function updateSpaceRecord(input: UpdateSpaceInput): Promise<SpaceS
     .from("spaces")
     .update({
       title: input.title,
-      slug: input.slug,
+      slug,
       type: input.type,
       description: input.description,
       academic_year: input.academic_year,
