@@ -1,3 +1,5 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { mapGroupMemberRow, mapGroupRow, mapTaskSubmissionFileRow, mapTaskSubmissionRow } from "@/lib/db/mappers";
 import { getGroupById } from "@/lib/queries/electives";
 import { getManageableSubmissionById } from "@/lib/queries/tasks";
@@ -25,8 +27,8 @@ import type {
   UpdateTaskSubmissionDraftInput,
 } from "@/types/api";
 import type { AppUserProfile } from "@/types/auth";
+import type { Database, Json } from "@/types/database";
 import type { GroupDetail, GroupMemberSummary, GroupSummary, SpaceSummary, SubmissionFileSummary, TaskSubmissionSummary, TaskSummary } from "@/types/domain";
-import type { Json } from "@/types/database";
 import { createSpace, updateSpace } from "@/lib/mutations/spaces";
 
 function nowIso() {
@@ -68,7 +70,7 @@ function mapSubmissionFileInput(submissionId: string, file: NormalizedSubmission
   };
 }
 
-export async function createElectiveSpace(ownerId: string, input: CreateElectiveInput) {
+export async function createElectiveSpace(ownerId: string, input: CreateElectiveInput, client?: SupabaseClient<Database>) {
   return createSpace(ownerId, {
     title: input.title,
     slug: input.slug,
@@ -78,7 +80,7 @@ export async function createElectiveSpace(ownerId: string, input: CreateElective
     status: input.status ?? "draft",
     grouping_locked: input.grouping_locked ?? false,
     max_group_size: input.max_group_size ?? 4,
-  });
+  }, client);
 }
 
 export async function updateElectiveSpace(input: {
@@ -90,7 +92,7 @@ export async function updateElectiveSpace(input: {
   status?: "draft" | "published" | "archived";
   grouping_locked?: boolean;
   max_group_size?: number;
-}) {
+}, client?: SupabaseClient<Database>) {
   return updateSpace({
     id: input.id,
     title: input.title,
@@ -101,7 +103,7 @@ export async function updateElectiveSpace(input: {
     status: input.status,
     grouping_locked: input.grouping_locked,
     max_group_size: input.max_group_size,
-  });
+  }, client);
 }
 
 function enrichGroupSeed(group: GroupSummary): GroupDetail {

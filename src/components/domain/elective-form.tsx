@@ -48,12 +48,19 @@ export function ElectiveForm({
     startTransition(async () => {
       try {
         if (mode === "create") {
-          await createElectiveAction(values);
+          const result = await createElectiveAction(values);
+          if (!result.ok) {
+            setFormError(result.error ?? t("admin.userTable.saveFailed"));
+            return;
+          }
         } else {
-          await updateElectiveAction(values);
+          const result = await updateElectiveAction(values);
+          if (!result.ok) {
+            setFormError(result.error ?? t("admin.userTable.saveFailed"));
+            return;
+          }
         }
         router.push("/admin/electives");
-        router.refresh();
       } catch (error) {
         setFormError(error instanceof Error ? error.message : t("admin.userTable.saveFailed"));
       }
