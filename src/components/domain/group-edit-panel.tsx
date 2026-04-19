@@ -50,11 +50,13 @@ export function GroupEditPanel({
     setFormError(null);
     startTransition(async () => {
       try {
-        if (mode === "create") {
-          await createGroupAction(values);
-        } else {
-          await updateGroupAction(values);
+        const result = mode === "create" ? await createGroupAction(values) : await updateGroupAction(values);
+
+        if (!result.ok) {
+          setFormError(result.error ?? t("admin.userTable.saveFailed"));
+          return;
         }
+
         router.refresh();
       } catch (error) {
         setFormError(error instanceof Error ? error.message : t("admin.userTable.saveFailed"));

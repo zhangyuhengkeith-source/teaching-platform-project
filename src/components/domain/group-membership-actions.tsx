@@ -23,7 +23,11 @@ export function JoinGroupButton({ groupId }: { groupId: string }) {
           startTransition(async () => {
             setError(null);
             try {
-              await joinGroupAction({ group_id: groupId });
+              const result = await joinGroupAction({ group_id: groupId });
+              if (!result.ok) {
+                setError(result.error ?? t("admin.groupActions.actionFailed"));
+                return;
+              }
               router.refresh();
             } catch (actionError) {
               setError(actionError instanceof Error ? actionError.message : t("admin.groupActions.actionFailed"));
@@ -53,7 +57,11 @@ export function LeaveGroupButton({ groupId }: { groupId: string }) {
           startTransition(async () => {
             setError(null);
             try {
-              await leaveGroupAction({ group_id: groupId });
+              const result = await leaveGroupAction({ group_id: groupId });
+              if (!result.ok) {
+                setError(result.error ?? t("admin.groupActions.actionFailed"));
+                return;
+              }
               router.refresh();
             } catch (actionError) {
               setError(actionError instanceof Error ? actionError.message : t("admin.groupActions.actionFailed"));
@@ -84,7 +92,11 @@ export function RemoveGroupMemberButton({ groupId, profileId }: { groupId: strin
           startTransition(async () => {
             setError(null);
             try {
-              await removeGroupMemberAction({ group_id: groupId, profile_id: profileId });
+              const result = await removeGroupMemberAction({ group_id: groupId, profile_id: profileId });
+              if (!result.ok) {
+                setError(result.error ?? t("admin.groupActions.actionFailed"));
+                return;
+              }
               router.refresh();
             } catch (actionError) {
               setError(actionError instanceof Error ? actionError.message : t("admin.groupActions.actionFailed"));

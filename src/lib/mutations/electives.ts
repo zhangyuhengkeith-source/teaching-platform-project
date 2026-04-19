@@ -116,7 +116,7 @@ function enrichGroupSeed(group: GroupSummary): GroupDetail {
 }
 
 export async function createGroup(profile: AppUserProfile, input: CreateGroupInput, space: SpaceSummary): Promise<GroupDetail> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerWriteClient({ requireServiceRole: true });
 
   if (!supabase) {
     const group: GroupSummary = {
@@ -168,12 +168,17 @@ export async function createGroup(profile: AppUserProfile, input: CreateGroupInp
     throw new Error(error?.message ?? "Failed to create group.");
   }
 
-  await supabase.from("group_members").insert({
+  const { error: memberError } = await supabase.from("group_members").insert({
     group_id: data.id,
     profile_id: profile.id,
     member_role: "leader",
     status: "active",
   });
+
+  if (memberError) {
+    await supabase.from("groups").delete().eq("id", data.id);
+    throw new Error(memberError.message ?? "Failed to add the group leader.");
+  }
 
   return {
     ...mapGroupRow(data),
@@ -191,7 +196,7 @@ export async function joinGroup(profile: AppUserProfile, input: JoinGroupInput):
     throw new Error("Group not found.");
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerWriteClient({ requireServiceRole: true });
   if (!supabase) {
     const member: GroupMemberSummary = {
       id: crypto.randomUUID(),
@@ -238,7 +243,7 @@ export async function leaveGroup(profile: AppUserProfile, input: LeaveGroupInput
     throw new Error("Group leaders cannot leave while other active members remain.");
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerWriteClient({ requireServiceRole: true });
   if (!supabase) {
     const seedMember = seedGroupMembers.find((entry) => entry.groupId === group.id && entry.profileId === profile.id);
     if (seedMember) {
@@ -259,7 +264,7 @@ export async function updateGroup(profile: AppUserProfile, input: UpdateGroupInp
     throw new Error("Group not found.");
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerWriteClient({ requireServiceRole: true });
   if (!supabase) {
     const seedGroup = seedGroups.find((entry) => entry.id === input.id);
     if (!seedGroup) {
@@ -303,7 +308,7 @@ export async function updateGroup(profile: AppUserProfile, input: UpdateGroupInp
 }
 
 export async function removeGroupMember(input: RemoveGroupMemberInput): Promise<void> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerWriteClient({ requireServiceRole: true });
   if (!supabase) {
     const member = seedGroupMembers.find((entry) => entry.groupId === input.group_id && entry.profileId === input.profile_id);
     if (member) {
