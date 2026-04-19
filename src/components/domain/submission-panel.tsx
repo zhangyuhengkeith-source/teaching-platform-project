@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type ChangeEvent } from "react";
+import { useEffect, useState, useTransition, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -39,6 +39,16 @@ function createPendingSubmissionFile(file: File): PendingSubmissionFile {
   };
 }
 
+function toSubmissionFileMetadata(file: SubmissionFileSummary) {
+  return {
+    id: file.id,
+    file_path: file.filePath,
+    file_name: file.fileName,
+    mime_type: file.mimeType,
+    file_size: file.fileSize,
+  };
+}
+
 export function SubmissionPanel({
   task,
   submission,
@@ -63,15 +73,23 @@ export function SubmissionPanel({
       task_id: task.id,
       text_content: submission?.textContent ?? "",
       content_json: submission?.contentJson ?? null,
-      file_metadata: (submission?.files ?? []).map((file) => ({
-        id: file.id,
-        file_path: file.filePath,
-        file_name: file.fileName,
-        mime_type: file.mimeType,
-        file_size: file.fileSize,
-      })),
+      file_metadata: (submission?.files ?? []).map(toSubmissionFileMetadata),
     },
   });
+
+  useEffect(() => {
+    const nextFiles = submission?.files ?? [];
+    setExistingFiles(nextFiles);
+    setPendingFiles([]);
+    setFormError(null);
+    form.reset({
+      id: submission?.id,
+      task_id: task.id,
+      text_content: submission?.textContent ?? "",
+      content_json: submission?.contentJson ?? null,
+      file_metadata: nextFiles.map(toSubmissionFileMetadata),
+    });
+  }, [form, submission, task.id]);
 
   function handleFileSelection(event: ChangeEvent<HTMLInputElement>) {
     setFormError(null);
@@ -124,13 +142,7 @@ export function SubmissionPanel({
           const payload = {
             ...values,
             file_metadata: [
-              ...existingFiles.map((file) => ({
-                id: file.id,
-                file_path: file.filePath,
-                file_name: file.fileName,
-                mime_type: file.mimeType,
-                file_size: file.fileSize,
-              })),
+              ...existingFiles.map(toSubmissionFileMetadata),
               ...uploadedMetadata,
             ],
           };
