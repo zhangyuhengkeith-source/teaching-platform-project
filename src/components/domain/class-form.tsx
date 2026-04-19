@@ -66,7 +66,6 @@ export function ClassForm({
         }
 
         router.push("/admin/classes");
-        router.refresh();
       } catch (error) {
         setFormError(error instanceof Error ? error.message : t("admin.userTable.saveFailed"));
       }

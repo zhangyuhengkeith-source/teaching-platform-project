@@ -46,7 +46,7 @@ export function AdminClassCreateForm() {
           academic_year: "",
           status: "draft",
         });
-        router.refresh();
+        router.push("/admin/classes");
       } catch (error) {
         setFormError(error instanceof Error ? error.message : t("forms.unableToSaveSubmission"));
       }
