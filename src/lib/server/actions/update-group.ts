@@ -5,8 +5,9 @@ import { revalidatePath } from "next/cache";
 import { requireElectiveViewer } from "@/lib/auth/require-elective-access";
 import { updateGroup } from "@/lib/mutations/electives";
 import { canEditGroup } from "@/lib/permissions/electives";
-import { getGroupById } from "@/lib/queries/electives";
+import { getGroupById, listAllGroupsForElective } from "@/lib/queries/electives";
 import { getSpaceById, listMembershipsForSpace } from "@/lib/queries/spaces";
+import { generateGroupCode } from "@/lib/utils/group-code";
 import { updateGroupSchema } from "@/lib/validations/electives";
 
 export interface UpdateGroupActionResult {
@@ -34,8 +35,21 @@ export async function updateGroupAction(input: unknown) {
       return { ok: false, error: "You do not have permission to update this group." } satisfies UpdateGroupActionResult;
     }
 
+    if (parsed.name) {
+      const nextGroupName = parsed.name;
+      const existingGroups = await listAllGroupsForElective(space.id);
+      const duplicateName = existingGroups.some(
+        (group) => group.id !== existing.id && group.name.trim().toLowerCase() === nextGroupName.trim().toLowerCase(),
+      );
+
+      if (duplicateName) {
+        return { ok: false, error: "A group with this name already exists in the elective." } satisfies UpdateGroupActionResult;
+      }
+    }
+
     const updated = await updateGroup(profile, {
       ...parsed,
+      slug: generateGroupCode(existing.leaderProfileId, parsed.name ?? existing.name),
       leader_profile_id: undefined,
     });
 

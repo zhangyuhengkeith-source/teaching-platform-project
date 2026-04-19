@@ -41,7 +41,6 @@ export default async function AdminGroupDetailPage({
             initialValues={{
               id: group.id,
               name: group.name,
-              slug: group.slug,
               project_summary: group.projectSummary,
               status: group.status,
             }}

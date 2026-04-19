@@ -593,6 +593,8 @@ export const en: TranslationDictionary = {
       resourceTitle: "Resource title",
       noticeTitle: "Notice title",
       groupName: "Group name",
+      groupCode: "Group code",
+      groupCodeHint: "Automatically generated from the creator account and group name. This value cannot be edited manually.",
       taskTitle: "Task title",
       slug: "Slug",
       slugHint: "Used in class URLs. Keep it lowercase and readable.",

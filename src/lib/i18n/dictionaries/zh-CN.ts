@@ -591,6 +591,8 @@ export const zhCN = {
       resourceTitle: "资源标题",
       noticeTitle: "公告标题",
       groupName: "小组名称",
+      groupCode: "小组编号",
+      groupCodeHint: "系统会根据创建者账号与小组名称自动生成，不可手动修改。",
       taskTitle: "任务标题",
       slug: "Slug",
       slugHint: "用于班级 URL，建议保持小写且便于识别。",

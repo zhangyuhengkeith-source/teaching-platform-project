@@ -128,6 +128,10 @@ async function listGroupsRawForElective(spaceId: string): Promise<GroupDetail[]>
   );
 }
 
+export async function listAllGroupsForElective(spaceId: string): Promise<GroupDetail[]> {
+  return listGroupsRawForElective(spaceId);
+}
+
 export async function listGroupsForElective(spaceId: string, profile: AppUserProfile): Promise<GroupDetail[]> {
   const space = await getSpaceById(spaceId);
   if (!space) {

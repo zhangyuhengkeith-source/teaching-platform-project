@@ -32,7 +32,6 @@ export const updateElectiveSchema = createElectiveSchema.partial().extend({
 export const createGroupSchema = z.object({
   space_id: uuidField,
   name: z.string().trim().min(1, "Group name is required."),
-  slug: slugField,
   project_title: z.string().trim().max(160).optional().nullable(),
   project_summary: z.string().trim().max(2000).optional().nullable(),
   leader_profile_id: uuidField.optional(),

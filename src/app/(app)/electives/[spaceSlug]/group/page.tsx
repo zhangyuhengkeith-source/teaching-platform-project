@@ -44,7 +44,6 @@ export default async function ElectiveGroupPage({
                 initialValues={{
                   id: currentGroup.id,
                   name: currentGroup.name,
-                  slug: currentGroup.slug,
                   project_summary: currentGroup.projectSummary,
                   status: currentGroup.status,
                 }}
@@ -64,7 +63,7 @@ export default async function ElectiveGroupPage({
         <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
           <SectionCard description="Create a new group if you want to define your own project direction." title="Create group">
             {canParticipate ? (
-              <GroupEditPanel mode="create" spaceId={space.id} />
+              <GroupEditPanel groupCodeProfileId={profile.id} mode="create" spaceId={space.id} />
             ) : (
               <EmptyState description="Grouping is currently locked or your role cannot create groups in this elective." icon={Users} title="Group creation unavailable" />
             )}

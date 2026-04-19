@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useI18n } from "@/hooks/use-i18n";
 import { createGroupAction } from "@/lib/server/actions/create-group";
 import { updateGroupAction } from "@/lib/server/actions/update-group";
+import { generateGroupCode } from "@/lib/utils/group-code";
 import {
   createGroupSchema,
   type CreateGroupSchema,
@@ -22,11 +23,13 @@ export function GroupEditPanel({
   mode,
   spaceId,
   initialValues,
+  groupCodeProfileId,
   showStatusField = false,
 }: {
   mode: "create" | "edit";
   spaceId: string;
   initialValues?: Partial<UpdateGroupSchema>;
+  groupCodeProfileId?: string;
   showStatusField?: boolean;
 }) {
   const router = useRouter();
@@ -38,12 +41,13 @@ export function GroupEditPanel({
     defaultValues: {
       space_id: spaceId,
       name: initialValues?.name ?? "",
-      slug: initialValues?.slug ?? "",
       project_summary: initialValues?.project_summary ?? "",
       status: initialValues?.status ?? "forming",
       ...(mode === "edit" && initialValues?.id ? { id: initialValues.id } : {}),
     },
   });
+  const watchedName = form.watch("name");
+  const generatedGroupCode = groupCodeProfileId ? generateGroupCode(groupCodeProfileId, watchedName ?? "") : "";
 
   const onSubmit = form.handleSubmit((values) => {
     setFormError(null);
@@ -72,10 +76,13 @@ export function GroupEditPanel({
           <label className="text-sm font-medium">{t("admin.forms.groupName")}</label>
           <Input {...form.register("name")} />
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">{t("admin.forms.slug")}</label>
-          <Input {...form.register("slug")} />
-        </div>
+        {mode === "create" && groupCodeProfileId ? (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t("admin.forms.groupCode")}</label>
+            <Input readOnly value={generatedGroupCode} />
+            <p className="text-xs text-slate-500">{t("admin.forms.groupCodeHint")}</p>
+          </div>
+        ) : null}
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium">{t("admin.forms.projectSummary")}</label>

@@ -150,6 +150,20 @@ export async function createGroup(profile: AppUserProfile, input: CreateGroupInp
     return enrichGroupSeed(group);
   }
 
+  const { data: conflictingGroups, error: conflictingGroupsError } = await supabase
+    .from("groups")
+    .select("id, name")
+    .eq("space_id", input.space_id);
+
+  if (conflictingGroupsError) {
+    throw new Error(conflictingGroupsError.message ?? "Failed to validate the group name.");
+  }
+
+  const duplicateName = (conflictingGroups ?? []).some((group) => group.name.trim().toLowerCase() === input.name.trim().toLowerCase());
+  if (duplicateName) {
+    throw new Error("A group with this name already exists in the elective.");
+  }
+
   const { data, error } = await supabase
     .from("groups")
     .insert({
@@ -280,6 +294,25 @@ export async function updateGroup(profile: AppUserProfile, input: UpdateGroupInp
       updatedAt: nowIso(),
     });
     return enrichGroupSeed(seedGroup);
+  }
+
+  if (typeof input.name === "string") {
+    const { data: conflictingGroups, error: conflictingGroupsError } = await supabase
+      .from("groups")
+      .select("id, name")
+      .eq("space_id", group.spaceId);
+
+    if (conflictingGroupsError) {
+      throw new Error(conflictingGroupsError.message ?? "Failed to validate the group name.");
+    }
+
+    const duplicateName = (conflictingGroups ?? []).some(
+      (entry) => entry.id !== input.id && entry.name.trim().toLowerCase() === input.name!.trim().toLowerCase(),
+    );
+
+    if (duplicateName) {
+      throw new Error("A group with this name already exists in the elective.");
+    }
   }
 
   const { data, error } = await supabase

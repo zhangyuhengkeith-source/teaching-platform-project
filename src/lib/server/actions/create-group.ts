@@ -5,8 +5,9 @@ import { revalidatePath } from "next/cache";
 import { requireElectiveViewer } from "@/lib/auth/require-elective-access";
 import { createGroup } from "@/lib/mutations/electives";
 import { canCreateOrJoinGroup, canManageElective } from "@/lib/permissions/electives";
-import { getGroupForUserInElective } from "@/lib/queries/electives";
+import { getGroupForUserInElective, listAllGroupsForElective } from "@/lib/queries/electives";
 import { getSpaceById, listMembershipsForSpace } from "@/lib/queries/spaces";
+import { generateGroupCode } from "@/lib/utils/group-code";
 import { createGroupSchema } from "@/lib/validations/electives";
 
 export interface CreateGroupActionResult {
@@ -37,10 +38,17 @@ export async function createGroupAction(input: unknown) {
       return { ok: false, error: "You already belong to an active group in this elective." } satisfies CreateGroupActionResult;
     }
 
+    const existingGroups = await listAllGroupsForElective(space.id);
+    const duplicateName = existingGroups.some((group) => group.name.trim().toLowerCase() === parsed.name.trim().toLowerCase());
+    if (duplicateName) {
+      return { ok: false, error: "A group with this name already exists in the elective." } satisfies CreateGroupActionResult;
+    }
+
     await createGroup(
       profile,
       {
         ...parsed,
+        slug: generateGroupCode(profile.id, parsed.name),
         leader_profile_id: canManage ? parsed.leader_profile_id ?? profile.id : profile.id,
       },
       space,
