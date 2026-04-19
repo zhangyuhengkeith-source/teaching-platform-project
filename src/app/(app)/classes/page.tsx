@@ -1,6 +1,7 @@
 import { GraduationCap } from "lucide-react";
 
 import { requireClassViewer } from "@/lib/auth/require-class-access";
+import { getClassSubjectLabelFromSlug } from "@/lib/constants/class-subjects";
 import { listClassSpacesForUser, listSectionsForSpace } from "@/lib/queries/spaces";
 import { listResourcesForSpace } from "@/lib/queries/resources";
 import { listNoticesForSpace } from "@/lib/queries/notices";
@@ -44,6 +45,7 @@ export default async function ClassesPage() {
               resourceCount={space.resourceCount}
               sectionCount={space.sectionCount}
               status={space.status}
+              subjectLabel={getClassSubjectLabelFromSlug(space.slug)}
               title={space.title}
             />
           ))}

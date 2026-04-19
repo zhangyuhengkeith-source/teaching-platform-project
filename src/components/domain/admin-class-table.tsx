@@ -3,6 +3,7 @@ import Link from "next/link";
 import { TranslationText } from "@/components/common/translation-text";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
+import { getClassSubjectLabelFromSlug } from "@/lib/constants/class-subjects";
 import { formatDate } from "@/lib/utils/format";
 import type { SpaceSummary } from "@/types/domain";
 
@@ -14,7 +15,7 @@ export function AdminClassTable({ items }: { items: SpaceSummary[] }) {
           <thead className="bg-slate-50 text-slate-500">
             <tr>
               <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.title" /></th>
-              <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.slug" /></th>
+              <th className="px-4 py-3 font-medium">学科/subject</th>
               <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.academicYear" /></th>
               <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.status" /></th>
               <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.owner" /></th>
@@ -26,7 +27,7 @@ export function AdminClassTable({ items }: { items: SpaceSummary[] }) {
             {items.map((item) => (
               <tr className="border-t border-border" key={item.id}>
                 <td className="px-4 py-3 font-medium text-slate-900">{item.title}</td>
-                <td className="px-4 py-3 text-slate-500">{item.slug}</td>
+                <td className="px-4 py-3 text-slate-500">{getClassSubjectLabelFromSlug(item.slug)}</td>
                 <td className="px-4 py-3 text-slate-500">{item.academicYear ?? "-"}</td>
                 <td className="px-4 py-3">
                   <StatusBadge status={item.status} />

@@ -7,6 +7,7 @@ import type { Status } from "@/lib/constants/statuses";
 
 interface ClassCardProps {
   title: string;
+  subjectLabel?: string | null;
   description?: string | null;
   academicYear?: string | null;
   status?: Status;
@@ -16,13 +17,18 @@ interface ClassCardProps {
   href: string;
 }
 
-export function ClassCard({ title, description, academicYear, status, sectionCount, resourceCount, noticeCount, href }: ClassCardProps) {
+export function ClassCard({ title, subjectLabel, description, academicYear, status, sectionCount, resourceCount, noticeCount, href }: ClassCardProps) {
   return (
     <Card className="transition hover:-translate-y-0.5 hover:shadow-lg">
       <CardHeader className="space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
             <CardTitle className="text-xl">{title}</CardTitle>
+            {subjectLabel ? (
+              <div className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                学科 / Subject: {subjectLabel}
+              </div>
+            ) : null}
             {academicYear ? (
               <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                 <CalendarRange className="h-4 w-4" />
@@ -57,4 +63,3 @@ export function ClassCard({ title, description, academicYear, status, sectionCou
     </Card>
   );
 }
-

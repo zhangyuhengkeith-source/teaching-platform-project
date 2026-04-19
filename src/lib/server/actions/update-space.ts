@@ -24,6 +24,7 @@ export async function updateSpaceAction(input: unknown) {
 
   const updated = await updateSpace(parsed);
   revalidatePath("/admin/classes");
+  revalidatePath(`/classes/${space.slug}`);
   revalidatePath(`/classes/${updated.slug}`);
   revalidatePath("/classes");
   return updated;

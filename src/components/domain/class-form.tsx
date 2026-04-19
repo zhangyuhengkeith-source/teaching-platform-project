@@ -5,9 +5,21 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
+import {
+  buildClassSlug,
+  CLASS_SUBJECTS,
+  getClassSubjectFromSlug,
+  getClassSubjectLabel,
+} from "@/lib/constants/class-subjects";
 import { createSpaceAction } from "@/lib/server/actions/create-space";
 import { updateSpaceAction } from "@/lib/server/actions/update-space";
-import { createSpaceSchema, type CreateSpaceSchema, type UpdateSpaceSchema, updateSpaceSchema } from "@/lib/validations/spaces";
+import { type UpdateSpaceSchema } from "@/lib/validations/spaces";
+import {
+  createClassFormSchema,
+  type CreateClassFormSchema,
+  type UpdateClassFormSchema,
+  updateClassFormSchema,
+} from "@/lib/validations/class-space";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,12 +36,11 @@ export function ClassForm({
   const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
-  const form = useForm<CreateSpaceSchema | UpdateSpaceSchema>({
-    resolver: zodResolver(mode === "create" ? createSpaceSchema : updateSpaceSchema),
+  const form = useForm<CreateClassFormSchema | UpdateClassFormSchema>({
+    resolver: zodResolver(mode === "create" ? createClassFormSchema : updateClassFormSchema),
     defaultValues: {
       title: initialValues?.title ?? "",
-      slug: initialValues?.slug ?? "",
-      type: "class",
+      subject: getClassSubjectFromSlug(initialValues?.slug) ?? undefined,
       description: initialValues?.description ?? "",
       academic_year: initialValues?.academic_year ?? "",
       status: initialValues?.status ?? "draft",
@@ -42,10 +53,16 @@ export function ClassForm({
 
     startTransition(async () => {
       try {
+        const payload = {
+          ...values,
+          slug: buildClassSlug(values.subject, values.title, values.academic_year),
+          type: "class" as const,
+        };
+
         if (mode === "create") {
-          await createSpaceAction({ ...values, type: "class" });
+          await createSpaceAction(payload);
         } else {
-          await updateSpaceAction({ ...values, type: "class" });
+          await updateSpaceAction(payload);
         }
 
         router.push("/admin/classes");
@@ -56,6 +73,11 @@ export function ClassForm({
     });
   });
 
+  const watchedTitle = form.watch("title");
+  const watchedSubject = form.watch("subject");
+  const watchedAcademicYear = form.watch("academic_year");
+  const generatedSlug = watchedSubject ? buildClassSlug(watchedSubject, watchedTitle, watchedAcademicYear) : "";
+
   return (
     <form className="space-y-6" onSubmit={onSubmit}>
       <div className="grid gap-6 md:grid-cols-2">
@@ -65,10 +87,19 @@ export function ClassForm({
           {form.formState.errors.title ? <p className="text-sm text-red-600">{form.formState.errors.title.message}</p> : null}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="slug">{t("admin.forms.slug")}</label>
-          <Input id="slug" {...form.register("slug")} />
-          <p className="text-xs text-muted-foreground">{t("admin.forms.slugHint")}</p>
-          {form.formState.errors.slug ? <p className="text-sm text-red-600">{form.formState.errors.slug.message}</p> : null}
+          <label className="text-sm font-medium" htmlFor="subject">学科/subject</label>
+          <select className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm" id="subject" {...form.register("subject")}>
+            <option value="">请选择学科</option>
+            {CLASS_SUBJECTS.map((subject) => (
+              <option key={subject} value={subject}>
+                {getClassSubjectLabel(subject)}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            系统会自动生成班级链接 slug{generatedSlug ? `：${generatedSlug}` : "。"}
+          </p>
+          {form.formState.errors.subject ? <p className="text-sm text-red-600">{form.formState.errors.subject.message}</p> : null}
         </div>
       </div>
       <div className="space-y-2">
