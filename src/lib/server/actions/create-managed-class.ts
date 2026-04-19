@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createSpace } from "@/lib/mutations/spaces";
 import { isBootstrapAdminEmail } from "@/lib/config/app-config";
+import { createSupabaseServerWriteClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSpaceSchema } from "@/lib/validations/spaces";
 import type { CreateSpaceActionResult } from "@/lib/server/actions/create-space";
@@ -48,7 +49,8 @@ export async function createManagedClassAction(input: unknown) {
       ...(typeof input === "object" && input !== null ? input : {}),
       type: "class",
     });
-    await createSpace(profile.id, parsed, supabase);
+    const writeClient = await createSupabaseServerWriteClient({ requireServiceRole: true });
+    await createSpace(profile.id, parsed, writeClient ?? undefined);
 
     revalidatePath("/admin/users");
     revalidatePath("/admin/classes");
