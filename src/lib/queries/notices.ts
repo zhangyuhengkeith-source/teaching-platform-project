@@ -2,6 +2,7 @@ import { canManageNotice } from "@/lib/permissions/notices";
 import { listManageableClasses, listMembershipsForSpace } from "@/lib/queries/spaces";
 import { listManageableElectiveSpaces } from "@/lib/queries/electives";
 import { mapNoticeRow } from "@/lib/db/mappers";
+import { createSupabaseServerWriteClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { seedNotices } from "@/lib/seed/seed";
 import type { AppUserProfile } from "@/types/auth";
@@ -44,10 +45,25 @@ export async function getNoticeById(noticeId: string): Promise<NoticeSummary | n
 
 export async function listManageableNotices(profile: AppUserProfile): Promise<NoticeSummary[]> {
   const spaces = await listManageableNoticeSpaces(profile);
-  const notices = await Promise.all(spaces.map((space) => listNoticesForSpace(space.id)));
+  const supabase = await createSupabaseServerWriteClient();
+  const spaceIds = spaces.map((space) => space.id);
+  const notices =
+    supabase && spaceIds.length > 0
+      ? (() => supabase.from("notices").select("*").in("space_id", spaceIds).order("updated_at", { ascending: false }))()
+      : null;
 
-  return notices
-    .flat()
+  const noticeItems =
+    notices
+      ? await notices.then(({ data, error }) => {
+          if (error || !data) {
+            return [] as NoticeSummary[];
+          }
+
+          return data.map(mapNoticeRow);
+        })
+      : (await Promise.all(spaces.map((space) => listNoticesForSpace(space.id)))).flat();
+
+  return noticeItems
     .filter((notice) => {
       const space = spaces.find((item) => item.id === notice.spaceId);
       return space ? canManageNotice(profile, { notice, space }) : false;
@@ -56,7 +72,16 @@ export async function listManageableNotices(profile: AppUserProfile): Promise<No
 }
 
 export async function getManageableNoticeById(noticeId: string, profile: AppUserProfile): Promise<NoticeSummary | null> {
-  const notice = await getNoticeById(noticeId);
+  const supabase = await createSupabaseServerWriteClient();
+  const notice =
+    supabase
+      ? await supabase
+          .from("notices")
+          .select("*")
+          .eq("id", noticeId)
+          .maybeSingle()
+          .then(({ data, error }) => (error || !data ? null : mapNoticeRow(data)))
+      : await getNoticeById(noticeId);
 
   if (!notice) {
     return null;
