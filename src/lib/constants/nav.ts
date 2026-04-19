@@ -13,6 +13,7 @@ import {
   BarChart3,
   Settings,
   FolderKanban,
+  ListTodo,
   Sparkles,
   ScrollText,
 } from "lucide-react";
@@ -73,7 +74,7 @@ export function getAdminNavForProfile(profile: AppUserProfile): NavItem[] {
 export const ADMIN_NAV: NavItem[] = [
   { titleKey: "nav.adminHome", href: ROUTES.admin, icon: Shield },
   { titleKey: "nav.classes", href: "/admin/classes", icon: GraduationCap },
-  { titleKey: "nav.tasks", href: ROUTES.adminTasks, icon: FolderKanban },
+  { titleKey: "nav.tasks", href: ROUTES.adminTasks, icon: ListTodo },
   { titleKey: "nav.electives", href: "/admin/electives", icon: BookOpen },
   { titleKey: "nav.resources", href: "/admin/resources", icon: FolderKanban },
   { titleKey: "nav.notices", href: "/admin/notices", icon: Bell },
