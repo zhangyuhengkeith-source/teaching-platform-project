@@ -118,52 +118,50 @@ export function SubmissionPanel({
     setPendingFiles((current) => current.filter((file) => file.clientId !== clientId));
   }
 
-  const runAction = (mode: "draft" | "submit") =>
-    form.handleSubmit((values) => {
-      setFormError(null);
-      startTransition(async () => {
-        let uploadedObjects: Array<{ bucket: string; objectPath: string }> = [];
+  const runAction = (mode: "draft" | "submit") => {
+    setFormError(null);
+    startTransition(async () => {
+      let uploadedObjects: Array<{ bucket: string; objectPath: string }> = [];
 
-        try {
-          const uploadedMetadata: Array<{
-            file_path: string;
-            file_name: string;
-            mime_type: string | null;
-            file_size: number | null;
-          }> = [];
+      try {
+        const values = form.getValues();
+        const uploadedMetadata: Array<{
+          file_path: string;
+          file_name: string;
+          mime_type: string | null;
+          file_size: number | null;
+        }> = [];
 
-          if (pendingFiles.length > 0) {
-            const spacePathSegment = task.spaceSlug ?? task.spaceId;
-            const uploadResult = await uploadSubmissionFiles(spacePathSegment, task.slug, pendingFiles);
-            uploadedObjects = uploadResult.uploadedObjects;
-            uploadedMetadata.push(...uploadResult.fileMetadata);
-          }
-
-          const payload = {
-            ...values,
-            file_metadata: [
-              ...existingFiles.map(toSubmissionFileMetadata),
-              ...uploadedMetadata,
-            ],
-          };
-
-          if (mode === "draft") {
-            await saveTaskSubmissionDraftAction(payload);
-          } else {
-            await submitTaskSubmissionAction(payload);
-          }
-
-          router.refresh();
-        } catch (error) {
-          try {
-            await removeUploadedStorageObjects(uploadedObjects);
-          } catch {
-            // Best-effort cleanup; surface the original error instead.
-          }
-          setFormError(error instanceof Error ? error.message : t("forms.unableToSaveSubmission"));
+        if (pendingFiles.length > 0) {
+          const spacePathSegment = task.spaceSlug ?? task.spaceId;
+          const uploadResult = await uploadSubmissionFiles(spacePathSegment, task.slug, pendingFiles);
+          uploadedObjects = uploadResult.uploadedObjects;
+          uploadedMetadata.push(...uploadResult.fileMetadata);
         }
-      });
-    })();
+
+        const payload = submissionDraftSchema.parse({
+          ...values,
+          file_metadata: [...existingFiles.map(toSubmissionFileMetadata), ...uploadedMetadata],
+        });
+
+        if (mode === "draft") {
+          await saveTaskSubmissionDraftAction(payload);
+        } else {
+          await submitTaskSubmissionAction(payload);
+        }
+
+        form.clearErrors();
+        router.refresh();
+      } catch (error) {
+        try {
+          await removeUploadedStorageObjects(uploadedObjects);
+        } catch {
+          // Best-effort cleanup; surface the original error instead.
+        }
+        setFormError(error instanceof Error ? error.message : t("forms.unableToSaveSubmission"));
+      }
+    });
+  };
 
   return (
     <div className="space-y-5">
