@@ -141,6 +141,7 @@ export function SubmissionPanel({
 
         const payload = submissionDraftSchema.parse({
           ...values,
+          id: values.id || undefined,
           file_metadata: [...existingFiles.map(toSubmissionFileMetadata), ...uploadedMetadata],
         });
 
