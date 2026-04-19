@@ -45,6 +45,12 @@ export async function getNoticeById(noticeId: string): Promise<NoticeSummary | n
 
 export async function listManageableNotices(profile: AppUserProfile): Promise<NoticeSummary[]> {
   const spaces = await listManageableNoticeSpaces(profile);
+  const spacesWithMemberships = await Promise.all(
+    spaces.map(async (space) => ({
+      space,
+      memberships: await listMembershipsForSpace(space.id),
+    })),
+  );
   const supabase = await createSupabaseServerWriteClient();
   const spaceIds = spaces.map((space) => space.id);
   const notices =
@@ -65,8 +71,8 @@ export async function listManageableNotices(profile: AppUserProfile): Promise<No
 
   return noticeItems
     .filter((notice) => {
-      const space = spaces.find((item) => item.id === notice.spaceId);
-      return space ? canManageNotice(profile, { notice, space }) : false;
+      const match = spacesWithMemberships.find(({ space }) => space.id === notice.spaceId);
+      return match ? canManageNotice(profile, { notice, space: match.space, memberships: match.memberships }) : false;
     })
     .sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""));
 }
