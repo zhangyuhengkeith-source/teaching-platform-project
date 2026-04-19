@@ -15,6 +15,7 @@ Required:
 
 Optional:
 
+- `SUPABASE_SERVICE_ROLE_KEY` for trusted server-side writes such as task submissions and attachment metadata updates
 - `NEXT_PUBLIC_APP_BASE_URL`
 - `NEXT_PUBLIC_BOOTSTRAP_ADMIN_EMAILS`
 - `NEXT_PUBLIC_TP_ENABLE_DEMO_MODE=true` for local-only demo access
@@ -51,6 +52,7 @@ At the moment, only the `supabase` provider paths are implemented. If you switch
 - `NEXT_PUBLIC_TP_STORAGE_MODE=supabase`
 - `NEXT_PUBLIC_SUPABASE_URL=<your project url>`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY=<your anon key>`
+- `SUPABASE_SERVICE_ROLE_KEY=<your service role key>`
 
 ### Local demo mode without Supabase
 

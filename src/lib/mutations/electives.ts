@@ -8,6 +8,7 @@ import {
   seedSubmissionFiles,
   seedTaskSubmissions,
 } from "@/lib/seed/seed";
+import { createSupabaseServerWriteClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { removeStoredFiles } from "@/services/storage-server-service";
 import type {
@@ -328,7 +329,7 @@ export async function deleteTask(taskId: string): Promise<void> {
 }
 
 async function syncSubmissionFiles(submissionId: string, files: CreateTaskSubmissionInput["file_metadata"]) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerWriteClient({ requireServiceRole: true });
 
   if (!supabase) {
     if (typeof files === "undefined") {
@@ -428,7 +429,7 @@ export async function updateTaskSubmissionDraft(
   context: { task: TaskSummary; group: GroupDetail | null },
   input: UpdateTaskSubmissionDraftInput,
 ): Promise<TaskSubmissionSummary> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerWriteClient({ requireServiceRole: true });
   const submitterProfileId = context.task.submissionMode === "individual" ? profile.id : null;
   const submitterGroupId = context.task.submissionMode === "group" ? context.group?.id ?? null : null;
   let existing: TaskSubmissionSummary | null = seedTaskSubmissions.find((entry) => entry.id === input.id) ?? null;
@@ -495,7 +496,7 @@ export async function updateTaskSubmissionDraft(
 
   const { data, error } = await query;
   if (error || !data) {
-    throw new Error(error?.message ?? "Failed to save submission draft.");
+    throw new Error(error?.message ? `Failed to save submission draft via trusted server write client: ${error.message}` : "Failed to save submission draft via trusted server write client.");
   }
 
   const files = await syncSubmissionFiles(data.id, input.file_metadata);
@@ -521,7 +522,7 @@ export async function submitTaskSubmission(
     throw new Error(error instanceof Error ? `Failed while syncing submission content or attachments: ${error.message}` : "Failed while syncing submission content or attachments.");
   }
   const nextStatus = deriveSubmissionStatusForSubmit(draft.status);
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerWriteClient({ requireServiceRole: true });
 
   if (!supabase) {
     draft.status = nextStatus;
@@ -541,7 +542,7 @@ export async function submitTaskSubmission(
     .single();
 
   if (error || !data) {
-    throw new Error(error?.message ? `Failed while marking the submission as submitted: ${error.message}` : "Failed while marking the submission as submitted.");
+    throw new Error(error?.message ? `Failed while marking the submission as submitted via trusted server write client: ${error.message}` : "Failed while marking the submission as submitted via trusted server write client.");
   }
 
   return {
@@ -560,7 +561,7 @@ export async function returnTaskSubmissionWithFeedback(profile: AppUserProfile, 
     throw new Error("Submission not found.");
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerWriteClient({ requireServiceRole: true });
   if (!supabase) {
     const seedSubmission = seedTaskSubmissions.find((entry) => entry.id === input.submission_id);
     if (!seedSubmission) {
