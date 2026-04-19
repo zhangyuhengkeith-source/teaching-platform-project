@@ -32,7 +32,7 @@ export default async function ClassesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Browse the class spaces you belong to and continue into structured teaching materials, sections, and notices." title="Classes" />
+      <PageHeader description="\u67e5\u770b\u4f60\u5df2\u52a0\u5165\u7684\u73ed\u7ea7\uff0c\u5e76\u7ee7\u7eed\u8fdb\u5165\u8bfe\u7a0b\u7ae0\u8282\u3001\u5b66\u4e60\u8d44\u6e90\u4e0e\u73ed\u7ea7\u516c\u544a\u3002" title="\u73ed\u7ea7" />
       {cards.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {cards.map((space) => (
@@ -51,7 +51,7 @@ export default async function ClassesPage() {
           ))}
         </div>
       ) : (
-        <EmptyState description="No class memberships are active yet. Once you are added to a class, it will appear here." icon={GraduationCap} title="No classes yet" />
+        <EmptyState description="\u4f60\u5f53\u524d\u8fd8\u6ca1\u6709\u5df2\u751f\u6548\u7684\u73ed\u7ea7\u5f52\u5c5e\u3002\u52a0\u5165\u73ed\u7ea7\u540e\uff0c\u4f1a\u5728\u8fd9\u91cc\u663e\u793a\u3002" icon={GraduationCap} title="\u6682\u65e0\u73ed\u7ea7" />
       )}
     </div>
   );

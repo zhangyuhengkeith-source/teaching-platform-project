@@ -11,9 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useI18n } from "@/hooks/use-i18n";
-import {
-  MAX_SUBMISSION_FILE_SIZE_BYTES,
-} from "@/lib/db/storage";
+import { MAX_SUBMISSION_FILE_SIZE_BYTES } from "@/lib/db/storage";
 import { saveTaskSubmissionDraftAction } from "@/lib/server/actions/save-task-submission-draft";
 import { submitTaskSubmissionAction } from "@/lib/server/actions/submit-task-submission";
 import { submissionDraftSchema, type SubmissionDraftSchema } from "@/lib/validations/electives";
@@ -101,7 +99,7 @@ export function SubmissionPanel({
 
     const oversizedFile = selectedFiles.find((file) => file.size > MAX_SUBMISSION_FILE_SIZE_BYTES);
     if (oversizedFile) {
-      setFormError(`File ${oversizedFile.name} exceeds the ${formatFileSize(MAX_SUBMISSION_FILE_SIZE_BYTES)} limit.`);
+      setFormError(`\u6587\u4ef6 ${oversizedFile.name} \u8d85\u8fc7\u4e86 ${formatFileSize(MAX_SUBMISSION_FILE_SIZE_BYTES)} \u7684\u5927\u5c0f\u9650\u5236\u3002`);
       event.target.value = "";
       return;
     }
@@ -192,19 +190,27 @@ export function SubmissionPanel({
           <label className="text-sm font-medium">{t("forms.writtenResponse")}</label>
           <Textarea disabled={!canEdit || isPending} minLength={10} rows={12} {...form.register("text_content")} />
           <p className="text-xs text-muted-foreground">
-            Upload optional supporting files. Each file can be up to {formatFileSize(MAX_SUBMISSION_FILE_SIZE_BYTES)}.
+            {"\u53ef\u9009\u4e0a\u4f20\u8865\u5145\u9644\u4ef6\u3002\u6bcf\u4e2a\u6587\u4ef6\u5927\u5c0f\u4e0a\u9650\u4e3a "}
+            {formatFileSize(MAX_SUBMISSION_FILE_SIZE_BYTES)}
+            {"\u3002"}
           </p>
           {form.formState.errors.text_content ? <p className="text-sm text-red-600">{form.formState.errors.text_content.message}</p> : null}
         </div>
 
         <div className="space-y-3 rounded-2xl border border-dashed border-border bg-slate-50 p-4">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-slate-900">Attachments</p>
-            <p className="text-sm text-muted-foreground">Submitted files stay permission-protected and open through signed download links.</p>
+            <p className="text-sm font-medium text-slate-900">{"\u9644\u4ef6"}</p>
+            <p className="text-sm text-muted-foreground">
+              {"\u5df2\u63d0\u4ea4\u7684\u6587\u4ef6\u4f1a\u4fdd\u7559\u6743\u9650\u63a7\u5236\uff0c\u5e76\u901a\u8fc7\u7b7e\u540d\u4e0b\u8f7d\u94fe\u63a5\u6253\u5f00\u3002"}
+            </p>
           </div>
           {canEdit ? <Input disabled={isPending} multiple onChange={handleFileSelection} type="file" /> : null}
           <SubmissionFileList
-            emptyText={canEdit ? "No uploaded attachments yet. Add files above if needed." : "No attachments were submitted."}
+            emptyText={
+              canEdit
+                ? "\u5f53\u524d\u8fd8\u6ca1\u6709\u4e0a\u4f20\u9644\u4ef6\uff0c\u5982\u6709\u9700\u8981\u53ef\u5728\u4e0a\u65b9\u6dfb\u52a0\u3002"
+                : "\u672c\u6b21\u63d0\u4ea4\u6ca1\u6709\u9644\u4ef6\u3002"
+            }
             files={existingFiles}
             onRemove={canEdit ? removeExistingFile : undefined}
             submissionId={submission?.id}
@@ -216,10 +222,13 @@ export function SubmissionPanel({
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-2 last:border-b-0 last:pb-0" key={file.clientId}>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-slate-900">{file.fileName}</p>
-                    <p className="text-xs text-muted-foreground">Queued for upload{formatFileSize(file.fileSize) ? ` · ${formatFileSize(file.fileSize)}` : ""}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {"\u7b49\u5f85\u4e0a\u4f20"}
+                      {formatFileSize(file.fileSize) ? ` \u00b7 ${formatFileSize(file.fileSize)}` : ""}
+                    </p>
                   </div>
                   <Button onClick={() => removePendingFile(file.clientId)} size="sm" type="button" variant="ghost">
-                    Remove
+                    {"\u79fb\u9664"}
                   </Button>
                 </div>
               ))}
@@ -238,9 +247,7 @@ export function SubmissionPanel({
             </Button>
           </div>
         ) : (
-          <div className="rounded-xl border border-border bg-slate-50 px-4 py-3 text-sm text-muted-foreground">
-            {t("forms.readOnly")}
-          </div>
+          <div className="rounded-xl border border-border bg-slate-50 px-4 py-3 text-sm text-muted-foreground">{t("forms.readOnly")}</div>
         )}
       </form>
     </div>

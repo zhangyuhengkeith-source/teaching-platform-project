@@ -15,6 +15,15 @@ interface NoticeCardProps {
   status?: NoticeSummary["status"];
 }
 
+const NOTICE_TYPE_LABELS: Record<NoticeSummary["noticeType"], string> = {
+  homework: "作业",
+  deadline: "截止提醒",
+  mock_exam: "模考",
+  general: "通用通知",
+  grouping: "分组",
+  service_update: "服务更新",
+};
+
 export function NoticeCard({ title, bodyPreview, noticeType, publishAt, pinned, status }: NoticeCardProps) {
   return (
     <Card>
@@ -27,9 +36,14 @@ export function NoticeCard({ title, bodyPreview, noticeType, publishAt, pinned, 
             <div>
               <CardTitle className="text-base">{title}</CardTitle>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <Badge variant="muted" className="capitalize">{noticeType.replace("_", " ")}</Badge>
+                <Badge variant="muted">{NOTICE_TYPE_LABELS[noticeType]}</Badge>
                 {status ? <StatusBadge status={status} /> : null}
-                {pinned ? <Badge variant="primary"><Pin className="mr-1 h-3 w-3" />Pinned</Badge> : null}
+                {pinned ? (
+                  <Badge variant="primary">
+                    <Pin className="mr-1 h-3 w-3" />
+                    置顶
+                  </Badge>
+                ) : null}
               </div>
             </div>
           </div>
@@ -37,9 +51,8 @@ export function NoticeCard({ title, bodyPreview, noticeType, publishAt, pinned, 
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm leading-6 text-muted-foreground">{truncateText(bodyPreview, 180)}</p>
-        {publishAt ? <p className="text-xs text-slate-400">Published {formatDate(publishAt)}</p> : null}
+        {publishAt ? <p className="text-xs text-slate-400">发布于 {formatDate(publishAt)}</p> : null}
       </CardContent>
     </Card>
   );
 }
-

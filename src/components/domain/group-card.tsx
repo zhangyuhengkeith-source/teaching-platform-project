@@ -24,9 +24,9 @@ export function GroupCard({ name, projectSummary, leaderName, memberCount, maxGr
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm leading-6 text-muted-foreground">{projectSummary ?? "Project direction has not been written yet."}</p>
+        <p className="text-sm leading-6 text-muted-foreground">{projectSummary ?? "当前还没有填写项目方向说明。"}</p>
         <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
-          <span>Leader: {leaderName ?? "To be assigned"}</span>
+          <span>组长：{leaderName ?? "待确定"}</span>
           <span className="inline-flex items-center gap-2">
             <Users className="h-4 w-4" />
             {memberCount ?? 0}/{maxGroupSize ?? 4}

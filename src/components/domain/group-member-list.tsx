@@ -18,16 +18,16 @@ export function GroupMemberList({ members }: { members: GroupMemberSummary[] }) 
               </div>
               <div>
                 <p className="font-medium text-slate-900">{member.profileName ?? member.profileId}</p>
-                <p className="text-sm text-muted-foreground">Joined {new Date(member.joinedAt).toLocaleDateString("en")}</p>
+                <p className="text-sm text-muted-foreground">加入时间 {new Date(member.joinedAt).toLocaleDateString("zh-CN")}</p>
               </div>
             </div>
             {member.memberRole === "leader" ? (
               <Badge variant="primary">
                 <Crown className="mr-1 h-3 w-3" />
-                Leader
+                组长
               </Badge>
             ) : (
-              <Badge variant="muted">Member</Badge>
+              <Badge variant="muted">成员</Badge>
             )}
           </CardContent>
         </Card>

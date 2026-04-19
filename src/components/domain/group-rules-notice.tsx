@@ -13,22 +13,22 @@ export function GroupRulesNotice({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Grouping rules</CardTitle>
+        <CardTitle className="text-base">分组规则</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4 text-primary" />
-          One active group per student in this elective
+          每位学生在这门选修课中只能加入一个有效小组
         </div>
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4 text-primary" />
-          Maximum size: {maxGroupSize ?? 4} members
+          小组人数上限：{maxGroupSize ?? 4} 人
         </div>
         <div className="flex items-center gap-2">
           <LockKeyhole className="h-4 w-4 text-primary" />
-          {groupingLocked ? "Grouping is locked. Student create, join, and leave actions are disabled." : "Grouping is open. Leaders can maintain project title and summary."}
+          {groupingLocked ? "当前分组已锁定，学生不能创建、加入或退出小组。" : "当前分组开放中，组长可以维护项目标题与简介。"}
         </div>
-        <Badge variant={groupingLocked ? "warning" : "success"}>{groupingLocked ? "Locked" : "Open"}</Badge>
+        <Badge variant={groupingLocked ? "warning" : "success"}>{groupingLocked ? "已锁定" : "开放中"}</Badge>
       </CardContent>
     </Card>
   );

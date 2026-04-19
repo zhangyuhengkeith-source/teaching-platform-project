@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, CalendarRange } from "lucide-react";
+import { ArrowRight, CalendarRange } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -26,7 +26,7 @@ export function ClassCard({ title, subjectLabel, description, academicYear, stat
             <CardTitle className="text-xl">{title}</CardTitle>
             {subjectLabel ? (
               <div className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                学科 / Subject: {subjectLabel}
+                科目：{subjectLabel}
               </div>
             ) : null}
             {academicYear ? (
@@ -40,23 +40,23 @@ export function ClassCard({ title, subjectLabel, description, academicYear, stat
         </div>
       </CardHeader>
       <CardContent className="space-y-5">
-        <p className="min-h-12 text-sm leading-6 text-muted-foreground">{description ?? "A class space ready for structured teaching materials and notices."}</p>
+        <p className="min-h-12 text-sm leading-6 text-muted-foreground">{description ?? "用于承载结构化教学内容、章节安排与班级公告的学习空间。"}</p>
         <div className="grid grid-cols-3 gap-3 text-sm">
           <div className="rounded-xl bg-slate-50 p-3">
-            <p className="text-slate-500">Sections</p>
+            <p className="text-slate-500">章节</p>
             <p className="mt-1 font-semibold text-slate-900">{sectionCount ?? 0}</p>
           </div>
           <div className="rounded-xl bg-slate-50 p-3">
-            <p className="text-slate-500">Resources</p>
+            <p className="text-slate-500">资源</p>
             <p className="mt-1 font-semibold text-slate-900">{resourceCount ?? 0}</p>
           </div>
           <div className="rounded-xl bg-slate-50 p-3">
-            <p className="text-slate-500">Notices</p>
+            <p className="text-slate-500">公告</p>
             <p className="mt-1 font-semibold text-slate-900">{noticeCount ?? 0}</p>
           </div>
         </div>
         <Link className="inline-flex items-center gap-2 text-sm font-medium text-primary" href={href}>
-          Open class
+          进入班级
           <ArrowRight className="h-4 w-4" />
         </Link>
       </CardContent>

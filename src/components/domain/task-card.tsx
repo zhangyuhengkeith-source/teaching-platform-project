@@ -2,7 +2,6 @@ import Link from "next/link";
 import { CalendarClock, Users } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { TranslationText } from "@/components/common/translation-text";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,7 @@ import type { TaskSummary } from "@/types/domain";
 export function TaskCard({
   task,
   href,
-  actionLabel = <TranslationText translationKey="admin.taskCard.open" />,
+  actionLabel = "\u6253\u5f00\u4efb\u52a1",
 }: {
   task: TaskSummary;
   href?: string;
@@ -26,7 +25,7 @@ export function TaskCard({
             <CardTitle className="text-base">{task.title}</CardTitle>
             <div className="flex flex-wrap gap-2">
               <Badge variant="muted" className="capitalize">
-                {task.submissionMode === "group" ? <TranslationText translationKey="admin.forms.groupSubmission" /> : <TranslationText translationKey="admin.forms.individualSubmission" />}
+                {task.submissionMode === "group" ? "\u5c0f\u7ec4" : "\u4e2a\u4eba"}
               </Badge>
               <StatusBadge status={task.status} />
             </div>
@@ -37,10 +36,13 @@ export function TaskCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm leading-6 text-muted-foreground">{task.brief ?? <TranslationText translationKey="admin.taskCard.emptyBrief" />}</p>
+        <p className="text-sm leading-6 text-muted-foreground">
+          {task.brief ?? "\u6559\u5e08\u8865\u5145\u4efb\u52a1\u7b80\u4ecb\u540e\uff0c\u4f1a\u663e\u793a\u5728\u8fd9\u91cc\u3002"}
+        </p>
         <p className="inline-flex items-center gap-2 text-xs text-slate-400">
           <CalendarClock className="h-4 w-4" />
-          <TranslationText translationKey="admin.taskCard.due" values={{ value: formatDateTime(task.dueAt) }} />
+          {"\u622a\u6b62\u65f6\u95f4\uff1a"}
+          {formatDateTime(task.dueAt)}
         </p>
         {href ? <span className="text-sm font-medium text-primary">{actionLabel}</span> : null}
       </CardContent>

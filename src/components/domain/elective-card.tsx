@@ -28,25 +28,25 @@ export function ElectiveCard({ title, description, academicYear, status, groupCo
         </div>
       </CardHeader>
       <CardContent className="space-y-5">
-        <p className="min-h-12 text-sm leading-6 text-muted-foreground">{description ?? "An elective workspace for collaborative projects, milestones, and teacher guidance."}</p>
+        <p className="min-h-12 text-sm leading-6 text-muted-foreground">{description ?? "用于项目协作、阶段任务与教师指导的选修课空间。"}</p>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="rounded-xl bg-slate-50 p-3">
             <div className="flex items-center gap-2 text-slate-500">
               <Users className="h-4 w-4" />
-              Groups
+              小组
             </div>
             <p className="mt-1 font-semibold text-slate-900">{groupCount ?? 0}</p>
           </div>
           <div className="rounded-xl bg-slate-50 p-3">
             <div className="flex items-center gap-2 text-slate-500">
               <BookOpenText className="h-4 w-4" />
-              Tasks
+              任务
             </div>
             <p className="mt-1 font-semibold text-slate-900">{taskCount ?? 0}</p>
           </div>
         </div>
         <Link className="inline-flex items-center gap-2 text-sm font-medium text-primary" href={href}>
-          Open elective
+          进入选修课
           <ArrowRight className="h-4 w-4" />
         </Link>
       </CardContent>
