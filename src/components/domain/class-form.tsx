@@ -60,7 +60,11 @@ export function ClassForm({
         };
 
         if (mode === "create") {
-          await createSpaceAction(payload);
+          const result = await createSpaceAction(payload);
+          if (!result.ok) {
+            setFormError(result.error ?? t("admin.userTable.saveFailed"));
+            return;
+          }
         } else {
           await updateSpaceAction(payload);
         }

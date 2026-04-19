@@ -7,15 +7,28 @@ import { createSpaceSchema } from "@/lib/validations/spaces";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { isTeacher } from "@/lib/permissions/profiles";
 
-export async function createSpaceAction(input: unknown) {
-  const profile = await requireAuth();
-  if (!isTeacher(profile)) {
-    throw new Error("You do not have permission to create a space.");
-  }
+export interface CreateSpaceActionResult {
+  ok: boolean;
+  error?: string;
+}
 
-  const parsed = createSpaceSchema.parse(input);
-  const space = await createSpace(profile.id, parsed);
-  revalidatePath("/admin/classes");
-  revalidatePath("/classes");
-  return space;
+export async function createSpaceAction(input: unknown) {
+  try {
+    const profile = await requireAuth();
+    if (!isTeacher(profile)) {
+      return { ok: false, error: "You do not have permission to create a space." } satisfies CreateSpaceActionResult;
+    }
+
+    const parsed = createSpaceSchema.parse(input);
+    await createSpace(profile.id, parsed);
+    revalidatePath("/admin/classes");
+    revalidatePath("/classes");
+    return { ok: true } satisfies CreateSpaceActionResult;
+  } catch (error) {
+    console.error("Failed to create space.", error);
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Failed to create space.",
+    } satisfies CreateSpaceActionResult;
+  }
 }

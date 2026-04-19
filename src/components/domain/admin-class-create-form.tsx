@@ -34,11 +34,15 @@ export function AdminClassCreateForm() {
 
     startTransition(async () => {
       try {
-        await createManagedClassAction({
+        const result = await createManagedClassAction({
           ...values,
           slug: buildClassSlug(values.subject, values.title, values.academic_year),
           type: "class",
         });
+        if (!result.ok) {
+          setFormError(result.error ?? t("forms.unableToSaveSubmission"));
+          return;
+        }
         form.reset({
           title: "",
           subject: undefined,
