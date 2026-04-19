@@ -18,6 +18,28 @@ import type { SpaceSummary } from "@/types/domain";
 
 type NoticeFormValues = CreateNoticeSchema & { id?: string };
 
+function toDateTimeInputValue(value?: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function fromDateTimeInputValue(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  return new Date(value).toISOString();
+}
+
 export function NoticeForm({
   mode,
   spaces,
@@ -38,8 +60,8 @@ export function NoticeForm({
       title: initialValues?.title ?? "",
       body: initialValues?.body ?? "",
       notice_type: initialValues?.notice_type ?? "general",
-      publish_at: initialValues?.publish_at ?? "",
-      expire_at: initialValues?.expire_at ?? "",
+      publish_at: toDateTimeInputValue(initialValues?.publish_at),
+      expire_at: toDateTimeInputValue(initialValues?.expire_at),
       is_pinned: initialValues?.is_pinned ?? false,
       status: initialValues?.status ?? "draft",
       ...(mode === "edit" && initialValues?.id ? { id: initialValues.id } : {}),
@@ -51,10 +73,16 @@ export function NoticeForm({
 
     startTransition(async () => {
       try {
+        const payload = {
+          ...values,
+          publish_at: fromDateTimeInputValue(values.publish_at ?? null),
+          expire_at: fromDateTimeInputValue(values.expire_at ?? null),
+        };
+
         if (mode === "create") {
-          await createNoticeAction(values);
+          await createNoticeAction(payload);
         } else {
-          await updateNoticeAction(values);
+          await updateNoticeAction(payload);
         }
 
         router.push("/admin/notices");
@@ -106,11 +134,11 @@ export function NoticeForm({
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="publish_at">{t("admin.forms.publishAt")}</label>
-          <Input id="publish_at" placeholder="2025-09-15T00:00:00.000Z" {...form.register("publish_at")} />
+          <Input id="publish_at" type="datetime-local" {...form.register("publish_at")} />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="expire_at">{t("admin.forms.expireAt")}</label>
-          <Input id="expire_at" placeholder="2025-10-01T00:00:00.000Z" {...form.register("expire_at")} />
+          <Input id="expire_at" type="datetime-local" {...form.register("expire_at")} />
         </div>
       </div>
       <div className="flex items-center gap-3 rounded-xl border border-border bg-white px-4 py-3">
