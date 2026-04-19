@@ -5,6 +5,15 @@ import { GROUP_MEMBER_ROLES, SUBMISSION_MODES } from "@/lib/constants/elective-t
 
 const uuidField = z.string().uuid("A valid UUID is required.");
 const slugField = z.string().trim().min(1, "Slug is required.").regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers, and hyphens.");
+const datetimeField = z.preprocess(
+  (value) => (value === "" ? null : value),
+  z
+    .string()
+    .trim()
+    .refine((value) => !Number.isNaN(new Date(value).getTime()), "A valid date and time is required.")
+    .optional()
+    .nullable(),
+);
 
 export const createElectiveSchema = z.object({
   title: z.string().trim().min(1, "Title is required."),
@@ -54,7 +63,7 @@ export const createTaskSchema = z.object({
   brief: z.string().trim().max(300).optional().nullable(),
   body: z.string().trim().max(8000).optional().nullable(),
   submission_mode: z.enum(SUBMISSION_MODES),
-  due_at: z.preprocess((value) => (value === "" ? null : value), z.string().datetime().optional().nullable()),
+  due_at: datetimeField,
   allow_resubmission: z.boolean().optional(),
   template_resource_id: z.preprocess((value) => (value === "" ? null : value), uuidField.optional().nullable()),
   status: z.enum(TASK_STATUSES).optional(),
