@@ -1,11 +1,16 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { mapSpaceMembershipRow, mapSpaceRow, mapSpaceSectionRow } from "@/lib/db/mappers";
 import { seedMemberships, seedSections, seedSpaces } from "@/lib/seed/seed";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { AssignStudentToClassInput, CreateSpaceInput, UpdateSpaceInput } from "@/types/api";
+import type { Database } from "@/types/database";
 import type { SpaceMembershipSummary, SpaceSectionSummary, SpaceSummary } from "@/types/domain";
 
-async function ensureUniqueClassSlug(baseSlug: string, excludeId?: string): Promise<string> {
-  const supabase = await createSupabaseServerClient();
+type SpaceRepositoryClient = SupabaseClient<Database>;
+
+async function ensureUniqueClassSlug(baseSlug: string, excludeId?: string, client?: SpaceRepositoryClient): Promise<string> {
+  const supabase = client ?? (await createSupabaseServerClient());
 
   if (!supabase) {
     return baseSlug;
@@ -197,9 +202,9 @@ export async function profileHasActiveClassMembership(profileId: string): Promis
   return Boolean(data && data.length > 0);
 }
 
-export async function createSpaceRecord(ownerId: string, input: CreateSpaceInput): Promise<SpaceSummary> {
-  const supabase = await createSupabaseServerClient();
-  const slug = input.type === "class" ? await ensureUniqueClassSlug(input.slug) : input.slug;
+export async function createSpaceRecord(ownerId: string, input: CreateSpaceInput, client?: SpaceRepositoryClient): Promise<SpaceSummary> {
+  const supabase = client ?? (await createSupabaseServerClient());
+  const slug = input.type === "class" ? await ensureUniqueClassSlug(input.slug, undefined, supabase ?? undefined) : input.slug;
 
   if (!supabase) {
     return {
@@ -239,9 +244,9 @@ export async function createSpaceRecord(ownerId: string, input: CreateSpaceInput
   return mapSpaceRow(data);
 }
 
-export async function updateSpaceRecord(input: UpdateSpaceInput): Promise<SpaceSummary> {
-  const supabase = await createSupabaseServerClient();
-  const slug = input.type === "class" && input.slug ? await ensureUniqueClassSlug(input.slug, input.id) : input.slug;
+export async function updateSpaceRecord(input: UpdateSpaceInput, client?: SpaceRepositoryClient): Promise<SpaceSummary> {
+  const supabase = client ?? (await createSupabaseServerClient());
+  const slug = input.type === "class" && input.slug ? await ensureUniqueClassSlug(input.slug, input.id, supabase ?? undefined) : input.slug;
 
   if (!supabase) {
     return {
