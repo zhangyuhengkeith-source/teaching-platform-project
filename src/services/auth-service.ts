@@ -1,5 +1,6 @@
 "use client";
 
+import { getApiBaseUrl, getAuthMode } from "@/lib/config/app-config";
 import { canUseDemoMode, SUPABASE_CONFIG_ERROR } from "@/lib/config/runtime";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -16,7 +17,21 @@ interface SignUpWithPasswordInput {
   metadata?: Record<string, unknown>;
 }
 
+function getUnsupportedAuthModeMessage() {
+  const apiBaseUrl = getApiBaseUrl();
+
+  if (apiBaseUrl) {
+    return `Auth mode "${getAuthMode()}" is configured, but the browser auth service still needs a provider implementation for ${apiBaseUrl}.`;
+  }
+
+  return `Auth mode "${getAuthMode()}" is configured, but the browser auth service still needs a provider implementation.`;
+}
+
 function resolveBrowserAuthClient() {
+  if (getAuthMode() !== "supabase") {
+    throw new Error(getUnsupportedAuthModeMessage());
+  }
+
   const client = createSupabaseBrowserClient();
 
   if (!client && !canUseDemoMode()) {

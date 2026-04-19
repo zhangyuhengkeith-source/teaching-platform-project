@@ -1,9 +1,7 @@
 import { cookies } from "next/headers";
 
-import { canUseDemoMode, isSupabaseConfigured } from "@/lib/config/runtime";
-import { createProfileIfMissing } from "@/lib/mutations/profiles";
-import { getProfileByUserId } from "@/lib/queries/profiles";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { ensureProfile, findProfileById } from "@/repositories/profile-repository";
+import { resolveServerAuthIdentity } from "@/services/server-auth-service";
 import type { AppRole, AppUserProfile, SessionUser, UserType } from "@/types/auth";
 import type { ProfileSummary } from "@/types/domain";
 
@@ -52,17 +50,25 @@ async function resolveMockProfile(): Promise<AppUserProfile> {
   };
 }
 
+function mapProfileSummaryToAppUserProfile(profile: ProfileSummary): AppUserProfile {
+  return {
+    id: profile.id,
+    email: profile.email,
+    fullName: profile.fullName,
+    displayName: profile.displayName,
+    avatarUrl: profile.avatarUrl,
+    role: profile.role,
+    userType: profile.userType,
+    gradeLevel: profile.gradeLevel,
+    status: profile.status,
+  };
+}
+
 export async function getSession(): Promise<SessionUser> {
   try {
-    if (!isSupabaseConfigured()) {
-      if (!canUseDemoMode()) {
-        return {
-          isAuthenticated: false,
-          isMock: false,
-          profile: null,
-        };
-      }
+    const authResolution = await resolveServerAuthIdentity();
 
+    if (authResolution.kind === "demo") {
       return {
         isAuthenticated: true,
         isMock: true,
@@ -70,22 +76,7 @@ export async function getSession(): Promise<SessionUser> {
       };
     }
 
-    const supabase = await createSupabaseServerClient();
-    if (!supabase) {
-      return {
-        isAuthenticated: true,
-        isMock: true,
-        profile: await resolveMockProfile(),
-      };
-    }
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError) {
-      console.error("Failed to fetch Supabase user on the server.", authError);
+    if (authResolution.kind === "unauthenticated") {
       return {
         isAuthenticated: false,
         isMock: false,
@@ -93,59 +84,42 @@ export async function getSession(): Promise<SessionUser> {
       };
     }
 
-    if (!user) {
-      return {
-        isAuthenticated: false,
-        isMock: false,
-        profile: null,
-      };
-    }
-
-    const existingProfile = await getProfileByUserId(user.id);
+    const existingProfile = await findProfileById(authResolution.identity.id);
 
     if (existingProfile) {
       return {
         isAuthenticated: true,
         isMock: false,
-        profile: {
-          id: existingProfile.id,
-          email: existingProfile.email,
-          fullName: existingProfile.fullName,
-          displayName: existingProfile.displayName,
-          avatarUrl: existingProfile.avatarUrl,
-          role: existingProfile.role,
-          userType: existingProfile.userType,
-          gradeLevel: existingProfile.gradeLevel,
-          status: existingProfile.status,
-        },
+        profile: mapProfileSummaryToAppUserProfile(existingProfile),
       };
     }
 
+    const identity = authResolution.identity;
     let bootstrappedProfile: ProfileSummary;
 
     try {
-      bootstrappedProfile = await createProfileIfMissing({
-        id: user.id,
-        email: user.email ?? "user@example.com",
-        fullName: user.user_metadata.full_name ?? "Platform User",
-        displayName: user.user_metadata.display_name ?? null,
-        avatarUrl: user.user_metadata.avatar_url ?? null,
-        role: normalizeRole(user.user_metadata.role) ?? "student",
-        userType: normalizeUserType(user.user_metadata.user_type) ?? "internal",
-        gradeLevel: user.user_metadata.grade_level ?? null,
+      bootstrappedProfile = await ensureProfile({
+        id: identity.id,
+        email: identity.email ?? "user@example.com",
+        fullName: typeof identity.metadata.full_name === "string" ? identity.metadata.full_name : "Platform User",
+        displayName: typeof identity.metadata.display_name === "string" ? identity.metadata.display_name : null,
+        avatarUrl: typeof identity.metadata.avatar_url === "string" ? identity.metadata.avatar_url : null,
+        role: typeof identity.metadata.role === "string" ? normalizeRole(identity.metadata.role) ?? "student" : "student",
+        userType: typeof identity.metadata.user_type === "string" ? normalizeUserType(identity.metadata.user_type) ?? "internal" : "internal",
+        gradeLevel: typeof identity.metadata.grade_level === "string" ? identity.metadata.grade_level : null,
         status: "active",
       });
     } catch (error) {
       console.error("Failed to create or load the application profile.", error);
       bootstrappedProfile = {
-        id: user.id,
-        email: user.email ?? "user@example.com",
-        fullName: user.user_metadata.full_name ?? "Platform User",
-        displayName: user.user_metadata.display_name ?? null,
-        avatarUrl: user.user_metadata.avatar_url ?? null,
-        role: normalizeRole(user.user_metadata.role) ?? "student",
-        userType: normalizeUserType(user.user_metadata.user_type) ?? "internal",
-        gradeLevel: user.user_metadata.grade_level ?? null,
+        id: identity.id,
+        email: identity.email ?? "user@example.com",
+        fullName: typeof identity.metadata.full_name === "string" ? identity.metadata.full_name : "Platform User",
+        displayName: typeof identity.metadata.display_name === "string" ? identity.metadata.display_name : null,
+        avatarUrl: typeof identity.metadata.avatar_url === "string" ? identity.metadata.avatar_url : null,
+        role: typeof identity.metadata.role === "string" ? normalizeRole(identity.metadata.role) ?? "student" : "student",
+        userType: typeof identity.metadata.user_type === "string" ? normalizeUserType(identity.metadata.user_type) ?? "internal" : "internal",
+        gradeLevel: typeof identity.metadata.grade_level === "string" ? identity.metadata.grade_level : null,
         status: "active" as const,
       };
     }
@@ -153,17 +127,7 @@ export async function getSession(): Promise<SessionUser> {
     return {
       isAuthenticated: true,
       isMock: false,
-      profile: {
-        id: bootstrappedProfile.id,
-        email: bootstrappedProfile.email,
-        fullName: bootstrappedProfile.fullName,
-        displayName: bootstrappedProfile.displayName,
-        avatarUrl: bootstrappedProfile.avatarUrl,
-        role: bootstrappedProfile.role,
-        userType: bootstrappedProfile.userType,
-        gradeLevel: bootstrappedProfile.gradeLevel,
-        status: bootstrappedProfile.status,
-      },
+      profile: mapProfileSummaryToAppUserProfile(bootstrappedProfile),
     };
   } catch (error) {
     if (isDynamicServerUsageError(error)) {

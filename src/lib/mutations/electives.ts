@@ -1,15 +1,15 @@
-import { mapGroupMemberRow, mapGroupRow, mapTaskRow, mapTaskSubmissionFileRow, mapTaskSubmissionRow } from "@/lib/db/mappers";
-import { splitStorageFilePath } from "@/lib/db/storage";
+import { mapGroupMemberRow, mapGroupRow, mapTaskSubmissionFileRow, mapTaskSubmissionRow } from "@/lib/db/mappers";
 import { getGroupById } from "@/lib/queries/electives";
 import { getManageableSubmissionById } from "@/lib/queries/tasks";
+import { createTaskRecord, deleteTaskRecord, updateTaskRecord } from "@/repositories/task-repository";
 import {
   seedGroupMembers,
   seedGroups,
   seedSubmissionFiles,
   seedTaskSubmissions,
-  seedTasks,
 } from "@/lib/seed/seed";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { removeStoredFiles } from "@/services/storage-server-service";
 import type {
   CreateElectiveInput,
   CreateGroupInput,
@@ -65,32 +65,6 @@ function mapSubmissionFileInput(submissionId: string, file: NormalizedSubmission
     fileSize: file.file_size ?? null,
     createdAt: nowIso(),
   };
-}
-
-async function removeStoredSubmissionFiles(filePaths: string[]) {
-  const supabase = await createSupabaseServerClient();
-
-  if (!supabase || filePaths.length === 0) {
-    return;
-  }
-
-  const groupedPaths = new Map<string, string[]>();
-
-  filePaths.forEach((filePath) => {
-    const parsed = splitStorageFilePath(filePath);
-    if (!parsed) {
-      return;
-    }
-
-    groupedPaths.set(parsed.bucket, [...(groupedPaths.get(parsed.bucket) ?? []), parsed.objectPath]);
-  });
-
-  for (const [bucket, objectPaths] of groupedPaths.entries()) {
-    const { error } = await supabase.storage.from(bucket).remove(objectPaths);
-    if (error) {
-      throw new Error(error.message);
-    }
-  }
 }
 
 export async function createElectiveSpace(ownerId: string, input: CreateElectiveInput) {
@@ -342,145 +316,15 @@ export async function removeGroupMember(input: RemoveGroupMemberInput): Promise<
 }
 
 export async function createTask(profile: AppUserProfile, input: CreateTaskInput): Promise<TaskSummary> {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) {
-    const task: TaskSummary = {
-      id: crypto.randomUUID(),
-      spaceId: input.space_id,
-      title: input.title,
-      slug: input.slug,
-      brief: input.brief ?? null,
-      body: input.body ?? null,
-      submissionMode: input.submission_mode,
-      dueAt: input.due_at ?? null,
-      allowResubmission: input.allow_resubmission ?? true,
-      templateResourceId: input.template_resource_id ?? null,
-      status: input.status ?? "draft",
-      createdBy: profile.id,
-      createdAt: nowIso(),
-      updatedAt: nowIso(),
-    };
-    seedTasks.unshift(task);
-    return task;
-  }
-
-  const { data, error } = await supabase
-    .from("tasks")
-    .insert({
-      space_id: input.space_id,
-      title: input.title,
-      slug: input.slug,
-      brief: input.brief ?? null,
-      body: input.body ?? null,
-      submission_mode: input.submission_mode,
-      due_at: input.due_at ?? null,
-      allow_resubmission: input.allow_resubmission ?? true,
-      template_resource_id: input.template_resource_id ?? null,
-      status: input.status ?? "draft",
-      created_by: profile.id,
-    })
-    .select("*")
-    .single();
-
-  if (error || !data) {
-    throw new Error(error?.message ?? "Failed to create task.");
-  }
-
-  return mapTaskRow(data);
+  return createTaskRecord(profile.id, input);
 }
 
 export async function updateTask(input: UpdateTaskInput): Promise<TaskSummary> {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) {
-    const task = seedTasks.find((entry) => entry.id === input.id);
-    if (!task) {
-      throw new Error("Task not found.");
-    }
-    Object.assign(task, {
-      title: input.title ?? task.title,
-      slug: input.slug ?? task.slug,
-      brief: input.brief ?? task.brief,
-      body: input.body ?? task.body,
-      submissionMode: input.submission_mode ?? task.submissionMode,
-      dueAt: input.due_at ?? task.dueAt,
-      allowResubmission: input.allow_resubmission ?? task.allowResubmission,
-      templateResourceId: input.template_resource_id ?? task.templateResourceId,
-      status: input.status ?? task.status,
-      updatedAt: nowIso(),
-    });
-    return task;
-  }
-
-  const { data, error } = await supabase
-    .from("tasks")
-    .update({
-      title: input.title,
-      slug: input.slug,
-      brief: input.brief,
-      body: input.body,
-      submission_mode: input.submission_mode,
-      due_at: input.due_at,
-      allow_resubmission: input.allow_resubmission,
-      template_resource_id: input.template_resource_id,
-      status: input.status,
-    })
-    .eq("id", input.id)
-    .select("*")
-    .single();
-
-  if (error || !data) {
-    throw new Error(error?.message ?? "Failed to update task.");
-  }
-
-  return mapTaskRow(data);
+  return updateTaskRecord(input);
 }
 
 export async function deleteTask(taskId: string): Promise<void> {
-  const supabase = await createSupabaseServerClient();
-
-  if (!supabase) {
-    for (let index = seedSubmissionFiles.length - 1; index >= 0; index -= 1) {
-      const file = seedSubmissionFiles[index];
-      if (!file) {
-        continue;
-      }
-
-      const submission = seedTaskSubmissions.find((entry) => entry.id === file.submissionId);
-      if (submission?.taskId === taskId) {
-        seedSubmissionFiles.splice(index, 1);
-      }
-    }
-
-    for (let index = seedTaskSubmissions.length - 1; index >= 0; index -= 1) {
-      if (seedTaskSubmissions[index]?.taskId === taskId) {
-        seedTaskSubmissions.splice(index, 1);
-      }
-    }
-
-    for (let index = seedTasks.length - 1; index >= 0; index -= 1) {
-      if (seedTasks[index]?.id === taskId) {
-        seedTasks.splice(index, 1);
-      }
-    }
-
-    return;
-  }
-
-  const { data: submissionFiles, error: submissionFilesError } = await supabase
-    .from("task_submission_files")
-    .select("file_path, task_submissions!inner(task_id)")
-    .eq("task_submissions.task_id", taskId);
-
-  if (submissionFilesError) {
-    throw new Error(submissionFilesError.message);
-  }
-
-  await removeStoredSubmissionFiles((submissionFiles ?? []).map((file) => file.file_path));
-
-  const { error } = await supabase.from("tasks").delete().eq("id", taskId);
-  if (error) {
-    throw new Error(error.message);
-  }
+  await deleteTaskRecord(taskId);
 }
 
 async function syncSubmissionFiles(submissionId: string, files: CreateTaskSubmissionInput["file_metadata"]) {
@@ -523,7 +367,7 @@ async function syncSubmissionFiles(submissionId: string, files: CreateTaskSubmis
   const filesToDelete = (existingFiles ?? []).filter((file) => !keepFileIds.has(file.id));
 
   if (filesToDelete.length > 0) {
-    await removeStoredSubmissionFiles(filesToDelete.map((file) => file.file_path));
+    await removeStoredFiles({ filePaths: filesToDelete.map((file) => file.file_path) });
 
     const { error: deleteError } = await supabase.from("task_submission_files").delete().in("id", filesToDelete.map((file) => file.id));
     if (deleteError) {

@@ -383,7 +383,7 @@ export const en: TranslationDictionary = {
     },
     users: {
       title: "Manage Users",
-      description: "Only {email} can open this page and change user roles, user types, or account status.",
+      description: "Only designated bootstrap admins and super admins can open this page and change user roles, user types, or account status.",
       createClassTitle: "Create Class",
       createClassDescription: "Create a new class directly from the super-admin console before assigning users.",
       emptyTitle: "No users yet",

@@ -3,12 +3,17 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/get-session";
 import { ROUTES } from "@/lib/constants/routes";
 import { mapTaskSubmissionFileRow, mapTaskSubmissionRow } from "@/lib/db/mappers";
-import { SUBMISSION_FILE_SIGNED_URL_TTL_SECONDS, splitStorageFilePath } from "@/lib/db/storage";
+import { SUBMISSION_FILE_SIGNED_URL_TTL_SECONDS } from "@/lib/db/storage";
 import { canViewSubmission } from "@/lib/permissions/tasks";
 import { getSpaceById, listMembershipsForSpace } from "@/lib/queries/spaces";
 import { getGroupForUserInElective } from "@/lib/queries/electives";
 import { getTaskById } from "@/lib/queries/tasks";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  createSignedDownloadUrl,
+  getStorageServiceErrorStatusCode,
+  isStorageServiceError,
+} from "@/services/storage-server-service";
 
 export const dynamic = "force-dynamic";
 
@@ -60,20 +65,19 @@ export async function GET(
     return NextResponse.json({ message: "Submission file not found." }, { status: 404 });
   }
 
-  const parsedPath = splitStorageFilePath(file.filePath);
-  if (!parsedPath) {
-    return NextResponse.json({ message: "Invalid file path." }, { status: 404 });
-  }
-
-  const { data: signedUrl, error: signedUrlError } = await supabase.storage
-    .from(parsedPath.bucket)
-    .createSignedUrl(parsedPath.objectPath, SUBMISSION_FILE_SIGNED_URL_TTL_SECONDS, {
-      download: file.fileName,
+  try {
+    const signedUrl = await createSignedDownloadUrl({
+      filePath: file.filePath,
+      downloadFileName: file.fileName,
+      expiresInSeconds: SUBMISSION_FILE_SIGNED_URL_TTL_SECONDS,
     });
 
-  if (signedUrlError || !signedUrl?.signedUrl) {
-    return NextResponse.json({ message: signedUrlError?.message ?? "Unable to create a download link." }, { status: 404 });
-  }
+    return NextResponse.redirect(signedUrl);
+  } catch (error) {
+    if (isStorageServiceError(error)) {
+      return NextResponse.json({ message: error.message }, { status: getStorageServiceErrorStatusCode(error) });
+    }
 
-  return NextResponse.redirect(signedUrl.signedUrl);
+    throw error;
+  }
 }

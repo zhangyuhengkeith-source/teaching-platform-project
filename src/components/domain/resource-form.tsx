@@ -8,11 +8,8 @@ import type { Resolver } from "react-hook-form";
 
 import { createResourceAction } from "@/lib/server/actions/create-resource";
 import { updateResourceAction } from "@/lib/server/actions/update-resource";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   MAX_RESOURCE_FILE_SIZE_BYTES,
-  STORAGE_BUCKETS,
-  buildResourceObjectPath,
   getFileExtension,
 } from "@/lib/db/storage";
 import {
@@ -26,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useI18n } from "@/hooks/use-i18n";
+import { removeUploadedStorageObjects, uploadResourceFiles } from "@/services/storage-service";
 import type { ResourceFileSummary, SpaceSectionSummary, SpaceSummary } from "@/types/domain";
 
 type ResourceFormValues = CreateResourceSchema & { id?: string };
@@ -89,23 +87,6 @@ export function ResourceForm({
   const selectedSpaceId = form.watch("space_id");
   const sectionOptions = useMemo(() => sections.filter((section) => section.spaceId === selectedSpaceId), [sections, selectedSpaceId]);
 
-  async function cleanupUploadedObjects(uploadedObjects: Array<{ bucket: string; objectPath: string }>) {
-    const supabase = createSupabaseBrowserClient();
-
-    if (!supabase || uploadedObjects.length === 0) {
-      return;
-    }
-
-    const groupedPaths = new Map<string, string[]>();
-    uploadedObjects.forEach(({ bucket, objectPath }) => {
-      groupedPaths.set(bucket, [...(groupedPaths.get(bucket) ?? []), objectPath]);
-    });
-
-    for (const [bucket, objectPaths] of groupedPaths.entries()) {
-      await supabase.storage.from(bucket).remove(objectPaths);
-    }
-  }
-
   function handleFileSelection(event: ChangeEvent<HTMLInputElement>) {
     setFormError(null);
 
@@ -145,7 +126,6 @@ export function ResourceForm({
           throw new Error("Selected space not found.");
         }
 
-        const supabase = createSupabaseBrowserClient();
         const uploadedMetadata: Array<{
           file_path: string;
           file_name: string;
@@ -157,33 +137,9 @@ export function ResourceForm({
         }> = [];
 
         if (pendingFiles.length > 0) {
-          if (!supabase) {
-            throw new Error("Supabase storage is not configured.");
-          }
-
-          for (const pendingFile of pendingFiles) {
-            const objectPath = buildResourceObjectPath(selectedSpace.slug, pendingFile.fileName);
-            const { error } = await supabase.storage.from(STORAGE_BUCKETS.resourceFiles).upload(objectPath, pendingFile.file, {
-              cacheControl: "3600",
-              upsert: false,
-              contentType: pendingFile.mimeType ?? undefined,
-            });
-
-            if (error) {
-              throw new Error(error.message);
-            }
-
-            uploadedObjects = [...uploadedObjects, { bucket: STORAGE_BUCKETS.resourceFiles, objectPath }];
-            uploadedMetadata.push({
-              file_path: `${STORAGE_BUCKETS.resourceFiles}/${objectPath}`,
-              file_name: pendingFile.fileName,
-              file_ext: pendingFile.fileExt,
-              mime_type: pendingFile.mimeType,
-              file_size: pendingFile.fileSize,
-              preview_url: null,
-              sort_order: 0,
-            });
-          }
+          const uploadResult = await uploadResourceFiles(selectedSpace.slug, pendingFiles);
+          uploadedObjects = uploadResult.uploadedObjects;
+          uploadedMetadata.push(...uploadResult.fileMetadata);
         }
 
         const fileMetadata = [
@@ -218,7 +174,7 @@ export function ResourceForm({
         router.refresh();
       } catch (error) {
         try {
-          await cleanupUploadedObjects(uploadedObjects);
+          await removeUploadedStorageObjects(uploadedObjects);
         } catch {
           // Best-effort cleanup; surface the original submission error to the user.
         }

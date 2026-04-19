@@ -1,9 +1,6 @@
 import {
   mapGroupMemberRow,
   mapGroupRow,
-  mapTaskRow,
-  mapTaskSubmissionFileRow,
-  mapTaskSubmissionRow,
 } from "@/lib/db/mappers";
 import { canManageElective, canViewElective, canViewGroup, canViewSubmission, canViewTask } from "@/lib/permissions/electives";
 import { isTeacher } from "@/lib/permissions/profiles";
@@ -19,11 +16,9 @@ import {
   seedGroups,
   seedProfiles,
   seedSpaces,
-  seedSubmissionFiles,
-  seedTaskSubmissions,
-  seedTasks,
 } from "@/lib/seed/seed";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { findTaskById, listTaskSubmissionsByTaskId, listTasksBySpaceId } from "@/repositories/task-repository";
 import type { AppUserProfile } from "@/types/auth";
 import type { GroupDetail, GroupMemberSummary, GroupSummary, SpaceDetail, SpaceSummary, TaskDetail, TaskSubmissionSummary, TaskSummary } from "@/types/domain";
 
@@ -47,15 +42,6 @@ function applySubmissionEffectiveStatus(submission: TaskSubmissionSummary, dueAt
     ...submission,
     taskDueAt: dueAt,
     effectiveStatus: overdue && submission.status === "draft" ? "overdue" : submission.status,
-  };
-}
-
-async function enrichTask(task: TaskSummary): Promise<TaskSummary> {
-  const space = await getSpaceById(task.spaceId);
-  return {
-    ...task,
-    spaceTitle: task.spaceTitle ?? space?.title,
-    spaceSlug: task.spaceSlug ?? space?.slug,
   };
 }
 
@@ -192,18 +178,7 @@ export async function listManageableGroups(profile: AppUserProfile): Promise<Gro
 }
 
 async function listTasksRawForElective(spaceId: string): Promise<TaskSummary[]> {
-  const supabase = await createSupabaseServerClient();
-
-  if (!supabase) {
-    return Promise.all(seedTasks.filter((task) => task.spaceId === spaceId).map(enrichTask));
-  }
-
-  const { data, error } = await supabase.from("tasks").select("*").eq("space_id", spaceId).order("due_at", { ascending: true });
-  if (error || !data) {
-    return [];
-  }
-
-  return Promise.all(data.map((row) => enrichTask(mapTaskRow(row))));
+  return listTasksBySpaceId(spaceId);
 }
 
 export async function listTasksForElective(spaceId: string, profile: AppUserProfile): Promise<TaskSummary[]> {
@@ -227,61 +202,21 @@ export async function listManageableTasksForElective(spaceId: string, profile: A
 }
 
 export async function getTaskById(taskId: string): Promise<TaskSummary | null> {
-  const supabase = await createSupabaseServerClient();
-
-  if (!supabase) {
-    const task = seedTasks.find((entry) => entry.id === taskId) ?? null;
-    return task ? enrichTask(task) : null;
-  }
-
-  const { data, error } = await supabase.from("tasks").select("*").eq("id", taskId).maybeSingle();
-  if (error || !data) {
-    return null;
-  }
-
-  return enrichTask(mapTaskRow(data));
-}
-
-async function listSubmissionFiles(submissionId: string) {
-  const supabase = await createSupabaseServerClient();
-
-  if (!supabase) {
-    return seedSubmissionFiles.filter((file) => file.submissionId === submissionId);
-  }
-
-  const { data, error } = await supabase.from("task_submission_files").select("*").eq("submission_id", submissionId);
-  if (error || !data) {
-    return [];
-  }
-
-  return data.map(mapTaskSubmissionFileRow);
+  return findTaskById(taskId);
 }
 
 async function listSubmissionsRawForTask(taskId: string): Promise<TaskSubmissionSummary[]> {
-  const supabase = await createSupabaseServerClient();
-
-  if (!supabase) {
-    return Promise.all(seedTaskSubmissions.filter((submission) => submission.taskId === taskId).map(async (submission) => ({
-      ...submission,
-      files: submission.files ?? (await listSubmissionFiles(submission.id)),
-    })));
-  }
-
-  const { data, error } = await supabase.from("task_submissions").select("*, task_submission_files(*)").eq("task_id", taskId).order("updated_at", { ascending: false });
-  if (error || !data) {
-    return [];
-  }
-
-  const profileIds = [...new Set(data.flatMap((row) => [row.submitter_profile_id, row.feedback_by].filter(Boolean) as string[]))];
-  const groupIds = [...new Set(data.flatMap((row) => (row.submitter_group_id ? [row.submitter_group_id] : [])))];
+  const submissions = await listTaskSubmissionsByTaskId(taskId);
+  const profileIds = [...new Set(submissions.flatMap((submission) => [submission.submitterProfileId, submission.feedbackBy].filter(Boolean) as string[]))];
+  const groupIds = [...new Set(submissions.flatMap((submission) => (submission.submitterGroupId ? [submission.submitterGroupId] : [])))];
   const [profiles, groups] = await Promise.all([listProfilesByIds(profileIds), Promise.all(groupIds.map((id) => getGroupById(id)))]);
   const profileMap = Object.fromEntries(profiles.map((profile) => [profile.id, profile.fullName]));
   const groupMap = Object.fromEntries(groups.filter(Boolean).map((group) => [group!.id, group!.name]));
 
-  return data.map((row) => ({
-    ...mapTaskSubmissionRow(row, row.task_submission_files?.map(mapTaskSubmissionFileRow)),
-    submitterName: row.submitter_profile_id ? profileMap[row.submitter_profile_id] ?? row.submitter_profile_id : null,
-    groupName: row.submitter_group_id ? groupMap[row.submitter_group_id] ?? row.submitter_group_id : null,
+  return submissions.map((submission) => ({
+    ...submission,
+    submitterName: submission.submitterProfileId ? profileMap[submission.submitterProfileId] ?? submission.submitterProfileId : null,
+    groupName: submission.submitterGroupId ? groupMap[submission.submitterGroupId] ?? submission.submitterGroupId : null,
   }));
 }
 

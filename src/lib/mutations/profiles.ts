@@ -1,121 +1,16 @@
-import { mapProfileRow } from "@/lib/db/mappers";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { ensureProfile, updateProfileAccessLevel, updateProfileDetails } from "@/repositories/profile-repository";
 import type { UpdateProfileAccessInput, UpdateProfileInput } from "@/types/api";
 import type { AppUserProfile } from "@/types/auth";
 import type { ProfileSummary } from "@/types/domain";
 
 export async function createProfileIfMissing(user: AppUserProfile): Promise<ProfileSummary> {
-  const supabase = await createSupabaseServerClient();
-
-  if (!supabase) {
-    return {
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName,
-      displayName: user.displayName ?? null,
-      avatarUrl: user.avatarUrl ?? null,
-      role: user.role,
-      userType: user.userType,
-      gradeLevel: user.gradeLevel ?? null,
-      status: user.status ?? "active",
-    };
-  }
-
-  const { data: existing } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-  if (existing) {
-    return mapProfileRow(existing);
-  }
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .insert({
-      id: user.id,
-      email: user.email,
-      full_name: user.fullName,
-      display_name: user.displayName ?? null,
-      avatar_url: user.avatarUrl ?? null,
-      role: user.role,
-      user_type: user.userType,
-      grade_level: user.gradeLevel ?? null,
-      status: user.status ?? "active",
-    })
-    .select("*")
-    .single();
-
-  if (error || !data) {
-    throw new Error(error?.message ?? "Failed to bootstrap profile.");
-  }
-
-  return mapProfileRow(data);
+  return ensureProfile(user);
 }
 
 export async function updateProfile(profileId: string, input: UpdateProfileInput): Promise<ProfileSummary> {
-  const supabase = await createSupabaseServerClient();
-
-  if (!supabase) {
-    return {
-      id: profileId,
-      email: "mock@local.dev",
-      fullName: input.full_name,
-      displayName: input.display_name ?? null,
-      avatarUrl: input.avatar_url ?? null,
-      role: "student",
-      userType: "internal",
-      gradeLevel: input.grade_level ?? null,
-      status: "active",
-    };
-  }
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .update({
-      full_name: input.full_name,
-      display_name: input.display_name ?? null,
-      grade_level: input.grade_level ?? null,
-      avatar_url: input.avatar_url ?? null,
-    })
-    .eq("id", profileId)
-    .select("*")
-    .single();
-
-  if (error || !data) {
-    throw new Error(error?.message ?? "Failed to update profile.");
-  }
-
-  return mapProfileRow(data);
+  return updateProfileDetails(profileId, input);
 }
 
 export async function updateProfileAccess(input: UpdateProfileAccessInput): Promise<ProfileSummary> {
-  const supabase = await createSupabaseServerClient();
-
-  if (!supabase) {
-    return {
-      id: input.id,
-      email: "mock@local.dev",
-      fullName: "Mock User",
-      displayName: null,
-      avatarUrl: null,
-      role: input.role,
-      userType: input.user_type,
-      gradeLevel: null,
-      status: input.status,
-    };
-  }
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .update({
-      role: input.role,
-      user_type: input.user_type,
-      status: input.status,
-    })
-    .eq("id", input.id)
-    .select("*")
-    .single();
-
-  if (error || !data) {
-    throw new Error(error?.message ?? "Failed to update profile access.");
-  }
-
-  return mapProfileRow(data);
+  return updateProfileAccessLevel(input);
 }

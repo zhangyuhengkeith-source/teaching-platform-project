@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireAdminUsersAccess } from "@/lib/auth/require-admin-users-access";
-import { updateProfileAccess } from "@/lib/mutations/profiles";
+import { updateProfileAccessLevel } from "@/repositories/profile-repository";
 
 const updateProfileAccessSchema = z.object({
   id: z.string().uuid(),
@@ -16,7 +16,7 @@ const updateProfileAccessSchema = z.object({
 export async function updateProfileAccessAction(input: unknown) {
   await requireAdminUsersAccess();
   const parsed = updateProfileAccessSchema.parse(input);
-  const updated = await updateProfileAccess(parsed);
+  const updated = await updateProfileAccessLevel(parsed);
 
   revalidatePath("/admin/users");
 

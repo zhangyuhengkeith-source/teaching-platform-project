@@ -1,67 +1,39 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
 
-import { canUseDemoMode, getSupabaseConfig } from "@/lib/config/runtime";
-
-const PROTECTED_PREFIXES = ["/dashboard", "/classes", "/electives", "/service", "/notifications", "/profile", "/wrong-book", "/admin", "/waiting-assignment"];
+import { PROTECTED_PREFIXES, PROTECTED_ROUTE_MATCHER } from "@/lib/auth/protected-routes";
+import { resolveMiddlewareAuthContext } from "@/services/middleware-auth-service";
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next({ request });
-  const config = getSupabaseConfig();
   const isProtected = PROTECTED_PREFIXES.some((prefix) => request.nextUrl.pathname.startsWith(prefix));
 
-  if (!config) {
-    if (!isProtected || canUseDemoMode()) {
-      return response;
-    }
-
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    redirectUrl.searchParams.set("next", request.nextUrl.pathname);
-    redirectUrl.searchParams.set("reason", "config");
-    return NextResponse.redirect(redirectUrl);
-  }
-
   try {
-    const supabase = createServerClient(config.url, config.anonKey, {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        },
-      },
-    });
+    const authContext = await resolveMiddlewareAuthContext(request);
 
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-
-    if (error) {
-      console.error("Failed to fetch Supabase session in middleware.", error);
-    }
-
-    if (isProtected && !session) {
+    if (isProtected && authContext.status !== "authenticated") {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = "/login";
       redirectUrl.searchParams.set("next", request.nextUrl.pathname);
+      if (authContext.status === "provider_unavailable") {
+        redirectUrl.searchParams.set("reason", "config");
+      }
       return NextResponse.redirect(redirectUrl);
     }
+
+    return authContext.response;
   } catch (error) {
     console.error("Unexpected middleware failure while checking auth.", error);
     if (isProtected) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = "/login";
       redirectUrl.searchParams.set("next", request.nextUrl.pathname);
+      redirectUrl.searchParams.set("reason", "config");
       return NextResponse.redirect(redirectUrl);
     }
   }
 
-  return response;
+  return NextResponse.next({ request });
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/classes/:path*", "/electives/:path*", "/service/:path*", "/notifications/:path*", "/profile/:path*", "/wrong-book/:path*", "/admin/:path*", "/waiting-assignment/:path*"],
+  matcher: PROTECTED_ROUTE_MATCHER,
 };

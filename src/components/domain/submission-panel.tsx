@@ -13,14 +13,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useI18n } from "@/hooks/use-i18n";
 import {
   MAX_SUBMISSION_FILE_SIZE_BYTES,
-  STORAGE_BUCKETS,
-  buildSubmissionObjectPath,
 } from "@/lib/db/storage";
 import { saveTaskSubmissionDraftAction } from "@/lib/server/actions/save-task-submission-draft";
 import { submitTaskSubmissionAction } from "@/lib/server/actions/submit-task-submission";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { submissionDraftSchema, type SubmissionDraftSchema } from "@/lib/validations/electives";
 import { formatDateTime, formatFileSize } from "@/lib/utils/format";
+import { removeUploadedStorageObjects, uploadSubmissionFiles } from "@/services/storage-service";
 import type { SubmissionFileSummary, TaskDetail, TaskSubmissionSummary } from "@/types/domain";
 
 interface PendingSubmissionFile {
@@ -75,23 +73,6 @@ export function SubmissionPanel({
     },
   });
 
-  async function cleanupUploadedObjects(uploadedObjects: Array<{ bucket: string; objectPath: string }>) {
-    const supabase = createSupabaseBrowserClient();
-
-    if (!supabase || uploadedObjects.length === 0) {
-      return;
-    }
-
-    const groupedPaths = new Map<string, string[]>();
-    uploadedObjects.forEach(({ bucket, objectPath }) => {
-      groupedPaths.set(bucket, [...(groupedPaths.get(bucket) ?? []), objectPath]);
-    });
-
-    for (const [bucket, objectPaths] of groupedPaths.entries()) {
-      await supabase.storage.from(bucket).remove(objectPaths);
-    }
-  }
-
   function handleFileSelection(event: ChangeEvent<HTMLInputElement>) {
     setFormError(null);
 
@@ -134,32 +115,10 @@ export function SubmissionPanel({
           }> = [];
 
           if (pendingFiles.length > 0) {
-            const supabase = createSupabaseBrowserClient();
-            if (!supabase) {
-              throw new Error("Supabase storage is not configured.");
-            }
-
             const spacePathSegment = task.spaceSlug ?? task.spaceId;
-            for (const pendingFile of pendingFiles) {
-              const objectPath = buildSubmissionObjectPath(spacePathSegment, task.slug, pendingFile.fileName);
-              const { error } = await supabase.storage.from(STORAGE_BUCKETS.submissionFiles).upload(objectPath, pendingFile.file, {
-                cacheControl: "3600",
-                upsert: false,
-                contentType: pendingFile.mimeType ?? undefined,
-              });
-
-              if (error) {
-                throw new Error(error.message);
-              }
-
-              uploadedObjects = [...uploadedObjects, { bucket: STORAGE_BUCKETS.submissionFiles, objectPath }];
-              uploadedMetadata.push({
-                file_path: `${STORAGE_BUCKETS.submissionFiles}/${objectPath}`,
-                file_name: pendingFile.fileName,
-                mime_type: pendingFile.mimeType,
-                file_size: pendingFile.fileSize,
-              });
-            }
+            const uploadResult = await uploadSubmissionFiles(spacePathSegment, task.slug, pendingFiles);
+            uploadedObjects = uploadResult.uploadedObjects;
+            uploadedMetadata.push(...uploadResult.fileMetadata);
           }
 
           const payload = {
@@ -185,7 +144,7 @@ export function SubmissionPanel({
           router.refresh();
         } catch (error) {
           try {
-            await cleanupUploadedObjects(uploadedObjects);
+            await removeUploadedStorageObjects(uploadedObjects);
           } catch {
             // Best-effort cleanup; surface the original error instead.
           }

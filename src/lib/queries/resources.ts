@@ -1,85 +1,23 @@
 import { canManageResource } from "@/lib/permissions/resources";
 import { listManageableClasses, listMembershipsForSpace } from "@/lib/queries/spaces";
-import { mapResourceFileRow, mapResourceRow } from "@/lib/db/mappers";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { seedResources } from "@/lib/seed/seed";
+import { findResourceById, findResourceBySlugForSpace, listResourcesBySectionId, listResourcesBySpaceId } from "@/repositories/resource-repository";
 import type { AppUserProfile } from "@/types/auth";
 import type { ResourceSummary } from "@/types/domain";
 
 export async function listResourcesForSpace(spaceId: string): Promise<ResourceSummary[]> {
-  const supabase = await createSupabaseServerClient();
-
-  if (!supabase) {
-    return seedResources.filter((resource) => resource.spaceId === spaceId).sort((a, b) => a.sortOrder - b.sortOrder);
-  }
-
-  const { data, error } = await supabase.from("resources").select("*, resource_files(*)").eq("space_id", spaceId).order("sort_order");
-  if (error || !data) {
-    return [];
-  }
-
-  return data.map((row) =>
-    mapResourceRow(
-      row,
-      row.resource_files?.map(mapResourceFileRow),
-    ),
-  );
+  return listResourcesBySpaceId(spaceId);
 }
 
 export async function listResourcesForSection(sectionId: string): Promise<ResourceSummary[]> {
-  const supabase = await createSupabaseServerClient();
-
-  if (!supabase) {
-    return seedResources.filter((resource) => resource.sectionId === sectionId).sort((a, b) => a.sortOrder - b.sortOrder);
-  }
-
-  const { data, error } = await supabase.from("resources").select("*, resource_files(*)").eq("section_id", sectionId).order("sort_order");
-  if (error || !data) {
-    return [];
-  }
-
-  return data.map((row) =>
-    mapResourceRow(
-      row,
-      row.resource_files?.map(mapResourceFileRow),
-    ),
-  );
+  return listResourcesBySectionId(sectionId);
 }
 
 export async function getResourceBySlugForSpace(spaceId: string, slug: string): Promise<ResourceSummary | null> {
-  const supabase = await createSupabaseServerClient();
-
-  if (!supabase) {
-    return seedResources.find((resource) => resource.spaceId === spaceId && resource.slug === slug) ?? null;
-  }
-
-  const { data, error } = await supabase.from("resources").select("*, resource_files(*)").eq("space_id", spaceId).eq("slug", slug).maybeSingle();
-  if (error || !data) {
-    return null;
-  }
-
-  return mapResourceRow(
-    data,
-    data.resource_files?.map(mapResourceFileRow),
-  );
+  return findResourceBySlugForSpace(spaceId, slug);
 }
 
 export async function getResourceById(resourceId: string): Promise<ResourceSummary | null> {
-  const supabase = await createSupabaseServerClient();
-
-  if (!supabase) {
-    return seedResources.find((resource) => resource.id === resourceId) ?? null;
-  }
-
-  const { data, error } = await supabase.from("resources").select("*, resource_files(*)").eq("id", resourceId).maybeSingle();
-  if (error || !data) {
-    return null;
-  }
-
-  return mapResourceRow(
-    data,
-    data.resource_files?.map(mapResourceFileRow),
-  );
+  return findResourceById(resourceId);
 }
 
 export async function listManageableResources(profile: AppUserProfile): Promise<ResourceSummary[]> {

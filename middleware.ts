@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 
+import { PROTECTED_ROUTE_MATCHER } from "@/lib/auth/protected-routes";
 import { middleware as supabaseMiddleware } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
@@ -7,5 +8,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/classes/:path*", "/electives/:path*", "/service/:path*", "/notifications/:path*", "/profile/:path*", "/wrong-book/:path*", "/admin/:path*", "/waiting-assignment/:path*"],
+  matcher: PROTECTED_ROUTE_MATCHER,
 };

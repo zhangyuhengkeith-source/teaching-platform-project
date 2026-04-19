@@ -6,12 +6,13 @@ import { AdminUserTable } from "@/components/domain/admin-user-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
-import { ADMIN_USERS_EMAIL } from "@/lib/auth/admin-users-access";
-import { listAllProfiles } from "@/lib/queries/profiles";
+import { getBootstrapAdminEmails } from "@/lib/config/admin-access";
 import { listAllClassSpaces, listMembershipsForSpace } from "@/lib/queries/spaces";
+import { listProfiles } from "@/repositories/profile-repository";
 
 export default async function AdminUsersPage() {
-  const [users, classes] = await Promise.all([listAllProfiles(), listAllClassSpaces()]);
+  const [users, classes] = await Promise.all([listProfiles(), listAllClassSpaces()]);
+  const bootstrapAdminLabel = getBootstrapAdminEmails().join(", ");
   const memberships = (await Promise.all(classes.map((space) => listMembershipsForSpace(space.id)))).flat();
   const classMap = new Map(classes.map((space) => [space.id, space]));
   const membershipsByProfile = memberships.reduce<Record<string, string[]>>((accumulator, membership) => {
@@ -38,7 +39,7 @@ export default async function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        description={<TranslationText translationKey="admin.users.description" values={{ email: ADMIN_USERS_EMAIL }} />}
+        description={<TranslationText translationKey="admin.users.description" values={{ email: bootstrapAdminLabel }} />}
         title={<TranslationText translationKey="admin.users.title" />}
       />
       <SectionCard

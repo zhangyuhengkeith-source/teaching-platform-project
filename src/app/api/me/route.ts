@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/lib/auth/get-session";
-import { getProfileByUserId } from "@/lib/queries/profiles";
+import { findProfileById } from "@/repositories/profile-repository";
 
 export async function GET() {
   const session = await getSession();
-  const profile = session.profile ? await getProfileByUserId(session.profile.id) : null;
+  const profile = session.profile ? await findProfileById(session.profile.id) : null;
 
   return NextResponse.json({
     ...session,
