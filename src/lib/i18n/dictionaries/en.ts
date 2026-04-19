@@ -469,6 +469,7 @@ export const en: TranslationDictionary = {
       detailsTitle: "Notice details",
       detailsDescription: "Pinned notices will stand out more clearly in the class learning flow.",
       newDetailsDescription: "Students will see published notices in their class home pages and section pages.",
+      deleteConfirm: "Delete this notice?",
     },
     exercises: {
       title: "Manage Exercises",

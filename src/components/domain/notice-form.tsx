@@ -7,6 +7,7 @@ import { Controller, useForm } from "react-hook-form";
 import type { Resolver } from "react-hook-form";
 
 import { createNoticeAction } from "@/lib/server/actions/create-notice";
+import { deleteNoticeAction } from "@/lib/server/actions/delete-notice";
 import { updateNoticeAction } from "@/lib/server/actions/update-notice";
 import { createNoticeSchema, type CreateNoticeSchema, type UpdateNoticeSchema, updateNoticeSchema } from "@/lib/validations/notices";
 import { Button } from "@/components/ui/button";
@@ -93,6 +94,23 @@ export function NoticeForm({
     });
   });
 
+  const onDelete = () => {
+    if (mode !== "edit" || !initialValues?.id || isPending || !window.confirm(t("admin.notices.deleteConfirm"))) {
+      return;
+    }
+
+    setFormError(null);
+    startTransition(async () => {
+      try {
+        await deleteNoticeAction(initialValues.id!);
+        router.push("/admin/notices");
+        router.refresh();
+      } catch (error) {
+        setFormError(error instanceof Error ? error.message : t("admin.userTable.saveFailed"));
+      }
+    });
+  };
+
   return (
     <form className="space-y-6" onSubmit={onSubmit}>
       <div className="grid gap-6 md:grid-cols-2">
@@ -156,6 +174,9 @@ export function NoticeForm({
       {formError ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}
       <div className="flex gap-3">
         <Button type="submit">{isPending ? t("forms.saving") : mode === "create" ? t("admin.forms.createNotice") : t("admin.forms.updateNotice")}</Button>
+        {mode === "edit" && initialValues?.id ? (
+          <Button onClick={onDelete} type="button" variant="outline">{t("common.delete")}</Button>
+        ) : null}
         <Button onClick={() => router.push("/admin/notices")} type="button" variant="outline">{t("common.cancel")}</Button>
       </div>
     </form>

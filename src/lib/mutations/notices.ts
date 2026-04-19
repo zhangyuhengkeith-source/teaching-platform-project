@@ -1,4 +1,6 @@
 import { mapNoticeRow } from "@/lib/db/mappers";
+import { seedNotices } from "@/lib/seed/seed";
+import { createSupabaseServerWriteClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { CreateNoticeInput, UpdateNoticeInput } from "@/types/api";
 import type { NoticeSummary } from "@/types/domain";
@@ -83,4 +85,22 @@ export async function updateNotice(profileId: string, input: UpdateNoticeInput):
   }
 
   return mapNoticeRow(data);
+}
+
+export async function deleteNotice(noticeId: string): Promise<void> {
+  const supabase = await createSupabaseServerWriteClient({ requireServiceRole: true });
+
+  if (!supabase) {
+    const index = seedNotices.findIndex((notice) => notice.id === noticeId);
+    if (index >= 0) {
+      seedNotices.splice(index, 1);
+    }
+    return;
+  }
+
+  const { error } = await supabase.from("notices").delete().eq("id", noticeId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }

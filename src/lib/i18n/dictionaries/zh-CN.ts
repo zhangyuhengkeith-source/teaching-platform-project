@@ -467,6 +467,7 @@ export const zhCN = {
       detailsTitle: "公告详情",
       detailsDescription: "置顶公告会在班级学习流程中更醒目地展示。",
       newDetailsDescription: "学生会在班级首页与章节页面看到已发布公告。",
+      deleteConfirm: "确定删除这条公告吗？",
     },
     exercises: {
       title: "练习管理",
