@@ -41,7 +41,12 @@ export const APP_NAV: NavItem[] = [
 
 export function getAppNavForProfile(profile: AppUserProfile): NavItem[] {
   if (isTeacher(profile)) {
-    return APP_NAV.filter((item) => item.href !== ROUTES.service && item.href !== ROUTES.wrongBook);
+    const teacherNav = APP_NAV.filter((item) => item.href !== ROUTES.service && item.href !== ROUTES.wrongBook);
+    return [
+      ...teacherNav.slice(0, 1),
+      { titleKey: "nav.teacherAdmin", href: ROUTES.admin, icon: Shield },
+      ...teacherNav.slice(1),
+    ];
   }
 
   if (isExternalStudent(profile)) {

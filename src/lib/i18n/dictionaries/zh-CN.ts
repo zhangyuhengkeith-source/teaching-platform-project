@@ -34,6 +34,7 @@ export const zhCN = {
     login: "登录",
     register: "注册",
     dashboard: "仪表盘",
+    teacherAdmin: "教师管理后台",
     classes: "班级",
     electives: "选修",
     tasks: "任务",
@@ -101,7 +102,7 @@ export const zhCN = {
   },
   dashboard: {
     title: "仪表盘",
-    description: "当前账号角色为 {role}。登录后默认跳转目标为 {target}。",
+    description: "当前账号角色为 {role}。",
     teacherView: "教师视图",
     internalStudentView: "校内学生视图",
     externalStudentView: "校外学生视图",

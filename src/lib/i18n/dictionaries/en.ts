@@ -36,6 +36,7 @@ export const en: TranslationDictionary = {
     login: "Login",
     register: "Register",
     dashboard: "Dashboard",
+    teacherAdmin: "Teacher Admin",
     classes: "Classes",
     tasks: "Tasks",
     electives: "Electives",
@@ -103,7 +104,7 @@ export const en: TranslationDictionary = {
   },
   dashboard: {
     title: "Dashboard",
-    description: "Current account role is {role}. The post-login redirect target is {target}.",
+    description: "Current account role is {role}.",
     teacherView: "Teacher view",
     internalStudentView: "Internal student view",
     externalStudentView: "External student view",
