@@ -18,7 +18,6 @@ export function AdminGroupTable({ items }: { items: GroupDetail[] }) {
               <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.leader" /></th>
               <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.members" /></th>
               <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.status" /></th>
-              <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.projectTitle" /></th>
               <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.updated" /></th>
               <th className="px-4 py-3 font-medium"><TranslationText translationKey="admin.tables.action" /></th>
             </tr>
@@ -33,7 +32,6 @@ export function AdminGroupTable({ items }: { items: GroupDetail[] }) {
                 <td className="px-4 py-3">
                   <StatusBadge status={item.status} />
                 </td>
-                <td className="px-4 py-3 text-slate-500">{item.projectTitle ?? "-"}</td>
                 <td className="px-4 py-3 text-slate-500">{formatDate(item.updatedAt)}</td>
                 <td className="px-4 py-3">
                   <Button asChild size="sm" variant="outline">

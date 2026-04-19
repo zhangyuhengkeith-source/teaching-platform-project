@@ -21,10 +21,7 @@ export function GroupSummaryPanel({
     <Card>
       <CardHeader className="space-y-3">
         <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <CardTitle>{group.name}</CardTitle>
-            <p className="text-sm text-muted-foreground">{group.projectTitle ?? <TranslationText translationKey="admin.groupSummary.emptyProjectTitle" />}</p>
-          </div>
+          <CardTitle>{group.name}</CardTitle>
           <StatusBadge status={group.status} />
         </div>
       </CardHeader>

@@ -42,7 +42,6 @@ export default async function AdminGroupDetailPage({
               id: group.id,
               name: group.name,
               slug: group.slug,
-              project_title: group.projectTitle,
               project_summary: group.projectSummary,
               status: group.status,
             }}

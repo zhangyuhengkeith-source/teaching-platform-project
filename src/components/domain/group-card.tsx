@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface GroupCardProps {
   name: string;
-  projectTitle?: string | null;
   projectSummary?: string | null;
   leaderName?: string | null;
   memberCount?: number;
@@ -15,15 +14,12 @@ interface GroupCardProps {
   action?: ReactNode;
 }
 
-export function GroupCard({ name, projectTitle, projectSummary, leaderName, memberCount, maxGroupSize, status, action }: GroupCardProps) {
+export function GroupCard({ name, projectSummary, leaderName, memberCount, maxGroupSize, status, action }: GroupCardProps) {
   return (
     <Card>
       <CardHeader className="space-y-3">
         <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <CardTitle className="text-base">{name}</CardTitle>
-            {projectTitle ? <p className="text-sm text-slate-700">{projectTitle}</p> : null}
-          </div>
+          <CardTitle className="text-base">{name}</CardTitle>
           <StatusBadge status={status} />
         </div>
       </CardHeader>

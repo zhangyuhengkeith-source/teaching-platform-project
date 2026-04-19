@@ -45,7 +45,6 @@ export default async function ElectiveGroupPage({
                   id: currentGroup.id,
                   name: currentGroup.name,
                   slug: currentGroup.slug,
-                  project_title: currentGroup.projectTitle,
                   project_summary: currentGroup.projectSummary,
                   status: currentGroup.status,
                 }}
@@ -82,7 +81,6 @@ export default async function ElectiveGroupPage({
                     memberCount={group.memberCount}
                     name={group.name}
                     projectSummary={group.projectSummary}
-                    projectTitle={group.projectTitle}
                     status={group.status}
                   />
                 ))}

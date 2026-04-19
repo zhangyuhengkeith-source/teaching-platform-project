@@ -39,7 +39,6 @@ export function GroupEditPanel({
       space_id: spaceId,
       name: initialValues?.name ?? "",
       slug: initialValues?.slug ?? "",
-      project_title: initialValues?.project_title ?? "",
       project_summary: initialValues?.project_summary ?? "",
       status: initialValues?.status ?? "forming",
       ...(mode === "edit" && initialValues?.id ? { id: initialValues.id } : {}),
@@ -77,10 +76,6 @@ export function GroupEditPanel({
           <label className="text-sm font-medium">{t("admin.forms.slug")}</label>
           <Input {...form.register("slug")} />
         </div>
-      </div>
-      <div className="space-y-2">
-        <label className="text-sm font-medium">{t("admin.forms.projectTitle")}</label>
-        <Input {...form.register("project_title")} />
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium">{t("admin.forms.projectSummary")}</label>
