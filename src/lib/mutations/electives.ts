@@ -514,7 +514,12 @@ export async function submitTaskSubmission(
   context: { task: TaskSummary; group: GroupDetail | null },
   input: UpdateTaskSubmissionDraftInput,
 ): Promise<TaskSubmissionSummary> {
-  const draft = await updateTaskSubmissionDraft(profile, context, input);
+  let draft: TaskSubmissionSummary;
+  try {
+    draft = await updateTaskSubmissionDraft(profile, context, input);
+  } catch (error) {
+    throw new Error(error instanceof Error ? `Failed while syncing submission content or attachments: ${error.message}` : "Failed while syncing submission content or attachments.");
+  }
   const nextStatus = deriveSubmissionStatusForSubmit(draft.status);
   const supabase = await createSupabaseServerClient();
 
@@ -536,7 +541,7 @@ export async function submitTaskSubmission(
     .single();
 
   if (error || !data) {
-    throw new Error(error?.message ?? "Failed to submit work.");
+    throw new Error(error?.message ? `Failed while marking the submission as submitted: ${error.message}` : "Failed while marking the submission as submitted.");
   }
 
   return {

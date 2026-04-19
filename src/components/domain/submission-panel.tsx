@@ -146,9 +146,15 @@ export function SubmissionPanel({
         });
 
         if (mode === "draft") {
-          await saveTaskSubmissionDraftAction(payload);
+          const result = await saveTaskSubmissionDraftAction(payload);
+          if (!result.ok) {
+            throw new Error(result.error);
+          }
         } else {
-          await submitTaskSubmissionAction(payload);
+          const result = await submitTaskSubmissionAction(payload);
+          if (!result.ok) {
+            throw new Error(result.error);
+          }
         }
 
         form.clearErrors();
