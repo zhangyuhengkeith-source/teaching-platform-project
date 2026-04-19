@@ -25,11 +25,12 @@ import type { GroupDetail, GroupMemberSummary, GroupSummary, SpaceDetail, SpaceS
 function enrichGroup(group: GroupSummary, members: GroupMemberSummary[]): GroupDetail {
   const leader = seedProfiles.find((profile) => profile.id === group.leaderProfileId);
   const space = seedSpaces.find((entry) => entry.id === group.spaceId);
+  const leaderMember = members.find((member) => member.profileId === group.leaderProfileId && member.status === "active");
 
   return {
     ...group,
     members,
-    leaderName: group.leaderName ?? leader?.fullName ?? null,
+    leaderName: group.leaderName ?? leaderMember?.profileName ?? leader?.fullName ?? null,
     memberCount: members.filter((member) => member.status === "active").length,
     spaceTitle: group.spaceTitle ?? space?.title,
     spaceSlug: group.spaceSlug ?? space?.slug,
