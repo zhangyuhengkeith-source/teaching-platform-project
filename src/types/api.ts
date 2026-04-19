@@ -27,11 +27,13 @@ export interface UpdateProfileAccessInput {
   status: "active" | "inactive" | "suspended";
 }
 
-export interface AssignStudentToClassInput {
+export interface AssignProfileToSpaceInput {
   profile_id: string;
   space_id: string;
   membership_role: "teacher" | "student";
 }
+
+export interface AssignStudentToClassInput extends AssignProfileToSpaceInput {}
 
 export interface CreateSpaceInput {
   title: string;

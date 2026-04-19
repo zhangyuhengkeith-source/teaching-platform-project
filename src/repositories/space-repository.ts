@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { mapSpaceMembershipRow, mapSpaceRow, mapSpaceSectionRow } from "@/lib/db/mappers";
 import { seedMemberships, seedSections, seedSpaces } from "@/lib/seed/seed";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { AssignStudentToClassInput, CreateSpaceInput, UpdateSpaceInput } from "@/types/api";
+import type { AssignProfileToSpaceInput, AssignStudentToClassInput, CreateSpaceInput, UpdateSpaceInput } from "@/types/api";
 import type { Database } from "@/types/database";
 import type { SpaceMembershipSummary, SpaceSectionSummary, SpaceSummary } from "@/types/domain";
 
@@ -172,6 +172,21 @@ export async function listClassSpaces(): Promise<SpaceSummary[]> {
   return data.map(mapSpaceRow);
 }
 
+export async function listElectiveSpaces(): Promise<SpaceSummary[]> {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return seedSpaces.filter((space) => space.type === "elective");
+  }
+
+  const { data, error } = await supabase.from("spaces").select("*").eq("type", "elective").order("created_at", { ascending: false });
+  if (error || !data) {
+    return [];
+  }
+
+  return data.map(mapSpaceRow);
+}
+
 export async function profileHasActiveClassMembership(profileId: string): Promise<boolean> {
   const supabase = await createSupabaseServerClient();
 
@@ -286,8 +301,8 @@ export async function updateSpaceRecord(input: UpdateSpaceInput, client?: SpaceR
   return mapSpaceRow(data);
 }
 
-export async function upsertClassMembershipRecord(input: AssignStudentToClassInput): Promise<SpaceMembershipSummary> {
-  const supabase = await createSupabaseServerClient();
+export async function upsertSpaceMembershipRecord(input: AssignProfileToSpaceInput, client?: SpaceRepositoryClient): Promise<SpaceMembershipSummary> {
+  const supabase = client ?? (await createSupabaseServerClient());
 
   if (!supabase) {
     return {
@@ -326,4 +341,8 @@ export async function upsertClassMembershipRecord(input: AssignStudentToClassInp
     status: data.status,
     joinedAt: data.joined_at,
   };
+}
+
+export async function upsertClassMembershipRecord(input: AssignStudentToClassInput, client?: SpaceRepositoryClient): Promise<SpaceMembershipSummary> {
+  return upsertSpaceMembershipRecord(input, client);
 }

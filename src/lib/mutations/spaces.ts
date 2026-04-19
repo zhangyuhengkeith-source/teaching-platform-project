@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { createSpaceRecord, updateSpaceRecord, upsertClassMembershipRecord } from "@/repositories/space-repository";
-import type { AssignStudentToClassInput, CreateSpaceInput, UpdateSpaceInput } from "@/types/api";
+import { createSpaceRecord, updateSpaceRecord, upsertClassMembershipRecord, upsertSpaceMembershipRecord } from "@/repositories/space-repository";
+import type { AssignProfileToSpaceInput, AssignStudentToClassInput, CreateSpaceInput, UpdateSpaceInput } from "@/types/api";
 import type { Database } from "@/types/database";
 import type { SpaceMembershipSummary, SpaceSummary } from "@/types/domain";
 
@@ -13,6 +13,16 @@ export async function updateSpace(input: UpdateSpaceInput, client?: SupabaseClie
   return updateSpaceRecord(input, client);
 }
 
-export async function assignStudentToClass(input: AssignStudentToClassInput): Promise<SpaceMembershipSummary> {
-  return upsertClassMembershipRecord(input);
+export async function assignProfileToSpace(
+  input: AssignProfileToSpaceInput,
+  client?: SupabaseClient<Database>,
+): Promise<SpaceMembershipSummary> {
+  return upsertSpaceMembershipRecord(input, client);
+}
+
+export async function assignStudentToClass(
+  input: AssignStudentToClassInput,
+  client?: SupabaseClient<Database>,
+): Promise<SpaceMembershipSummary> {
+  return upsertClassMembershipRecord(input, client);
 }

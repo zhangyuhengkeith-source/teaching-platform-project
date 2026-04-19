@@ -5,6 +5,7 @@ import {
   findSpaceById,
   findSpaceBySlug,
   listClassSpaces,
+  listElectiveSpaces,
   listMembershipsBySpaceId,
   listSectionsBySpaceId,
   listSpacesByProfileId,
@@ -109,6 +110,10 @@ export async function listTeacherVisibleClasses(profile: AppUserProfile): Promis
 
 export async function listAllClassSpaces(): Promise<SpaceSummary[]> {
   return listClassSpaces();
+}
+
+export async function listAllElectiveSpaces(): Promise<SpaceSummary[]> {
+  return listElectiveSpaces();
 }
 
 export async function hasActiveClassMembership(profileId: string): Promise<boolean> {

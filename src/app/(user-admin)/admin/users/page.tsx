@@ -7,15 +7,12 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
 import { getBootstrapAdminEmails } from "@/lib/config/admin-access";
-import { listAllClassSpaces, listMembershipsForSpace } from "@/lib/queries/spaces";
+import { listAllClassSpaces, listAllElectiveSpaces, listMembershipsForSpace } from "@/lib/queries/spaces";
 import { listProfiles } from "@/repositories/profile-repository";
+import type { SpaceMembershipSummary, SpaceSummary } from "@/types/domain";
 
-export default async function AdminUsersPage() {
-  const [users, classes] = await Promise.all([listProfiles(), listAllClassSpaces()]);
-  const bootstrapAdminLabel = getBootstrapAdminEmails().join(", ");
-  const memberships = (await Promise.all(classes.map((space) => listMembershipsForSpace(space.id)))).flat();
-  const classMap = new Map(classes.map((space) => [space.id, space]));
-  const membershipsByProfile = memberships.reduce<Record<string, string[]>>((accumulator, membership) => {
+function buildActiveSpaceIdsByProfile(memberships: SpaceMembershipSummary[]) {
+  return memberships.reduce<Record<string, string[]>>((accumulator, membership) => {
     if (membership.status !== "active") {
       return accumulator;
     }
@@ -26,13 +23,34 @@ export default async function AdminUsersPage() {
     }
     return accumulator;
   }, {});
+}
+
+function mapSpaceTitles(spaceIds: string[], spaceMap: Map<string, SpaceSummary>) {
+  return spaceIds.map((spaceId) => spaceMap.get(spaceId)?.title).filter((title): title is string => Boolean(title));
+}
+
+export default async function AdminUsersPage() {
+  const [users, classes, electives] = await Promise.all([listProfiles(), listAllClassSpaces(), listAllElectiveSpaces()]);
+  const bootstrapAdminLabel = getBootstrapAdminEmails().join(", ");
+  const classMap = new Map(classes.map((space) => [space.id, space]));
+  const electiveMap = new Map(electives.map((space) => [space.id, space]));
+  const [classMemberships, electiveMemberships] = await Promise.all([
+    Promise.all(classes.map((space) => listMembershipsForSpace(space.id))),
+    Promise.all(electives.map((space) => listMembershipsForSpace(space.id))),
+  ]);
+  const classMembershipsByProfile = buildActiveSpaceIdsByProfile(classMemberships.flat());
+  const electiveMembershipsByProfile = buildActiveSpaceIdsByProfile(electiveMemberships.flat());
+
   const enrichedUsers = users.map((user) => {
-    const activeClassIds = membershipsByProfile[user.id] ?? [];
+    const activeClassIds = classMembershipsByProfile[user.id] ?? [];
+    const activeElectiveIds = electiveMembershipsByProfile[user.id] ?? [];
 
     return {
       ...user,
       activeClassIds,
-      activeClassTitles: activeClassIds.map((spaceId) => classMap.get(spaceId)?.title).filter((title): title is string => Boolean(title)),
+      activeClassTitles: mapSpaceTitles(activeClassIds, classMap),
+      activeElectiveIds,
+      activeElectiveTitles: mapSpaceTitles(activeElectiveIds, electiveMap),
     };
   });
 
@@ -49,7 +67,7 @@ export default async function AdminUsersPage() {
         <AdminClassCreateForm />
       </SectionCard>
       {enrichedUsers.length > 0 ? (
-        <AdminUserTable classes={classes} items={enrichedUsers} />
+        <AdminUserTable classes={classes} electives={electives} items={enrichedUsers} />
       ) : (
         <EmptyState
           description={<TranslationText translationKey="admin.users.emptyDescription" />}
