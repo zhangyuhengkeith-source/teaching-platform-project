@@ -8,7 +8,7 @@ import { joinGroupAction } from "@/lib/server/actions/join-group";
 import { leaveGroupAction } from "@/lib/server/actions/leave-group";
 import { removeGroupMemberAction } from "@/lib/server/actions/remove-group-member";
 
-const GROUP_ACTION_ERROR = "\u65e0\u6cd5\u5b8c\u6210\u5c0f\u7ec4\u64cd\u4f5c\u3002";
+const GROUP_ACTION_ERROR = "无法完成小组操作。";
 
 export function JoinGroupButton({ groupId }: { groupId: string }) {
   const router = useRouter();
@@ -36,7 +36,7 @@ export function JoinGroupButton({ groupId }: { groupId: string }) {
         }
         type="button"
       >
-        {isPending ? "\u52a0\u5165\u4e2d..." : "\u52a0\u5165\u5c0f\u7ec4"}
+        {isPending ? "加入中..." : "加入小组"}
       </Button>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
     </div>
@@ -70,7 +70,7 @@ export function LeaveGroupButton({ groupId }: { groupId: string }) {
         type="button"
         variant="outline"
       >
-        {isPending ? "\u9000\u51fa\u4e2d..." : "\u9000\u51fa\u5c0f\u7ec4"}
+        {isPending ? "退出中..." : "退出小组"}
       </Button>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
     </div>
@@ -105,7 +105,7 @@ export function RemoveGroupMemberButton({ groupId, profileId }: { groupId: strin
         type="button"
         variant="outline"
       >
-        {isPending ? "\u79fb\u9664\u4e2d..." : "\u79fb\u9664\u6210\u5458"}
+        {isPending ? "移除中..." : "移除成员"}
       </Button>
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
     </div>

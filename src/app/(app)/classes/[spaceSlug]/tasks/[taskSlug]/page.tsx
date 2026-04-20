@@ -29,15 +29,15 @@ export default async function ClassTaskPage({
   const templateResource = task.templateResourceId ? await getResourceById(task.templateResourceId) : null;
   const memberships = space.memberships ?? [];
   const editable = canEditSubmission(profile, task.submission ?? null, null, task, { space, memberships });
-  const contextLabel = `\u4e2a\u4eba\u63d0\u4ea4\uff1a${profile.fullName}`;
+  const contextLabel = `个人提交：${profile.fullName}`;
 
   return (
     <div className="space-y-6">
-      <PageHeader description={task.brief ?? "\u5b8c\u6210\u73ed\u7ea7\u4efb\u52a1\u3001\u8865\u5145\u9644\u4ef6\uff0c\u5e76\u63d0\u4ea4\u7ed9\u6559\u5e08\u8fdb\u884c\u67e5\u770b\u4e0e\u53cd\u9988\u3002"} title={task.title} />
+      <PageHeader description={task.brief ?? "完成班级任务、补充附件，并提交给教师进行查看与反馈。"} title={task.title} />
       <TaskDetailPanel task={task} />
 
       {templateResource ? (
-        <SectionCard description="\u6559\u5e08\u63d0\u4f9b\u7684\u53ef\u9009\u6a21\u677f\u6216\u8d77\u59cb\u53c2\u8003\u8d44\u6e90\u3002" title="\u4efb\u52a1\u6a21\u677f\u8d44\u6e90">
+        <SectionCard description="教师提供的可选模板或起始参考资源。" title="任务模板资源">
           <ResourceCard
             description={templateResource.description}
             files={templateResource.files}
@@ -52,9 +52,9 @@ export default async function ClassTaskPage({
       ) : null}
 
       {task.submissionMode === "group" ? (
-        <EmptyState description="\u8fd9\u4e2a\u73ed\u7ea7\u4efb\u52a1\u88ab\u8bbe\u7f6e\u4e3a\u5c0f\u7ec4\u63d0\u4ea4\uff0c\u5f53\u524d\u73ed\u7ea7\u6d41\u7a0b\u6682\u4e0d\u652f\u6301\u8be5\u914d\u7f6e\u3002" icon={FileText} title="\u6682\u4e0d\u652f\u6301\u7684\u4efb\u52a1\u914d\u7f6e" />
+        <EmptyState description="这个班级任务被设置为小组提交，当前班级流程暂不支持该配置。" icon={FileText} title="暂不支持的任务配置" />
       ) : (
-        <SectionCard description="\u4f60\u53ef\u4ee5\u5728\u8fd9\u91cc\u4fdd\u5b58\u8349\u7a3f\u3001\u4e0a\u4f20\u9644\u4ef6\u5e76\u6b63\u5f0f\u63d0\u4ea4\u4f5c\u4e1a\u3002" title="\u63d0\u4ea4\u4f5c\u4e1a">
+        <SectionCard description="你可以在这里保存草稿、上传附件并正式提交作业。" title="提交作业">
           <SubmissionPanel canEdit={editable} contextLabel={contextLabel} submission={task.submission ?? null} task={task} />
         </SectionCard>
       )}

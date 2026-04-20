@@ -20,21 +20,21 @@ interface ResourceCardProps {
 }
 
 const RESOURCE_TYPE_LABELS: Record<ResourceSummary["resourceType"], string> = {
-  ppt: "PPT \u8bfe\u4ef6",
-  case_analysis: "\u6848\u4f8b\u5206\u6790",
-  revision: "\u590d\u4e60\u8d44\u6599",
-  extension: "\u62d3\u5c55\u8d44\u6599",
-  worksheet: "\u7ec3\u4e60\u8bb2\u4e49",
-  model_answer: "\u53c2\u8003\u7b54\u6848",
-  mock_paper: "\u6a21\u62df\u8bd5\u5377",
-  mark_scheme: "\u8bc4\u5206\u6807\u51c6",
-  other: "\u5176\u4ed6\u8d44\u6e90",
+  ppt: "PPT 课件",
+  case_analysis: "案例分析",
+  revision: "复习资料",
+  extension: "拓展资料",
+  worksheet: "练习讲义",
+  model_answer: "参考答案",
+  mock_paper: "模拟试卷",
+  mark_scheme: "评分标准",
+  other: "其他资源",
 };
 
 const RESOURCE_VISIBILITY_LABELS: Record<ResourceSummary["visibility"], string> = {
-  space: "\u7a7a\u95f4\u5185\u53ef\u89c1",
-  selected_members: "\u6307\u5b9a\u6210\u5458\u53ef\u89c1",
-  public: "\u516c\u5f00",
+  space: "空间内可见",
+  selected_members: "指定成员可见",
+  public: "公开",
 };
 
 export function ResourceCard({ resourceId, title, description, resourceType, visibility, status, updatedAt, href, files }: ResourceCardProps) {
@@ -53,7 +53,7 @@ export function ResourceCard({ resourceId, title, description, resourceType, vis
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm leading-6 text-muted-foreground">{description ?? "\u9762\u5411\u5b66\u751f\u5f00\u653e\u7684\u6559\u5b66\u8d44\u6e90\u3002"}</p>
+        <p className="text-sm leading-6 text-muted-foreground">{description ?? "面向学生开放的教学资源。"}</p>
         <div className="flex flex-wrap items-center gap-2">
           {visibility ? <Badge variant="muted">{RESOURCE_VISIBILITY_LABELS[visibility]}</Badge> : null}
           {status ? <StatusBadge status={status} /> : null}
@@ -75,7 +75,7 @@ export function ResourceCard({ resourceId, title, description, resourceType, vis
             ))}
           </div>
         ) : null}
-        {updatedAt ? <p className="text-xs text-slate-400">{"\u66f4\u65b0\u4e8e "}{formatDate(updatedAt)}</p> : null}
+        {updatedAt ? <p className="text-xs text-slate-400">{"更新于 "}{formatDate(updatedAt)}</p> : null}
       </CardContent>
     </>
   );

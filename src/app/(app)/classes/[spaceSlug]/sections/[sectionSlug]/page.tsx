@@ -32,19 +32,19 @@ export default async function SectionDetailPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader description={section.description ?? "\u8fd9\u91cc\u4f1a\u5c55\u793a\u8be5\u7ae0\u8282\u5bf9\u5e94\u7684\u5b66\u4e60\u8d44\u6e90\u3001\u7ec3\u4e60\u4e0e\u73ed\u7ea7\u516c\u544a\u3002"} title={section.title} />
+      <PageHeader description={section.description ?? "这里会展示该章节对应的学习资源、练习与班级公告。"} title={section.title} />
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-6">
-          <SectionCard description="\u5e2e\u52a9\u4f60\u66f4\u987a\u7545\u63a8\u8fdb\u672c\u7ae0\u8282\u5b66\u4e60\u7684\u5efa\u8bae\u6b65\u9aa4\u3002" title="\u5efa\u8bae\u5b66\u4e60\u8def\u5f84">
+          <SectionCard description="帮助你更顺畅推进本章节学习的建议步骤。" title="建议学习路径">
             <div className="flex items-start gap-3 rounded-xl bg-slate-50 p-4">
               <ArrowRightCircle className="mt-0.5 h-5 w-5 text-primary" />
               <p className="text-sm leading-6 text-slate-700">
-                {"\u5efa\u8bae\u5148\u5b8c\u6210\u672c\u7ae0\u8282\u7684\u6838\u5fc3\u8bfe\u4ef6\u6216\u8bb2\u4e49\uff0c\u518d\u67e5\u770b\u6700\u65b0\u73ed\u7ea7\u516c\u544a\uff0c\u6700\u540e\u8fdb\u5165\u4e66\u9762\u7ec3\u4e60\u6216\u81ea\u6d4b\u4efb\u52a1\u3002"}
+                {"建议先完成本章节的核心课件或讲义，再查看最新班级公告，最后进入书面练习或自测任务。"}
               </p>
             </div>
           </SectionCard>
 
-          <SectionCard description="\u8d44\u6e90\u4f1a\u6309\u7c7b\u578b\u5206\u7ec4\u5c55\u793a\uff0c\u65b9\u4fbf\u5feb\u901f\u67e5\u627e\u3002" title="\u7ae0\u8282\u8d44\u6e90">
+          <SectionCard description="资源会按类型分组展示，方便快速查找。" title="章节资源">
             {groupedResources.length > 0 ? (
               <div className="space-y-6">
                 {groupedResources.map((group) => (
@@ -69,16 +69,16 @@ export default async function SectionDetailPage({
                 ))}
               </div>
             ) : (
-              <EmptyState description="\u8fd9\u4e2a\u7ae0\u8282\u6682\u65f6\u8fd8\u6ca1\u6709\u5df2\u53d1\u5e03\u8d44\u6e90\u3002" icon={FileStack} title="\u6682\u65e0\u8d44\u6e90" />
+              <EmptyState description="这个章节暂时还没有已发布资源。" icon={FileStack} title="暂无资源" />
             )}
           </SectionCard>
 
-          <SectionCard description="\u4e0e\u672c\u7ae0\u8282\u76f4\u63a5\u5173\u8054\u7684\u77ed\u7ec3\u4e60\u4e0e\u81ea\u6d4b\u5185\u5bb9\u3002" title="\u7ec3\u4e60">
+          <SectionCard description="与本章节直接关联的短练习与自测内容。" title="练习">
             {exerciseSets.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2">
                 {exerciseSets.map((exerciseSet) => (
                   <ExerciseSetCard
-                    actionLabel="\u8fdb\u5165\u7ec3\u4e60"
+                    actionLabel="进入练习"
                     exerciseType={exerciseSet.exerciseType}
                     href={`/classes/${space.slug}/practice/${exerciseSet.slug}`}
                     instructions={exerciseSet.instructions}
@@ -91,12 +91,12 @@ export default async function SectionDetailPage({
                 ))}
               </div>
             ) : (
-              <EmptyState description="\u8fd9\u4e2a\u7ae0\u8282\u6682\u65f6\u8fd8\u6ca1\u6709\u5173\u8054\u7ec3\u4e60\u3002" icon={ArrowRightCircle} title="\u6682\u65e0\u7ae0\u8282\u7ec3\u4e60" />
+              <EmptyState description="这个章节暂时还没有关联练习。" icon={ArrowRightCircle} title="暂无章节练习" />
             )}
           </SectionCard>
         </div>
 
-        <SectionCard description="\u7ae0\u8282\u5185\u4ecd\u4f1a\u5c55\u793a\u73ed\u7ea7\u516c\u544a\uff0c\u907f\u514d\u9519\u8fc7\u91cd\u8981\u63d0\u9192\u4e0e\u622a\u6b62\u65f6\u95f4\u3002" title="\u5f53\u524d\u73ed\u7ea7\u516c\u544a">
+        <SectionCard description="章节内仍会展示班级公告，避免错过重要提醒与截止时间。" title="当前班级公告">
           {visibleNotices.length > 0 ? (
             <div className="space-y-4">
               {visibleNotices.slice(0, 3).map((notice) => (
@@ -112,7 +112,7 @@ export default async function SectionDetailPage({
               ))}
             </div>
           ) : (
-            <EmptyState description="\u5f53\u524d\u73ed\u7ea7\u6682\u65f6\u8fd8\u6ca1\u6709\u5df2\u53d1\u5e03\u516c\u544a\u3002" icon={BellRing} title="\u6682\u65e0\u516c\u544a" />
+            <EmptyState description="当前班级暂时还没有已发布公告。" icon={BellRing} title="暂无公告" />
           )}
         </SectionCard>
       </div>

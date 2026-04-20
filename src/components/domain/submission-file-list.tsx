@@ -9,7 +9,7 @@ import type { SubmissionFileSummary } from "@/types/domain";
 export function SubmissionFileList({
   submissionId,
   files,
-  emptyText = "\u6682\u65e0\u9644\u4ef6\u3002",
+  emptyText = "暂无附件。",
   onRemove,
   showCreatedAt = false,
 }: {
@@ -33,8 +33,8 @@ export function SubmissionFileList({
               <p className="truncate text-sm font-medium text-slate-900">{file.fileName}</p>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {formatFileSize(file.fileSize) ?? "\u5927\u5c0f\u672a\u77e5"}
-              {showCreatedAt ? ` \u00b7 \u6dfb\u52a0\u4e8e ${formatDateTime(file.createdAt)}` : ""}
+              {formatFileSize(file.fileSize) ?? "大小未知"}
+              {showCreatedAt ? ` · 添加于 ${formatDateTime(file.createdAt)}` : ""}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -44,12 +44,12 @@ export function SubmissionFileList({
                 href={`/api/submissions/${submissionId}/files/${file.id}`}
               >
                 <Download className="h-3.5 w-3.5" />
-                {"\u4e0b\u8f7d"}
+                {"下载"}
               </a>
             ) : null}
             {onRemove ? (
               <Button onClick={() => onRemove(file.id)} size="sm" type="button" variant="ghost">
-                {"\u79fb\u9664"}
+                {"移除"}
               </Button>
             ) : null}
           </div>

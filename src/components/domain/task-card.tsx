@@ -11,7 +11,7 @@ import type { TaskSummary } from "@/types/domain";
 export function TaskCard({
   task,
   href,
-  actionLabel = "\u6253\u5f00\u4efb\u52a1",
+  actionLabel = "打开任务",
 }: {
   task: TaskSummary;
   href?: string;
@@ -25,7 +25,7 @@ export function TaskCard({
             <CardTitle className="text-base">{task.title}</CardTitle>
             <div className="flex flex-wrap gap-2">
               <Badge variant="muted" className="capitalize">
-                {task.submissionMode === "group" ? "\u5c0f\u7ec4" : "\u4e2a\u4eba"}
+                {task.submissionMode === "group" ? "小组" : "个人"}
               </Badge>
               <StatusBadge status={task.status} />
             </div>
@@ -37,11 +37,11 @@ export function TaskCard({
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm leading-6 text-muted-foreground">
-          {task.brief ?? "\u6559\u5e08\u8865\u5145\u4efb\u52a1\u7b80\u4ecb\u540e\uff0c\u4f1a\u663e\u793a\u5728\u8fd9\u91cc\u3002"}
+          {task.brief ?? "教师补充任务简介后，会显示在这里。"}
         </p>
         <p className="inline-flex items-center gap-2 text-xs text-slate-400">
           <CalendarClock className="h-4 w-4" />
-          {"\u622a\u6b62\u65f6\u95f4\uff1a"}
+          {"截止时间："}
           {formatDateTime(task.dueAt)}
         </p>
         {href ? <span className="text-sm font-medium text-primary">{actionLabel}</span> : null}
