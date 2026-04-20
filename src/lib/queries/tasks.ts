@@ -111,7 +111,7 @@ export async function getSubmissionForTaskAndUserOrGroup(task: TaskSummary, prof
 }
 
 export async function getTaskBySlugForSpace(spaceSlug: string, taskSlug: string, profile: AppUserProfile): Promise<{ space: SpaceSummary; task: TaskDetail } | null> {
-  const space = await getSpaceBySlugForUser(spaceSlug, profile.id);
+  const space = await getSpaceBySlugForUser(spaceSlug, profile);
   if (!space) {
     return null;
   }

@@ -4,6 +4,7 @@ import { FilePenLine } from "lucide-react";
 import { TranslationText } from "@/components/common/translation-text";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
+import { canAccessAdminBackoffice } from "@/lib/auth/admin-users-access";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { redirectAfterLogin } from "@/lib/auth/redirect-after-login";
 import { isExternalStudent } from "@/lib/permissions/profiles";
@@ -11,7 +12,7 @@ import { isExternalStudent } from "@/lib/permissions/profiles";
 export default async function ServicePage() {
   const profile = await requireAuth();
 
-  if (!isExternalStudent(profile)) {
+  if (!isExternalStudent(profile) && !canAccessAdminBackoffice(profile)) {
     redirect(redirectAfterLogin(profile));
   }
 

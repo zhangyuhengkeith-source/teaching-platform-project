@@ -1,5 +1,5 @@
 import { canManageSpace, canViewSpace } from "@/lib/permissions/spaces";
-import { isTeacher } from "@/lib/permissions/profiles";
+import { isSuperAdmin, isTeacher } from "@/lib/permissions/profiles";
 import {
   findSectionBySlugForSpaceId,
   findSpaceById,
@@ -18,12 +18,21 @@ export async function listSpacesForUser(profileId: string): Promise<SpaceSummary
   return listSpacesByProfileId(profileId);
 }
 
+export async function listVisibleSpacesForUser(profile: AppUserProfile): Promise<SpaceSummary[]> {
+  if (isSuperAdmin(profile)) {
+    const [classes, electives] = await Promise.all([listClassSpaces(), listElectiveSpaces()]);
+    return [...classes, ...electives];
+  }
+
+  return listSpacesForUser(profile.id);
+}
+
 export async function listClassSpacesForUser(profile: AppUserProfile): Promise<SpaceSummary[]> {
-  const spaces = await listSpacesForUser(profile.id);
+  const spaces = await listVisibleSpacesForUser(profile);
   return spaces.filter((space) => space.type === "class");
 }
 
-export async function getSpaceBySlugForUser(slug: string, profileId: string): Promise<SpaceDetail | null> {
+export async function getSpaceBySlugForUser(slug: string, profile: AppUserProfile): Promise<SpaceDetail | null> {
   const space = await findSpaceBySlug(slug);
 
   if (!space) {
@@ -31,7 +40,10 @@ export async function getSpaceBySlugForUser(slug: string, profileId: string): Pr
   }
 
   const memberships = await listMembershipsForSpace(space.id);
-  const canSeeSpace = memberships.some((membership) => membership.profileId === profileId && membership.status === "active") || space.ownerId === profileId;
+  const canSeeSpace =
+    isSuperAdmin(profile) ||
+    memberships.some((membership) => membership.profileId === profile.id && membership.status === "active") ||
+    space.ownerId === profile.id;
 
   if (!canSeeSpace) {
     return null;
@@ -42,7 +54,7 @@ export async function getSpaceBySlugForUser(slug: string, profileId: string): Pr
 }
 
 export async function getClassSpaceBySlugForUser(slug: string, profile: AppUserProfile): Promise<SpaceDetail | null> {
-  const space = await getSpaceBySlugForUser(slug, profile.id);
+  const space = await getSpaceBySlugForUser(slug, profile);
 
   if (!space || space.type !== "class") {
     return null;
@@ -72,10 +84,9 @@ export async function getSectionBySlugForSpace(spaceId: string, sectionSlug: str
 }
 
 export async function listManageableClasses(profile: AppUserProfile): Promise<SpaceSummary[]> {
-  const spaces = await listSpacesForUser(profile.id);
+  const spaces = isSuperAdmin(profile) ? await listClassSpaces() : (await listSpacesForUser(profile.id)).filter((space) => space.type === "class");
   const checks = await Promise.all(
     spaces
-      .filter((space) => space.type === "class")
       .map(async (space) => ({
         space,
         memberships: await listMembershipsForSpace(space.id),

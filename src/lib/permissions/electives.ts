@@ -22,6 +22,10 @@ export function canViewElective(profile: AppUserProfile | null | undefined, cont
 }
 
 export function canCreateOrJoinGroup(profile: AppUserProfile | null | undefined, context: ElectiveAccessContext) {
+  if (canManageElective(profile, context)) {
+    return true;
+  }
+
   return Boolean(profile && isInternalStudent(profile) && !context.space.groupingLocked && canViewElective(profile, context));
 }
 
@@ -50,6 +54,10 @@ export function canEditGroup(profile: AppUserProfile | null | undefined, group: 
 }
 
 export function canLeaveGroup(profile: AppUserProfile | null | undefined, group: GroupDetail, context: ElectiveAccessContext) {
+  if (canManageElective(profile, context)) {
+    return Boolean(profile && group.members.some((member) => member.profileId === profile.id && member.status === "active"));
+  }
+
   return Boolean(profile && !context.space.groupingLocked && group.members.some((member) => member.profileId === profile.id && member.status === "active"));
 }
 

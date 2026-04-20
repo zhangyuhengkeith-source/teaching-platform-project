@@ -39,7 +39,7 @@ async function enrichExerciseSet(set: ExerciseSetSummary): Promise<ExerciseSetSu
 }
 
 async function loadExerciseSetAccessContext(profile: AppUserProfile, set: ExerciseSetSummary) {
-  const space = seedSpaces.find((entry) => entry.id === set.spaceId);
+  const space = await getSpaceById(set.spaceId);
 
   if (!space) {
     return null;
@@ -119,7 +119,7 @@ export async function listExerciseSetsForSpace(spaceId: string, profile?: AppUse
     return sets.filter((set) => set.status === "published");
   }
 
-  const space = seedSpaces.find((entry) => entry.id === spaceId);
+  const space = await getSpaceById(spaceId);
   if (!space) {
     return [];
   }

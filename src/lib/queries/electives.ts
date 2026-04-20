@@ -3,11 +3,12 @@ import {
   mapGroupRow,
 } from "@/lib/db/mappers";
 import { canManageElective, canViewElective, canViewGroup, canViewSubmission, canViewTask } from "@/lib/permissions/electives";
-import { isTeacher } from "@/lib/permissions/profiles";
+import { isSuperAdmin } from "@/lib/permissions/profiles";
 import { listProfilesByIds } from "@/lib/queries/profiles";
 import {
   getSpaceById,
   getSpaceBySlugForUser,
+  listAllElectiveSpaces,
   listMembershipsForSpace,
   listSpacesForUser,
 } from "@/lib/queries/spaces";
@@ -47,6 +48,10 @@ function applySubmissionEffectiveStatus(submission: TaskSubmissionSummary, dueAt
 }
 
 export async function listElectiveSpacesForUser(profile: AppUserProfile): Promise<SpaceSummary[]> {
+  if (isSuperAdmin(profile)) {
+    return listAllElectiveSpaces();
+  }
+
   const spaces = await listSpacesForUser(profile.id);
   return spaces.filter((space) => space.type === "elective");
 }
@@ -64,7 +69,7 @@ export async function listManageableElectiveSpaces(profile: AppUserProfile): Pro
 }
 
 export async function getElectiveSpaceBySlugForUser(slug: string, profile: AppUserProfile): Promise<SpaceDetail | null> {
-  const space = await getSpaceBySlugForUser(slug, profile.id);
+  const space = await getSpaceBySlugForUser(slug, profile);
   if (!space || space.type !== "elective") {
     return null;
   }
