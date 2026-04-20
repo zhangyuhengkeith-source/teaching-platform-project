@@ -1,11 +1,9 @@
 import { UserRound } from "lucide-react";
 
 import { TranslationText } from "@/components/common/translation-text";
-import { AdminClassCreateForm } from "@/components/domain/admin-class-create-form";
 import { AdminUserTable } from "@/components/domain/admin-user-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
-import { SectionCard } from "@/components/shared/section-card";
 import { getBootstrapAdminEmails } from "@/lib/config/admin-access";
 import { listAllClassSpaces, listAllElectiveSpaces, listMembershipsForSpace } from "@/lib/queries/spaces";
 import { listProfiles } from "@/repositories/profile-repository";
@@ -60,12 +58,6 @@ export default async function AdminUsersPage() {
         description={<TranslationText translationKey="admin.users.description" values={{ email: bootstrapAdminLabel }} />}
         title={<TranslationText translationKey="admin.users.title" />}
       />
-      <SectionCard
-        description={<TranslationText translationKey="admin.users.createClassDescription" />}
-        title={<TranslationText translationKey="admin.users.createClassTitle" />}
-      >
-        <AdminClassCreateForm />
-      </SectionCard>
       {enrichedUsers.length > 0 ? (
         <AdminUserTable classes={classes} electives={electives} items={enrichedUsers} />
       ) : (

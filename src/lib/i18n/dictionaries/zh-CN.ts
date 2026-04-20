@@ -383,8 +383,6 @@ export const zhCN = {
     users: {
       title: "用户管理",
       description: "只有 {email} 可以打开此页面并修改用户角色、用户类型或账号状态。",
-      createClassTitle: "创建班级",
-      createClassDescription: "在超管后台直接创建新班级，随后再为用户分配班级。",
       emptyTitle: "暂无用户",
       emptyDescription: "当前还没有可管理的用户资料。新注册用户在首次登录并创建 profile 记录后会出现在这里。",
     },
