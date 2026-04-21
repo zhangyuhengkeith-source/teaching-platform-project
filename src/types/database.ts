@@ -15,6 +15,7 @@ import type { ResourceType } from "@/lib/constants/resource-types";
 import type { AppRole, ProfileStatus, UserType } from "@/types/auth";
 
 export type SpaceType = "class" | "elective";
+export type ClassApprovalStatus = "pending" | "approved" | "rejected";
 export type SectionType = "chapter" | "module" | "week" | "topic_group";
 export type ResourceVisibility = "space" | "selected_members" | "public";
 export type NoticeType = "homework" | "deadline" | "mock_exam" | "general" | "grouping" | "service_update";
@@ -102,6 +103,14 @@ export interface Database {
           academic_year: string | null;
           status: SpaceStatus;
           owner_id: string;
+          created_by: string | null;
+          approval_status: ClassApprovalStatus;
+          submitted_at: string | null;
+          approved_at: string | null;
+          approved_by: string | null;
+          rejected_at: string | null;
+          rejected_by: string | null;
+          rejection_reason: string | null;
           grouping_locked: boolean;
           max_group_size: number;
           archived_at: string | null;
@@ -118,6 +127,14 @@ export interface Database {
           academic_year?: string | null;
           status?: SpaceStatus;
           owner_id: string;
+          created_by?: string | null;
+          approval_status?: ClassApprovalStatus;
+          submitted_at?: string | null;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          rejected_at?: string | null;
+          rejected_by?: string | null;
+          rejection_reason?: string | null;
           grouping_locked?: boolean;
           max_group_size?: number;
           archived_at?: string | null;

@@ -2,12 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 
-import { createSpace } from "@/lib/mutations/spaces";
+import { assignProfileToSpace, createSpace } from "@/lib/mutations/spaces";
 import { isBootstrapAdminEmail } from "@/lib/config/app-config";
 import { createSupabaseServerWriteClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSpaceSchema } from "@/lib/validations/spaces";
 import { getSpaceWriteErrorMessage } from "@/lib/server/actions/space-action-errors";
+import { nowInShanghaiIso } from "@/lib/utils/timezone";
 
 export interface CreateSpaceActionResult {
   ok: boolean;
@@ -41,7 +42,7 @@ export async function createSpaceAction(input: unknown) {
 
     const canWriteSpaces =
       profile.status === "active" &&
-      (profile.role === "teacher" || profile.role === "super_admin" || isBootstrapAdminEmail(profile.email));
+      (profile.role === "teacher" || profile.role === "admin" || profile.role === "super_admin" || isBootstrapAdminEmail(profile.email));
 
     if (!canWriteSpaces) {
       return {
@@ -52,7 +53,35 @@ export async function createSpaceAction(input: unknown) {
 
     const parsed = createSpaceSchema.parse(input);
     const writeClient = await createSupabaseServerWriteClient({ requireServiceRole: true });
-    await createSpace(profile.id, parsed, writeClient ?? undefined);
+    const timestamp = nowInShanghaiIso();
+    const adminCreating = profile.role === "admin" || profile.role === "super_admin" || isBootstrapAdminEmail(profile.email);
+    const space = await createSpace(
+      profile.id,
+      parsed.type === "class"
+        ? {
+            ...parsed,
+            status: adminCreating ? "published" : "draft",
+            approval_status: adminCreating ? "approved" : "pending",
+            submitted_at: timestamp,
+            approved_at: adminCreating ? timestamp : null,
+            approved_by: adminCreating ? profile.id : null,
+            rejected_at: null,
+            rejected_by: null,
+            rejection_reason: null,
+          }
+        : parsed,
+      writeClient ?? undefined,
+    );
+    if (parsed.type === "class") {
+      await assignProfileToSpace(
+        {
+          profile_id: profile.id,
+          space_id: space.id,
+          membership_role: "teacher",
+        },
+        writeClient ?? undefined,
+      );
+    }
     revalidatePath("/admin/classes");
     revalidatePath("/classes");
     return { ok: true } satisfies CreateSpaceActionResult;

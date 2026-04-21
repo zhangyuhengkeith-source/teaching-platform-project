@@ -11,7 +11,7 @@ import type {
   WrongBookStatus,
 } from "@/lib/constants/statuses";
 import type { ResourceType } from "@/lib/constants/resource-types";
-import type { NoticeType, ResourceVisibility, SpaceType } from "@/types/database";
+import type { ClassApprovalStatus, NoticeType, ResourceVisibility, SpaceType } from "@/types/database";
 
 export interface UpdateProfileInput {
   full_name: string;
@@ -42,6 +42,13 @@ export interface CreateSpaceInput {
   description?: string | null;
   academic_year?: string | null;
   status?: SpaceStatus;
+  approval_status?: ClassApprovalStatus;
+  submitted_at?: string | null;
+  approved_at?: string | null;
+  approved_by?: string | null;
+  rejected_at?: string | null;
+  rejected_by?: string | null;
+  rejection_reason?: string | null;
   grouping_locked?: boolean;
   max_group_size?: number;
 }

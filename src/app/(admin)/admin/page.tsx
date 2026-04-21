@@ -1,52 +1,39 @@
-import { BarChart3, Bell, FilePenLine, Users } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 
-import { TranslationText } from "@/components/common/translation-text";
+import { AdminClassHomeCard } from "@/components/domain/admin-class-home-card";
+import { AdminCreateClassCard } from "@/components/domain/admin-create-class-card";
+import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
-import { SectionCard } from "@/components/shared/section-card";
+import { requireRole } from "@/lib/auth/require-role";
+import { isAdminRole } from "@/lib/permissions/profiles";
+import { listAdminClassCards } from "@/lib/queries/admin-classes";
 
-const stats = [
-  { labelKey: "admin.home.stats.pendingWorkflows", value: "18", icon: FilePenLine },
-  { labelKey: "admin.home.stats.activeUsers", value: "126", icon: Users },
-  { labelKey: "admin.home.stats.unpublishedNotices", value: "3", icon: Bell },
-  { labelKey: "admin.home.stats.weeklyCompletion", value: "84%", icon: BarChart3 },
-] as const;
+export default async function AdminPage() {
+  const profile = await requireRole(["super_admin", "teacher"]);
+  const classes = await listAdminClassCards(profile);
+  const canApprove = isAdminRole(profile);
 
-export default function AdminPage() {
   return (
     <div className="space-y-6">
-      <PageHeader description={<TranslationText translationKey="admin.home.description" />} title={<TranslationText translationKey="admin.home.title" />} />
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {stats.map((item) => {
-          const Icon = item.icon;
-          return (
-            <SectionCard description={<TranslationText translationKey="admin.home.metricPlaceholder" />} key={item.labelKey} title={<TranslationText translationKey={item.labelKey} />}>
-              <div className="flex items-end justify-between">
-                <p className="text-3xl font-semibold">{item.value}</p>
-                <div className="rounded-xl bg-blue-50 p-3 text-primary">
-                  <Icon className="h-5 w-5" />
-                </div>
-              </div>
-            </SectionCard>
-          );
-        })}
+      <PageHeader
+        description="Manage classes from a single approval-centered workspace."
+        title="Teacher Management"
+      />
+
+      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <AdminCreateClassCard />
+        {classes.map((item) => (
+          <AdminClassHomeCard canApprove={canApprove} item={item} key={item.id} />
+        ))}
       </section>
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <SectionCard description={<TranslationText translationKey="admin.home.pendingDescription" />} title={<TranslationText translationKey="admin.home.pendingTitle" />}>
-          <ul className="space-y-3 text-sm text-slate-600">
-            <li className="rounded-xl bg-white p-4"><TranslationText translationKey="admin.home.pendingItems.essayOrders" /></li>
-            <li className="rounded-xl bg-white p-4"><TranslationText translationKey="admin.home.pendingItems.assignments" /></li>
-            <li className="rounded-xl bg-white p-4"><TranslationText translationKey="admin.home.pendingItems.groups" /></li>
-          </ul>
-        </SectionCard>
-        <SectionCard description={<TranslationText translationKey="admin.home.quickLinksDescription" />} title={<TranslationText translationKey="admin.home.quickLinksTitle" />}>
-          <div className="grid gap-3">
-            <div className="rounded-xl bg-white p-4 text-sm text-slate-600"><TranslationText translationKey="admin.home.quickLinks.submissions" /></div>
-            <div className="rounded-xl bg-white p-4 text-sm text-slate-600"><TranslationText translationKey="admin.home.quickLinks.essayOrders" /></div>
-            <div className="rounded-xl bg-white p-4 text-sm text-slate-600"><TranslationText translationKey="admin.home.quickLinks.notice" /></div>
-            <div className="rounded-xl bg-white p-4 text-sm text-slate-600"><TranslationText translationKey="admin.home.quickLinks.analytics" /></div>
-          </div>
-        </SectionCard>
-      </div>
+
+      {classes.length === 0 ? (
+        <EmptyState
+          description="No classes are available yet. Create a new class request to begin."
+          icon={GraduationCap}
+          title="No classes yet"
+        />
+      ) : null}
     </div>
   );
 }

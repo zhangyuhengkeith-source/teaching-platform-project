@@ -13,7 +13,7 @@ import type {
 } from "@/lib/constants/statuses";
 import type { ResourceType } from "@/lib/constants/resource-types";
 import type { AppRole, ProfileStatus, UserType } from "@/types/auth";
-import type { NoticeType, ResourceVisibility, SectionType, SpaceType } from "@/types/database";
+import type { ClassApprovalStatus, NoticeType, ResourceVisibility, SectionType, SpaceType } from "@/types/database";
 
 export interface ProfileSummary {
   id: string;
@@ -72,6 +72,14 @@ export interface SpaceSummary {
   academicYear: string | null;
   status: SpaceStatus;
   ownerId: string;
+  createdBy?: string | null;
+  approvalStatus?: ClassApprovalStatus;
+  submittedAt?: string | null;
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  rejectedAt?: string | null;
+  rejectedBy?: string | null;
+  rejectionReason?: string | null;
   groupingLocked?: boolean;
   maxGroupSize?: number;
   createdAt?: string;
@@ -337,4 +345,11 @@ export interface ContentChangeNotificationSummary {
   isRead: boolean;
   readAt: string | null;
   createdAt: string;
+}
+
+export interface AdminClassCardSummary extends SpaceSummary {
+  subjectLabel: string;
+  studentCount: number;
+  teacherCount: number;
+  latestResourceUpdatedAt: string | null;
 }
