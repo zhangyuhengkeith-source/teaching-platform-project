@@ -9,6 +9,8 @@ import { updateResourceSchema } from "@/lib/validations/resources";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { canManageResource } from "@/lib/permissions/resources";
 import { canManageSpace } from "@/lib/permissions/spaces";
+import { getChangeActionFromStatusTransition } from "@/lib/status/content-status";
+import { notifyClassContentChanged } from "@/services/content-change-notification-service";
 
 export async function updateResourceAction(input: unknown) {
   const profile = await requireAuth();
@@ -30,16 +32,19 @@ export async function updateResourceAction(input: unknown) {
   }
 
   const targetSpaceId = parsed.space_id ?? resource.spaceId;
+  let targetSpace = space;
   if (targetSpaceId !== resource.spaceId) {
-    const targetSpace = await getSpaceById(targetSpaceId);
-    if (!targetSpace) {
+    const nextTargetSpace = await getSpaceById(targetSpaceId);
+    if (!nextTargetSpace) {
       throw new Error("Target space not found.");
     }
 
-    const targetMemberships = await listMembershipsForSpace(targetSpace.id);
-    if (!canManageSpace(profile, { space: targetSpace, memberships: targetMemberships })) {
+    const targetMemberships = await listMembershipsForSpace(nextTargetSpace.id);
+    if (!canManageSpace(profile, { space: nextTargetSpace, memberships: targetMemberships })) {
       throw new Error("You do not have permission to move this resource into the selected space.");
     }
+
+    targetSpace = nextTargetSpace;
   }
 
   if (parsed.section_id) {
@@ -53,6 +58,15 @@ export async function updateResourceAction(input: unknown) {
     ...parsed,
     space_id: targetSpaceId,
   });
+  if (targetSpace.type === "class") {
+    await notifyClassContentChanged({
+      classId: targetSpace.id,
+      contentType: "resource",
+      contentId: updated.id,
+      actionType: getChangeActionFromStatusTransition(resource.status, updated.status),
+      title: updated.title,
+    });
+  }
   revalidatePath("/admin/resources");
   revalidatePath("/classes");
   return updated;

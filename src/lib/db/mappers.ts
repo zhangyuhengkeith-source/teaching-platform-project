@@ -17,6 +17,7 @@ import type {
   TaskSubmissionRow,
   TeacherProfileRow,
   WrongBookItemRow,
+  ContentChangeNotificationRow,
 } from "@/types/database";
 import type {
   ExerciseAttemptSummary,
@@ -37,6 +38,7 @@ import type {
   TaskSummary,
   TeacherProfileSummary,
   WrongBookItemSummary,
+  ContentChangeNotificationSummary,
 } from "@/types/domain";
 
 export function mapProfileRow(row: ProfileRow): ProfileSummary {
@@ -108,6 +110,7 @@ export function mapSpaceSectionRow(row: SpaceSectionRow): SpaceSectionSummary {
     title: row.title,
     slug: row.slug,
     type: row.type,
+    status: row.status,
     sortOrder: row.sort_order,
     description: row.description,
   };
@@ -306,5 +309,20 @@ export function mapTaskSubmissionRow(row: TaskSubmissionRow, files?: SubmissionF
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     files,
+  };
+}
+
+export function mapContentChangeNotificationRow(row: ContentChangeNotificationRow): ContentChangeNotificationSummary {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    classId: row.class_id,
+    contentType: row.content_type,
+    contentId: row.content_id,
+    actionType: row.action_type,
+    message: row.message,
+    isRead: row.is_read,
+    readAt: row.read_at,
+    createdAt: row.created_at,
   };
 }

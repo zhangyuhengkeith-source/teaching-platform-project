@@ -5,7 +5,9 @@ import {
   mapWrongBookItemRow,
 } from "@/lib/db/mappers";
 import { canManageExerciseSet, canViewExerciseSet, canViewWrongBook } from "@/lib/permissions/exercises";
+import { isAdminRole } from "@/lib/permissions/profiles";
 import { getClassSpaceBySlugForUser, getSpaceById, listMembershipsForSpace, listManageableClasses, listSectionsForSpace } from "@/lib/queries/spaces";
+import { isNonArchivedContentStatus } from "@/lib/status/content-status";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   seedExerciseAttempts,
@@ -191,12 +193,18 @@ export async function listManageableExerciseSets(profile: AppUserProfile): Promi
   const classes = await listManageableClasses(profile);
   const allSets = (await Promise.all(classes.map((space) => listExerciseSetsRawBySpace(space.id)))).flat();
 
-  return allSets.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  return allSets
+    .filter((set) => isAdminRole(profile) || isNonArchivedContentStatus(set.status))
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
 export async function getManageableExerciseSetById(exerciseSetId: string, profile: AppUserProfile): Promise<ExerciseSetDetail | null> {
   const set = await getExerciseSetById(exerciseSetId);
   if (!set) {
+    return null;
+  }
+
+  if (!isAdminRole(profile) && !isNonArchivedContentStatus(set.status)) {
     return null;
   }
 

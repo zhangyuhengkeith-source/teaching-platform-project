@@ -58,6 +58,7 @@ export interface SpaceSectionSummary {
   title: string;
   slug: string;
   type: SectionType;
+  status?: SpaceStatus;
   sortOrder: number;
   description: string | null;
 }
@@ -320,4 +321,20 @@ export interface TaskSubmissionSummary {
 export interface TaskDetail extends TaskSummary {
   templateResource?: ResourceSummary | null;
   submission?: TaskSubmissionSummary | null;
+}
+
+export type ChangeNotificationContentType = "announcement" | "chapter" | "resource" | "assignment" | "practice_set" | "student_group";
+export type ChangeNotificationActionType = "edited" | "archived" | "deleted";
+
+export interface ContentChangeNotificationSummary {
+  id: string;
+  userId: string;
+  classId: string;
+  contentType: ChangeNotificationContentType;
+  contentId: string;
+  actionType: ChangeNotificationActionType;
+  message: string;
+  isRead: boolean;
+  readAt: string | null;
+  createdAt: string;
 }

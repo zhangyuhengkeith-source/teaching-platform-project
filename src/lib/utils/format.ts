@@ -1,3 +1,5 @@
+import { APP_TIME_ZONE } from "@/lib/utils/timezone";
+
 export function formatDate(value?: string | null) {
   if (!value) {
     return "Not set";
@@ -9,6 +11,7 @@ export function formatDate(value?: string | null) {
   }
 
   return new Intl.DateTimeFormat("en", {
+    timeZone: APP_TIME_ZONE,
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -26,6 +29,7 @@ export function formatDateTime(value?: string | null) {
   }
 
   return new Intl.DateTimeFormat("en", {
+    timeZone: APP_TIME_ZONE,
     year: "numeric",
     month: "short",
     day: "numeric",

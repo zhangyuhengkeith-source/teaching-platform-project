@@ -1,8 +1,9 @@
 import type { AppUserProfile } from "@/types/auth";
 import type { ExerciseItemSummary, ExerciseSetSummary, SpaceMembershipSummary, SpaceSummary, WrongBookItemSummary } from "@/types/domain";
 
-import { isTeacher } from "@/lib/permissions/profiles";
+import { isAdminRole, isTeacher } from "@/lib/permissions/profiles";
 import { canManageSpace, canViewSpace } from "@/lib/permissions/spaces";
+import { isNonArchivedContentStatus } from "@/lib/status/content-status";
 
 interface ExerciseAccessContext {
   exerciseSet: Pick<ExerciseSetSummary, "status" | "spaceId">;
@@ -18,6 +19,10 @@ export function canManageExerciseSet(profile: AppUserProfile | null | undefined,
 }
 
 export function canViewExerciseSet(profile: AppUserProfile | null | undefined, context: ExerciseAccessContext) {
+  if (!isAdminRole(profile) && !isNonArchivedContentStatus(context.exerciseSet.status)) {
+    return false;
+  }
+
   if (canManageExerciseSet(profile, context)) {
     return true;
   }

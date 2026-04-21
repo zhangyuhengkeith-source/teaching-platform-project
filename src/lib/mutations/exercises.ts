@@ -31,9 +31,10 @@ import type {
 } from "@/types/domain";
 import { getExerciseItemById, getExerciseSetById, getLatestAttemptForUserAndItem, getWrongBookItemDetailForUser } from "@/lib/queries/exercises";
 import type { AppUserProfile } from "@/types/auth";
+import { nowInShanghaiIso } from "@/lib/utils/timezone";
 
 function nowIso() {
-  return new Date().toISOString();
+  return nowInShanghaiIso();
 }
 
 function getSeedWrongBookItem(profileId: string, sourceId: string) {
@@ -121,6 +122,8 @@ export async function updateExerciseSet(updatedBy: string, input: UpdateExercise
       exercise_type: input.exercise_type,
       instructions: input.instructions,
       status: input.status,
+      archived_at: input.status === "archived" ? nowIso() : undefined,
+      deleted_at: input.status === "deleted" ? nowIso() : undefined,
       updated_by: updatedBy,
     })
     .eq("id", input.id)

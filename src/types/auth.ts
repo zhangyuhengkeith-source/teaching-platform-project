@@ -1,4 +1,4 @@
-export type AppRole = "super_admin" | "teacher" | "student";
+export type AppRole = "admin" | "super_admin" | "teacher" | "student";
 export type UserType = "internal" | "external";
 export type ProfileStatus = "active" | "inactive" | "suspended";
 

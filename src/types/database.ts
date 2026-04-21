@@ -104,6 +104,8 @@ export interface Database {
           owner_id: string;
           grouping_locked: boolean;
           max_group_size: number;
+          archived_at: string | null;
+          deleted_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -118,6 +120,8 @@ export interface Database {
           owner_id: string;
           grouping_locked?: boolean;
           max_group_size?: number;
+          archived_at?: string | null;
+          deleted_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["spaces"]["Insert"]>;
         Relationships: [{ foreignKeyName: "spaces_owner_id_fkey"; columns: ["owner_id"]; referencedRelation: "profiles"; referencedColumns: ["id"] }];
@@ -152,8 +156,11 @@ export interface Database {
           title: string;
           slug: string;
           type: SectionType;
+          status: SpaceStatus;
           sort_order: number;
           description: string | null;
+          archived_at: string | null;
+          deleted_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -163,8 +170,11 @@ export interface Database {
           title: string;
           slug: string;
           type: SectionType;
+          status?: SpaceStatus;
           sort_order?: number;
           description?: string | null;
+          archived_at?: string | null;
+          deleted_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["space_sections"]["Insert"]>;
         Relationships: [{ foreignKeyName: "space_sections_space_id_fkey"; columns: ["space_id"]; referencedRelation: "spaces"; referencedColumns: ["id"] }];
@@ -183,6 +193,8 @@ export interface Database {
           created_by: string;
           updated_by: string | null;
           published_at: string | null;
+          archived_at: string | null;
+          deleted_at: string | null;
           sort_order: number;
           created_at: string;
           updated_at: string;
@@ -200,6 +212,8 @@ export interface Database {
           created_by: string;
           updated_by?: string | null;
           published_at?: string | null;
+          archived_at?: string | null;
+          deleted_at?: string | null;
           sort_order?: number;
         };
         Update: Partial<Database["public"]["Tables"]["resources"]["Insert"]>;
@@ -250,6 +264,8 @@ export interface Database {
           status: NoticeStatus;
           created_by: string;
           updated_by: string | null;
+          archived_at: string | null;
+          deleted_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -265,6 +281,8 @@ export interface Database {
           status?: NoticeStatus;
           created_by: string;
           updated_by?: string | null;
+          archived_at?: string | null;
+          deleted_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["notices"]["Insert"]>;
         Relationships: [
@@ -285,6 +303,8 @@ export interface Database {
           status: ExerciseSetStatus;
           created_by: string;
           updated_by: string | null;
+          archived_at: string | null;
+          deleted_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -299,6 +319,8 @@ export interface Database {
           status?: ExerciseSetStatus;
           created_by: string;
           updated_by?: string | null;
+          archived_at?: string | null;
+          deleted_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["exercise_sets"]["Insert"]>;
         Relationships: [
@@ -461,9 +483,12 @@ export interface Database {
           body: string | null;
           submission_mode: SubmissionMode;
           due_at: string | null;
+          deadline: string | null;
           allow_resubmission: boolean;
           template_resource_id: string | null;
           status: TaskStatus;
+          archived_at: string | null;
+          deleted_at: string | null;
           created_by: string;
           created_at: string;
           updated_at: string;
@@ -477,9 +502,12 @@ export interface Database {
           body?: string | null;
           submission_mode: SubmissionMode;
           due_at?: string | null;
+          deadline?: string | null;
           allow_resubmission?: boolean;
           template_resource_id?: string | null;
           status?: TaskStatus;
+          archived_at?: string | null;
+          deleted_at?: string | null;
           created_by: string;
         };
         Update: Partial<Database["public"]["Tables"]["tasks"]["Insert"]>;
@@ -549,6 +577,37 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["task_submission_files"]["Insert"]>;
         Relationships: [{ foreignKeyName: "task_submission_files_submission_id_fkey"; columns: ["submission_id"]; referencedRelation: "task_submissions"; referencedColumns: ["id"] }];
       };
+      content_change_notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          class_id: string;
+          content_type: "announcement" | "chapter" | "resource" | "assignment" | "practice_set" | "student_group";
+          content_id: string;
+          action_type: "edited" | "archived" | "deleted";
+          message: string;
+          is_read: boolean;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          class_id: string;
+          content_type: "announcement" | "chapter" | "resource" | "assignment" | "practice_set" | "student_group";
+          content_id: string;
+          action_type: "edited" | "archived" | "deleted";
+          message: string;
+          is_read?: boolean;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["content_change_notifications"]["Insert"]>;
+        Relationships: [
+          { foreignKeyName: "content_change_notifications_user_id_fkey"; columns: ["user_id"]; referencedRelation: "profiles"; referencedColumns: ["id"] },
+          { foreignKeyName: "content_change_notifications_class_id_fkey"; columns: ["class_id"]; referencedRelation: "spaces"; referencedColumns: ["id"] },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -575,3 +634,4 @@ export type GroupMemberRow = Database["public"]["Tables"]["group_members"]["Row"
 export type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
 export type TaskSubmissionRow = Database["public"]["Tables"]["task_submissions"]["Row"];
 export type TaskSubmissionFileRow = Database["public"]["Tables"]["task_submission_files"]["Row"];
+export type ContentChangeNotificationRow = Database["public"]["Tables"]["content_change_notifications"]["Row"];

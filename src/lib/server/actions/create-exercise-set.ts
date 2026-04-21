@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createExerciseItem, createExerciseSet } from "@/lib/mutations/exercises";
 import { requireRole } from "@/lib/auth/require-role";
+import { normalizeClassScopedInput } from "@/lib/auth/class-permissions";
 import { getManageableClassById } from "@/lib/queries/spaces";
 import { createExerciseItemSchema, createExerciseSetSchema } from "@/lib/validations/exercises";
 
@@ -22,7 +23,8 @@ function isCompatibleItemType(exerciseType: "mcq" | "flashcard" | "term_recall",
 export async function createExerciseSetAction(input: unknown) {
   const profile = await requireRole(["super_admin", "teacher"]);
   const payload = input as { items?: unknown[] };
-  const parsedSet = createExerciseSetSchema.parse(input);
+  const normalizedInput = normalizeClassScopedInput(input);
+  const parsedSet = createExerciseSetSchema.parse(normalizedInput);
   const space = await getManageableClassById(parsedSet.space_id, profile);
 
   if (!space) {

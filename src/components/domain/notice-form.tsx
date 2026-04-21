@@ -15,31 +15,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useI18n } from "@/hooks/use-i18n";
+import { fromShanghaiDateTimeInputValue, toShanghaiDateTimeInputValue } from "@/lib/utils/timezone";
 import type { SpaceSummary } from "@/types/domain";
 
 type NoticeFormValues = CreateNoticeSchema & { id?: string };
-
-function toDateTimeInputValue(value?: string | null) {
-  if (!value) {
-    return "";
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-}
-
-function fromDateTimeInputValue(value?: string | null) {
-  if (!value) {
-    return null;
-  }
-
-  return new Date(value).toISOString();
-}
 
 export function NoticeForm({
   mode,
@@ -61,8 +40,8 @@ export function NoticeForm({
       title: initialValues?.title ?? "",
       body: initialValues?.body ?? "",
       notice_type: initialValues?.notice_type ?? "general",
-      publish_at: toDateTimeInputValue(initialValues?.publish_at),
-      expire_at: toDateTimeInputValue(initialValues?.expire_at),
+      publish_at: toShanghaiDateTimeInputValue(initialValues?.publish_at),
+      expire_at: toShanghaiDateTimeInputValue(initialValues?.expire_at),
       is_pinned: initialValues?.is_pinned ?? false,
       status: initialValues?.status ?? "draft",
       ...(mode === "edit" && initialValues?.id ? { id: initialValues.id } : {}),
@@ -76,8 +55,8 @@ export function NoticeForm({
       try {
         const payload = {
           ...values,
-          publish_at: fromDateTimeInputValue(values.publish_at ?? null),
-          expire_at: fromDateTimeInputValue(values.expire_at ?? null),
+          publish_at: fromShanghaiDateTimeInputValue(values.publish_at ?? null),
+          expire_at: fromShanghaiDateTimeInputValue(values.expire_at ?? null),
         };
 
         if (mode === "create") {

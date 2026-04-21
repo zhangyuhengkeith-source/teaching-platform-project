@@ -2,6 +2,7 @@ import { mapNoticeRow } from "@/lib/db/mappers";
 import { seedNotices } from "@/lib/seed/seed";
 import { createSupabaseServerWriteClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { nowInShanghaiIso } from "@/lib/utils/timezone";
 import type { CreateNoticeInput, UpdateNoticeInput } from "@/types/api";
 import type { NoticeSummary } from "@/types/domain";
 
@@ -74,6 +75,8 @@ export async function updateNotice(profileId: string, input: UpdateNoticeInput):
       expire_at: input.expire_at,
       is_pinned: input.is_pinned,
       status: input.status,
+      archived_at: input.status === "archived" ? nowInShanghaiIso() : undefined,
+      deleted_at: input.status === "deleted" ? nowInShanghaiIso() : undefined,
       updated_by: profileId,
     })
     .eq("id", input.id)
@@ -91,14 +94,21 @@ export async function deleteNotice(noticeId: string): Promise<void> {
   const supabase = await createSupabaseServerWriteClient({ requireServiceRole: true });
 
   if (!supabase) {
-    const index = seedNotices.findIndex((notice) => notice.id === noticeId);
-    if (index >= 0) {
-      seedNotices.splice(index, 1);
+    const notice = seedNotices.find((entry) => entry.id === noticeId);
+    if (notice) {
+      notice.status = "deleted";
+      notice.updatedAt = nowInShanghaiIso();
     }
     return;
   }
 
-  const { error } = await supabase.from("notices").delete().eq("id", noticeId);
+  const { error } = await supabase
+    .from("notices")
+    .update({
+      status: "deleted",
+      deleted_at: nowInShanghaiIso(),
+    })
+    .eq("id", noticeId);
 
   if (error) {
     throw new Error(error.message);

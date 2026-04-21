@@ -2,6 +2,7 @@ import { Crown, UserRound } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatInShanghai } from "@/lib/utils/timezone";
 import type { GroupMemberSummary } from "@/types/domain";
 
 export function GroupMemberList({ members }: { members: GroupMemberSummary[] }) {
@@ -18,7 +19,7 @@ export function GroupMemberList({ members }: { members: GroupMemberSummary[] }) 
               </div>
               <div>
                 <p className="font-medium text-slate-900">{member.profileName ?? member.profileId}</p>
-                <p className="text-sm text-muted-foreground">加入时间 {new Date(member.joinedAt).toLocaleDateString("zh-CN")}</p>
+                <p className="text-sm text-muted-foreground">加入时间 {formatInShanghai(member.joinedAt, { year: "numeric", month: "2-digit", day: "2-digit" })}</p>
               </div>
             </div>
             {member.memberRole === "leader" ? (

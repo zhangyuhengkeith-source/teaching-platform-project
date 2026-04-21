@@ -10,7 +10,7 @@ import {
 } from "@/lib/seed/seed";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { findSpaceById } from "@/repositories/space-repository";
-import { removeStoredFiles } from "@/services/storage-server-service";
+import { nowInShanghaiIso } from "@/lib/utils/timezone";
 import type { CreateTaskInput, UpdateTaskInput } from "@/types/api";
 import type { TaskSubmissionSummary, TaskSummary } from "@/types/domain";
 
@@ -98,8 +98,8 @@ export async function createTaskRecord(profileId: string, input: CreateTaskInput
       templateResourceId: input.template_resource_id ?? null,
       status: input.status ?? "draft",
       createdBy: profileId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: nowInShanghaiIso(),
+      updatedAt: nowInShanghaiIso(),
     };
 
     seedTasks.unshift(task);
@@ -116,6 +116,7 @@ export async function createTaskRecord(profileId: string, input: CreateTaskInput
       body: input.body ?? null,
       submission_mode: input.submission_mode,
       due_at: input.due_at ?? null,
+      deadline: input.due_at ?? null,
       allow_resubmission: input.allow_resubmission ?? true,
       template_resource_id: input.template_resource_id ?? null,
       status: input.status ?? "draft",
@@ -150,7 +151,7 @@ export async function updateTaskRecord(input: UpdateTaskInput): Promise<TaskSumm
       allowResubmission: input.allow_resubmission ?? task.allowResubmission,
       templateResourceId: input.template_resource_id ?? task.templateResourceId,
       status: input.status ?? task.status,
-      updatedAt: new Date().toISOString(),
+      updatedAt: nowInShanghaiIso(),
     });
 
     return task;
@@ -165,9 +166,12 @@ export async function updateTaskRecord(input: UpdateTaskInput): Promise<TaskSumm
       body: input.body,
       submission_mode: input.submission_mode,
       due_at: input.due_at,
+      deadline: input.due_at,
       allow_resubmission: input.allow_resubmission,
       template_resource_id: input.template_resource_id,
       status: input.status,
+      archived_at: input.status === "archived" ? nowInShanghaiIso() : undefined,
+      deleted_at: input.status === "deleted" ? nowInShanghaiIso() : undefined,
     })
     .eq("id", input.id)
     .select("*")
@@ -184,45 +188,22 @@ export async function deleteTaskRecord(taskId: string): Promise<void> {
   const supabase = await createSupabaseServerClient();
 
   if (!supabase) {
-    for (let index = seedSubmissionFiles.length - 1; index >= 0; index -= 1) {
-      const file = seedSubmissionFiles[index];
-      if (!file) {
-        continue;
-      }
-
-      const submission = seedTaskSubmissions.find((entry) => entry.id === file.submissionId);
-      if (submission?.taskId === taskId) {
-        seedSubmissionFiles.splice(index, 1);
-      }
-    }
-
-    for (let index = seedTaskSubmissions.length - 1; index >= 0; index -= 1) {
-      if (seedTaskSubmissions[index]?.taskId === taskId) {
-        seedTaskSubmissions.splice(index, 1);
-      }
-    }
-
-    for (let index = seedTasks.length - 1; index >= 0; index -= 1) {
-      if (seedTasks[index]?.id === taskId) {
-        seedTasks.splice(index, 1);
-      }
+    const task = seedTasks.find((entry) => entry.id === taskId);
+    if (task) {
+      task.status = "deleted";
+      task.updatedAt = nowInShanghaiIso();
     }
 
     return;
   }
 
-  const { data: submissionFiles, error: submissionFilesError } = await supabase
-    .from("task_submission_files")
-    .select("file_path, task_submissions!inner(task_id)")
-    .eq("task_submissions.task_id", taskId);
-
-  if (submissionFilesError) {
-    throw new Error(submissionFilesError.message);
-  }
-
-  await removeStoredFiles({ filePaths: (submissionFiles ?? []).map((file) => file.file_path) });
-
-  const { error } = await supabase.from("tasks").delete().eq("id", taskId);
+  const { error } = await supabase
+    .from("tasks")
+    .update({
+      status: "deleted",
+      deleted_at: nowInShanghaiIso(),
+    })
+    .eq("id", taskId);
   if (error) {
     throw new Error(error.message);
   }

@@ -6,11 +6,12 @@ import { createResource } from "@/lib/mutations/resources";
 import { getSpaceById, listMembershipsForSpace, listSectionsForSpace } from "@/lib/queries/spaces";
 import { createResourceSchema } from "@/lib/validations/resources";
 import { requireAuth } from "@/lib/auth/require-auth";
+import { normalizeClassScopedInput } from "@/lib/auth/class-permissions";
 import { canManageSpace } from "@/lib/permissions/spaces";
 
 export async function createResourceAction(input: unknown) {
   const profile = await requireAuth();
-  const parsed = createResourceSchema.parse(input);
+  const parsed = createResourceSchema.parse(normalizeClassScopedInput(input));
   const space = await getSpaceById(parsed.space_id);
 
   if (!space) {

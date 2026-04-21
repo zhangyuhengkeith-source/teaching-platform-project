@@ -8,7 +8,7 @@ import { updateProfileAccessLevel } from "@/repositories/profile-repository";
 
 const updateProfileAccessSchema = z.object({
   id: z.string().uuid(),
-  role: z.enum(["super_admin", "teacher", "student"]),
+  role: z.enum(["admin", "super_admin", "teacher", "student"]),
   user_type: z.enum(["internal", "external"]),
   status: z.enum(["active", "inactive", "suspended"]),
 });

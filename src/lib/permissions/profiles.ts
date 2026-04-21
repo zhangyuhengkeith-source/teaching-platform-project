@@ -2,7 +2,11 @@ import type { AppUserProfile } from "@/types/auth";
 import { canAccessAdminBackoffice } from "@/lib/auth/admin-users-access";
 
 export function isSuperAdmin(profile: AppUserProfile | null | undefined) {
-  return profile?.role === "super_admin" || canAccessAdminBackoffice(profile);
+  return profile?.role === "super_admin" || profile?.role === "admin" || canAccessAdminBackoffice(profile);
+}
+
+export function isAdminRole(profile: AppUserProfile | null | undefined) {
+  return isSuperAdmin(profile);
 }
 
 export function isTeacher(profile: AppUserProfile | null | undefined) {

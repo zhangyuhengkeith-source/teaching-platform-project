@@ -1,5 +1,6 @@
 import { canManageSpace, canViewSpace } from "@/lib/permissions/spaces";
 import { isSuperAdmin, isTeacher } from "@/lib/permissions/profiles";
+import { isNonArchivedContentStatus } from "@/lib/status/content-status";
 import {
   findSectionBySlugForSpaceId,
   findSpaceById,
@@ -24,7 +25,7 @@ export async function listVisibleSpacesForUser(profile: AppUserProfile): Promise
     return [...classes, ...electives];
   }
 
-  return listSpacesForUser(profile.id);
+  return (await listSpacesForUser(profile.id)).filter((space) => isNonArchivedContentStatus(space.status));
 }
 
 export async function listClassSpacesForUser(profile: AppUserProfile): Promise<SpaceSummary[]> {
@@ -93,7 +94,9 @@ export async function listManageableClasses(profile: AppUserProfile): Promise<Sp
       })),
   );
 
-  return checks.filter(({ space, memberships }) => canManageSpace(profile, { space, memberships })).map(({ space }) => space);
+  return checks
+    .filter(({ space, memberships }) => canManageSpace(profile, { space, memberships }) && (isSuperAdmin(profile) || isNonArchivedContentStatus(space.status)))
+    .map(({ space }) => space);
 }
 
 export async function getManageableClassById(classId: string, profile: AppUserProfile): Promise<SpaceSummary | null> {
@@ -105,6 +108,10 @@ export async function getManageableClassById(classId: string, profile: AppUserPr
 
   const memberships = await listMembershipsForSpace(space.id);
   if (!canManageSpace(profile, { space, memberships })) {
+    return null;
+  }
+
+  if (!isSuperAdmin(profile) && !isNonArchivedContentStatus(space.status)) {
     return null;
   }
 

@@ -5,6 +5,8 @@ import { mapNoticeRow } from "@/lib/db/mappers";
 import { createSupabaseServerWriteClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { seedNotices } from "@/lib/seed/seed";
+import { isAdminRole } from "@/lib/permissions/profiles";
+import { isNonArchivedContentStatus } from "@/lib/status/content-status";
 import type { AppUserProfile } from "@/types/auth";
 import type { NoticeSummary, SpaceSummary } from "@/types/domain";
 
@@ -71,6 +73,10 @@ export async function listManageableNotices(profile: AppUserProfile): Promise<No
 
   return noticeItems
     .filter((notice) => {
+      if (!isAdminRole(profile) && !isNonArchivedContentStatus(notice.status)) {
+        return false;
+      }
+
       const match = spacesWithMemberships.find(({ space }) => space.id === notice.spaceId);
       return match ? canManageNotice(profile, { notice, space: match.space, memberships: match.memberships }) : false;
     })
@@ -90,6 +96,10 @@ export async function getManageableNoticeById(noticeId: string, profile: AppUser
       : await getNoticeById(noticeId);
 
   if (!notice) {
+    return null;
+  }
+
+  if (!isAdminRole(profile) && !isNonArchivedContentStatus(notice.status)) {
     return null;
   }
 

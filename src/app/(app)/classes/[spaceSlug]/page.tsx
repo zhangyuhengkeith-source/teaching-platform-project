@@ -13,7 +13,7 @@ import { listExerciseSetsForSpace } from "@/lib/queries/exercises";
 import { listNoticesForSpace } from "@/lib/queries/notices";
 import { listResourcesForSpace } from "@/lib/queries/resources";
 import { listTasksForClass } from "@/lib/queries/tasks";
-import { isTeacher } from "@/lib/permissions/profiles";
+import { isReadableContentStatus } from "@/lib/status/content-status";
 
 export default async function ClassDetailPage({
   params,
@@ -29,9 +29,10 @@ export default async function ClassDetailPage({
     listTasksForClass(space.id, profile),
   ]);
 
-  const visibleResources = isTeacher(profile) ? resources : resources.filter((resource) => resource.status === "published");
-  const visibleNotices = isTeacher(profile) ? notices : notices.filter((notice) => notice.status === "published");
-  const visibleTasks = isTeacher(profile) ? tasks : tasks.filter((task) => task.status === "published");
+  const visibleSections = space.sections.filter((section) => isReadableContentStatus(profile, section.status ?? "published"));
+  const visibleResources = resources.filter((resource) => isReadableContentStatus(profile, resource.status) && (resource.status === "published" || profile.role !== "student"));
+  const visibleNotices = notices.filter((notice) => isReadableContentStatus(profile, notice.status) && (notice.status === "published" || profile.role !== "student"));
+  const visibleTasks = tasks.filter((task) => isReadableContentStatus(profile, task.status) && (task.status === "published" || profile.role !== "student"));
 
   const resourceCountBySection = new Map<string, number>();
   visibleResources.forEach((resource) => {
@@ -48,7 +49,7 @@ export default async function ClassDetailPage({
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <SectionCard description="按章节、模块或周次组织的学习内容" title="章节总数">
           <div className="flex items-center justify-between">
-            <p className="text-3xl font-semibold">{space.sections.length}</p>
+            <p className="text-3xl font-semibold">{visibleSections.length}</p>
             <Layers3 className="h-5 w-5 text-primary" />
           </div>
         </SectionCard>
@@ -75,9 +76,9 @@ export default async function ClassDetailPage({
       <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
         <div className="space-y-6">
           <SectionCard description="按章节、模块或周次进入班级学习内容。" title="章节">
-            {space.sections.length > 0 ? (
+            {visibleSections.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2">
-                {space.sections.map((section) => (
+                {visibleSections.map((section) => (
                   <ChapterCard
                     description={section.description}
                     href={`/classes/${space.slug}/sections/${section.slug}`}

@@ -19,6 +19,7 @@ import {
   seedSpaces,
 } from "@/lib/seed/seed";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isBeforeShanghaiNow } from "@/lib/utils/timezone";
 import { findTaskById, listTaskSubmissionsByTaskId, listTasksBySpaceId } from "@/repositories/task-repository";
 import type { AppUserProfile } from "@/types/auth";
 import type { GroupDetail, GroupMemberSummary, GroupSummary, SpaceDetail, SpaceSummary, TaskDetail, TaskSubmissionSummary, TaskSummary } from "@/types/domain";
@@ -39,7 +40,7 @@ function enrichGroup(group: GroupSummary, members: GroupMemberSummary[]): GroupD
 }
 
 function applySubmissionEffectiveStatus(submission: TaskSubmissionSummary, dueAt: string | null): TaskSubmissionSummary {
-  const overdue = Boolean(dueAt && (submission.status === "draft" || submission.status === "returned") && new Date(dueAt).getTime() < Date.now());
+  const overdue = Boolean(dueAt && (submission.status === "draft" || submission.status === "returned") && isBeforeShanghaiNow(dueAt));
   return {
     ...submission,
     taskDueAt: dueAt,

@@ -22,7 +22,7 @@ export interface UpdateProfileInput {
 
 export interface UpdateProfileAccessInput {
   id: string;
-  role: "super_admin" | "teacher" | "student";
+  role: "admin" | "super_admin" | "teacher" | "student";
   user_type: "internal" | "external";
   status: "active" | "inactive" | "suspended";
 }

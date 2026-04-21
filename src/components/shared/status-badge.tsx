@@ -8,6 +8,7 @@ const variantMap: Record<Status, "muted" | "primary" | "warning" | "success"> = 
   draft: "muted",
   published: "primary",
   archived: "muted",
+  deleted: "muted",
   pending: "warning",
   active: "success",
   completed: "primary",
@@ -20,10 +21,11 @@ const variantMap: Record<Status, "muted" | "primary" | "warning" | "success"> = 
   resubmitted: "primary",
 };
 
-const statusKeyMap: Record<Status, "status.draft" | "status.published" | "status.archived" | "status.pending" | "status.active" | "status.completed" | "status.mastered" | "status.forming" | "status.locked" | "status.submitted" | "status.overdue" | "status.returned" | "status.resubmitted"> = {
+const statusKeyMap: Record<Status, "status.draft" | "status.published" | "status.archived" | "status.deleted" | "status.pending" | "status.active" | "status.completed" | "status.mastered" | "status.forming" | "status.locked" | "status.submitted" | "status.overdue" | "status.returned" | "status.resubmitted"> = {
   draft: "status.draft",
   published: "status.published",
   archived: "status.archived",
+  deleted: "status.deleted",
   pending: "status.pending",
   active: "status.active",
   completed: "status.completed",

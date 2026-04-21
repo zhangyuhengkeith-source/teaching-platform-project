@@ -15,6 +15,7 @@ import type {
   TaskSubmissionSummary,
   TaskSummary,
   WrongBookItemSummary,
+  ContentChangeNotificationSummary,
 } from "@/types/domain";
 
 export const seedProfiles: ProfileSummary[] = [
@@ -74,6 +75,8 @@ export const seedProfiles: ProfileSummary[] = [
     status: "active",
   },
 ];
+
+export const seedChangeNotifications: ContentChangeNotificationSummary[] = [];
 
 export const seedSpaces: SpaceSummary[] = [
   {

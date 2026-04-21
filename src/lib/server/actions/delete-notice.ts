@@ -7,6 +7,7 @@ import { deleteNotice } from "@/lib/mutations/notices";
 import { canManageNotice } from "@/lib/permissions/notices";
 import { getManageableNoticeById } from "@/lib/queries/notices";
 import { getSpaceById, listMembershipsForSpace } from "@/lib/queries/spaces";
+import { notifyClassContentChanged } from "@/services/content-change-notification-service";
 
 export async function deleteNoticeAction(noticeId: string) {
   const profile = await requireAuth();
@@ -27,6 +28,15 @@ export async function deleteNoticeAction(noticeId: string) {
   }
 
   await deleteNotice(notice.id);
+  if (space.type === "class") {
+    await notifyClassContentChanged({
+      classId: space.id,
+      contentType: "announcement",
+      contentId: notice.id,
+      actionType: "deleted",
+      title: notice.title,
+    });
+  }
 
   revalidatePath("/admin/notices");
   revalidatePath("/classes");

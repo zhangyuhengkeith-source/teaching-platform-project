@@ -13,11 +13,14 @@ import {
   listManageableElectiveSpaces,
 } from "@/lib/queries/electives";
 import { findTaskById, listTaskSubmissionsByTaskId, listTasksBySpaceId } from "@/repositories/task-repository";
+import { isBeforeShanghaiNow } from "@/lib/utils/timezone";
+import { isAdminRole } from "@/lib/permissions/profiles";
+import { isNonArchivedContentStatus } from "@/lib/status/content-status";
 import type { AppUserProfile } from "@/types/auth";
 import type { GroupDetail, SpaceSummary, TaskDetail, TaskSubmissionSummary, TaskSummary } from "@/types/domain";
 
 function applySubmissionEffectiveStatus(submission: TaskSubmissionSummary, dueAt: string | null): TaskSubmissionSummary {
-  const overdue = Boolean(dueAt && (submission.status === "draft" || submission.status === "returned") && new Date(dueAt).getTime() < Date.now());
+  const overdue = Boolean(dueAt && (submission.status === "draft" || submission.status === "returned") && isBeforeShanghaiNow(dueAt));
   return {
     ...submission,
     taskDueAt: dueAt,
@@ -69,7 +72,8 @@ export async function listManageableTasksForSpace(spaceId: string, profile: AppU
     return [];
   }
 
-  return listTasksRawForSpace(space.id);
+  const tasks = await listTasksRawForSpace(space.id);
+  return isAdminRole(profile) ? tasks : tasks.filter((task) => isNonArchivedContentStatus(task.status));
 }
 
 export async function listManageableTasksForElective(spaceId: string, profile: AppUserProfile): Promise<TaskSummary[]> {
@@ -174,7 +178,9 @@ export async function listSubmissionsForTask(taskId: string, profile: AppUserPro
 export async function listManageableSubmissions(profile: AppUserProfile): Promise<TaskSubmissionSummary[]> {
   const [classes, electives] = await Promise.all([listManageableClasses(profile), listManageableElectiveSpaces(profile)]);
   const spaces = [...classes, ...electives];
-  const tasks = (await Promise.all(spaces.map((space) => listTasksRawForSpace(space.id)))).flat();
+  const tasks = (await Promise.all(spaces.map((space) => listTasksRawForSpace(space.id))))
+    .flat()
+    .filter((task) => isAdminRole(profile) || isNonArchivedContentStatus(task.status));
 
   return (
     await Promise.all(

@@ -1,8 +1,9 @@
 import type { AppUserProfile } from "@/types/auth";
 import type { GroupDetail, SpaceMembershipSummary, SpaceSummary, TaskSubmissionSummary, TaskSummary } from "@/types/domain";
 
-import { isInternalStudent } from "@/lib/permissions/profiles";
+import { isAdminRole, isInternalStudent } from "@/lib/permissions/profiles";
 import { canManageSpace, canViewSpace } from "@/lib/permissions/spaces";
+import { isNonArchivedContentStatus } from "@/lib/status/content-status";
 
 interface TaskAccessContext {
   space: Pick<SpaceSummary, "id" | "ownerId" | "status" | "type">;
@@ -14,6 +15,10 @@ export function canManageTask(profile: AppUserProfile | null | undefined, contex
 }
 
 export function canViewTask(profile: AppUserProfile | null | undefined, task: Pick<TaskSummary, "status">, context: TaskAccessContext) {
+  if (!isAdminRole(profile) && !isNonArchivedContentStatus(task.status)) {
+    return false;
+  }
+
   if (canManageTask(profile, context)) {
     return true;
   }

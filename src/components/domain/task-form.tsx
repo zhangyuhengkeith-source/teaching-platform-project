@@ -19,29 +19,8 @@ import {
   type UpdateTaskSchema,
   updateTaskSchema,
 } from "@/lib/validations/electives";
+import { fromShanghaiDateTimeInputValue, toShanghaiDateTimeInputValue } from "@/lib/utils/timezone";
 import type { ResourceSummary, SpaceSummary, TaskSummary } from "@/types/domain";
-
-function toDateTimeInputValue(value?: string | null) {
-  if (!value) {
-    return "";
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-}
-
-function fromDateTimeInputValue(value?: string | null) {
-  if (!value) {
-    return null;
-  }
-
-  return new Date(value).toISOString();
-}
 
 export function TaskForm({
   mode,
@@ -71,7 +50,7 @@ export function TaskForm({
       brief: initialValues?.brief ?? "",
       body: initialValues?.body ?? "",
       submission_mode: initialValues?.submissionMode ?? (spaceType === "class" ? "individual" : "group"),
-      due_at: toDateTimeInputValue(initialValues?.dueAt),
+      due_at: toShanghaiDateTimeInputValue(initialValues?.dueAt),
       allow_resubmission: initialValues?.allowResubmission ?? true,
       template_resource_id: initialValues?.templateResourceId ?? "",
       status: initialValues?.status ?? "draft",
@@ -91,7 +70,7 @@ export function TaskForm({
         const payload = {
           ...values,
           space_id: values.space_id,
-          due_at: fromDateTimeInputValue(values.due_at ?? null),
+          due_at: fromShanghaiDateTimeInputValue(values.due_at ?? null),
           template_resource_id: values.template_resource_id || null,
         };
 

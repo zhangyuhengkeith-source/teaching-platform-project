@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { GROUP_STATUSES, SUBMISSION_STATUSES, TASK_STATUSES } from "@/lib/constants/statuses";
+import { GROUP_STATUSES, SPACE_STATUSES, SUBMISSION_STATUSES, TASK_STATUSES } from "@/lib/constants/statuses";
 import { GROUP_MEMBER_ROLES, SUBMISSION_MODES } from "@/lib/constants/elective-types";
 
 const uuidField = z.string().uuid("A valid UUID is required.");
@@ -20,7 +20,7 @@ export const createElectiveSchema = z.object({
   slug: slugField,
   description: z.string().trim().optional().nullable(),
   academic_year: z.string().trim().max(20).optional().nullable(),
-  status: z.enum(["draft", "published", "archived"]),
+  status: z.enum(SPACE_STATUSES),
   grouping_locked: z.boolean().optional(),
   max_group_size: z.number().int().min(2).max(12).optional(),
 });

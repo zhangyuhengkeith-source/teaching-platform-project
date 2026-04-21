@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { mapSpaceMembershipRow, mapSpaceRow, mapSpaceSectionRow } from "@/lib/db/mappers";
 import { seedMemberships, seedSections, seedSpaces } from "@/lib/seed/seed";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { nowInShanghaiIso } from "@/lib/utils/timezone";
 import type { AssignProfileToSpaceInput, AssignStudentToClassInput, CreateSpaceInput, UpdateSpaceInput } from "@/types/api";
 import type { Database } from "@/types/database";
 import type { SpaceMembershipSummary, SpaceSectionSummary, SpaceSummary } from "@/types/domain";
@@ -311,7 +312,7 @@ export async function upsertSpaceMembershipRecord(input: AssignProfileToSpaceInp
       profileId: input.profile_id,
       membershipRole: input.membership_role,
       status: "active",
-      joinedAt: new Date().toISOString(),
+    joinedAt: nowInShanghaiIso(),
     };
   }
 
@@ -320,7 +321,7 @@ export async function upsertSpaceMembershipRecord(input: AssignProfileToSpaceInp
     profile_id: input.profile_id,
     membership_role: input.membership_role,
     status: "active" as const,
-    joined_at: new Date().toISOString(),
+    joined_at: nowInShanghaiIso(),
   };
 
   const { data, error } = await supabase

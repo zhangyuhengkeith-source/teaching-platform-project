@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/auth/require-role";
+import { normalizeClassScopedInput } from "@/lib/auth/class-permissions";
 import { createTask } from "@/lib/mutations/electives";
 import { canManageSpace } from "@/lib/permissions/spaces";
 import { getSpaceById, listMembershipsForSpace } from "@/lib/queries/spaces";
@@ -10,7 +11,7 @@ import { createTaskSchema } from "@/lib/validations/electives";
 
 export async function createTaskAction(input: unknown) {
   const profile = await requireRole(["super_admin", "teacher"]);
-  const parsed = createTaskSchema.parse(input);
+  const parsed = createTaskSchema.parse(normalizeClassScopedInput(input));
   const space = await getSpaceById(parsed.space_id);
 
   if (!space) {

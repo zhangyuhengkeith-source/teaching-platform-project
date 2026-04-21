@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 
 import { TranslationText } from "@/components/common/translation-text";
+import { StudentChangeNotificationPopup } from "@/components/domain/student-change-notification-popup";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
@@ -27,6 +28,7 @@ export function AppLayout({ children, profile }: { children: ReactNode; profile:
           </div>
         </main>
       </div>
+      <StudentChangeNotificationPopup enabled={profile.role === "student" && profile.userType === "internal"} />
     </div>
   );
 }

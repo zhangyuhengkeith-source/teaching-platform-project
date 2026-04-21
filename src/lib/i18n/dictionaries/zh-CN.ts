@@ -277,6 +277,7 @@ export const zhCN = {
     draft: "草稿",
     published: "已发布",
     archived: "已归档",
+    deleted: "已删除",
     pending: "待处理",
     active: "进行中",
     completed: "已完成",
@@ -344,6 +345,7 @@ export const zhCN = {
     classMembership: "所属班级",
     unassignedClass: "暂未分配班级",
     roles: {
+      admin: "管理员",
       superAdmin: "超级管理员",
       teacher: "教师",
       student: "学生",

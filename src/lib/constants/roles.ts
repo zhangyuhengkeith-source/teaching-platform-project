@@ -1,6 +1,6 @@
 import type { AppRole, ProfileStatus, UserType } from "@/types/auth";
 
-export const APP_ROLES: AppRole[] = ["super_admin", "teacher", "student"];
+export const APP_ROLES: AppRole[] = ["admin", "super_admin", "teacher", "student"];
 export const USER_TYPES: UserType[] = ["internal", "external"];
 export const PROFILE_STATUSES: ProfileStatus[] = ["active", "inactive", "suspended"];
 

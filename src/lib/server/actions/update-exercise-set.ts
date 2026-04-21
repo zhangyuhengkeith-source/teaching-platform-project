@@ -7,6 +7,8 @@ import { requireRole } from "@/lib/auth/require-role";
 import { getManageableClassById } from "@/lib/queries/spaces";
 import { createExerciseItemSchema, updateExerciseSetSchema } from "@/lib/validations/exercises";
 import { getManageableExerciseSetById } from "@/lib/queries/exercises";
+import { getChangeActionFromStatusTransition } from "@/lib/status/content-status";
+import { notifyClassContentChanged } from "@/services/content-change-notification-service";
 
 function isCompatibleItemType(exerciseType: "mcq" | "flashcard" | "term_recall", itemType: "mcq" | "flashcard" | "spelling") {
   if (exerciseType === "mcq") {
@@ -54,6 +56,13 @@ export async function updateExerciseSetAction(input: unknown) {
   }
 
   await replaceExerciseItemsForSet(updatedSet.id, parsedItems);
+  await notifyClassContentChanged({
+    classId: targetSpace.id,
+    contentType: "practice_set",
+    contentId: updatedSet.id,
+    actionType: getChangeActionFromStatusTransition(existingSet.status, updatedSet.status),
+    title: updatedSet.title,
+  });
 
   revalidatePath("/admin/exercises");
   revalidatePath(`/admin/exercises/${updatedSet.id}/edit`);

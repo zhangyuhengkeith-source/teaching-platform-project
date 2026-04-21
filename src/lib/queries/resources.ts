@@ -1,5 +1,7 @@
 import { canManageResource } from "@/lib/permissions/resources";
+import { isAdminRole } from "@/lib/permissions/profiles";
 import { listManageableClasses, listMembershipsForSpace } from "@/lib/queries/spaces";
+import { isNonArchivedContentStatus } from "@/lib/status/content-status";
 import { findResourceById, findResourceBySlugForSpace, listResourcesBySectionId, listResourcesBySpaceId } from "@/repositories/resource-repository";
 import type { AppUserProfile } from "@/types/auth";
 import type { ResourceSummary } from "@/types/domain";
@@ -27,6 +29,10 @@ export async function listManageableResources(profile: AppUserProfile): Promise<
   return resources
     .flat()
     .filter((resource) => {
+      if (!isAdminRole(profile) && !isNonArchivedContentStatus(resource.status)) {
+        return false;
+      }
+
       const space = spaces.find((item) => item.id === resource.spaceId);
       return space ? canManageResource(profile, { resource, space }) : false;
     })
@@ -37,6 +43,10 @@ export async function getManageableResourceById(resourceId: string, profile: App
   const resource = await getResourceById(resourceId);
 
   if (!resource) {
+    return null;
+  }
+
+  if (!isAdminRole(profile) && !isNonArchivedContentStatus(resource.status)) {
     return null;
   }
 

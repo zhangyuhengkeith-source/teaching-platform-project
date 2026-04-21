@@ -7,6 +7,7 @@ import { deleteTask } from "@/lib/mutations/electives";
 import { canManageSpace } from "@/lib/permissions/spaces";
 import { getTaskById } from "@/lib/queries/tasks";
 import { getSpaceById, listMembershipsForSpace } from "@/lib/queries/spaces";
+import { notifyClassContentChanged } from "@/services/content-change-notification-service";
 
 export async function deleteTaskAction(taskId: string) {
   const profile = await requireRole(["super_admin", "teacher"]);
@@ -27,6 +28,15 @@ export async function deleteTaskAction(taskId: string) {
   }
 
   await deleteTask(task.id);
+  if (space.type === "class") {
+    await notifyClassContentChanged({
+      classId: space.id,
+      contentType: "assignment",
+      contentId: task.id,
+      actionType: "deleted",
+      title: task.title,
+    });
+  }
 
   const adminEditPath = space.type === "class" ? `/admin/classes/${space.id}/edit` : `/admin/electives/${space.id}/edit`;
   const learnerRootPath = space.type === "class" ? `/classes/${space.slug}` : `/electives/${space.slug}`;

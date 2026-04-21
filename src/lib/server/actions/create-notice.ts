@@ -6,11 +6,12 @@ import { createNotice } from "@/lib/mutations/notices";
 import { getSpaceById, listMembershipsForSpace } from "@/lib/queries/spaces";
 import { createNoticeSchema } from "@/lib/validations/notices";
 import { requireAuth } from "@/lib/auth/require-auth";
+import { normalizeClassScopedInput } from "@/lib/auth/class-permissions";
 import { canManageSpace } from "@/lib/permissions/spaces";
 
 export async function createNoticeAction(input: unknown) {
   const profile = await requireAuth();
-  const parsed = createNoticeSchema.parse(input);
+  const parsed = createNoticeSchema.parse(normalizeClassScopedInput(input));
   const space = await getSpaceById(parsed.space_id);
 
   if (!space) {

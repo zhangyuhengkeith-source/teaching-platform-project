@@ -279,6 +279,7 @@ export const en: TranslationDictionary = {
     draft: "Draft",
     published: "Published",
     archived: "Archived",
+    deleted: "Deleted",
     pending: "Pending",
     active: "Active",
     completed: "Completed",
@@ -346,6 +347,7 @@ export const en: TranslationDictionary = {
     languageAndTimezone: "Language and timezone defaults",
     onboardingCompleteness: "Profile onboarding completeness",
     roles: {
+      admin: "Admin",
       superAdmin: "Super admin",
       teacher: "Teacher",
       student: "Student",

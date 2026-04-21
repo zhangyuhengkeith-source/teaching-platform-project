@@ -30,9 +30,10 @@ import type { AppUserProfile } from "@/types/auth";
 import type { Database, Json } from "@/types/database";
 import type { GroupDetail, GroupMemberSummary, GroupSummary, SpaceSummary, SubmissionFileSummary, TaskSubmissionSummary, TaskSummary } from "@/types/domain";
 import { createSpace, updateSpace } from "@/lib/mutations/spaces";
+import { nowInShanghaiIso } from "@/lib/utils/timezone";
 
 function nowIso() {
-  return new Date().toISOString();
+  return nowInShanghaiIso();
 }
 
 function deriveSubmissionStatusForSubmit(currentStatus: TaskSubmissionSummary["status"] | undefined) {
@@ -89,7 +90,7 @@ export async function updateElectiveSpace(input: {
   slug?: string;
   description?: string | null;
   academic_year?: string | null;
-  status?: "draft" | "published" | "archived";
+  status?: "draft" | "published" | "archived" | "deleted";
   grouping_locked?: boolean;
   max_group_size?: number;
 }, client?: SupabaseClient<Database>) {

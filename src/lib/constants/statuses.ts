@@ -1,16 +1,31 @@
-export const STATUSES = ["draft", "published", "archived", "pending", "active", "completed", "mastered", "forming", "locked", "submitted", "overdue", "returned", "resubmitted"] as const;
+export const CONTENT_STATUSES = ["draft", "published", "archived", "deleted"] as const;
+
+export const STATUSES = [
+  ...CONTENT_STATUSES,
+  "pending",
+  "active",
+  "completed",
+  "mastered",
+  "forming",
+  "locked",
+  "submitted",
+  "overdue",
+  "returned",
+  "resubmitted",
+] as const;
 
 export type Status = (typeof STATUSES)[number];
 
-export const SPACE_STATUSES = ["draft", "published", "archived"] as const;
-export const NOTICE_STATUSES = ["draft", "published", "archived"] as const;
-export const RESOURCE_STATUSES = ["draft", "published", "archived"] as const;
-export const EXERCISE_SET_STATUSES = ["draft", "published"] as const;
+export const SPACE_STATUSES = CONTENT_STATUSES;
+export const NOTICE_STATUSES = CONTENT_STATUSES;
+export const RESOURCE_STATUSES = CONTENT_STATUSES;
+export const EXERCISE_SET_STATUSES = CONTENT_STATUSES;
 export const WRONG_BOOK_STATUSES = ["active", "mastered"] as const;
 export const GROUP_STATUSES = ["forming", "active", "locked", "archived"] as const;
-export const TASK_STATUSES = ["draft", "published", "archived"] as const;
+export const TASK_STATUSES = CONTENT_STATUSES;
 export const SUBMISSION_STATUSES = ["draft", "submitted", "overdue", "returned", "resubmitted", "completed"] as const;
 
+export type ContentStatus = (typeof CONTENT_STATUSES)[number];
 export type SpaceStatus = (typeof SPACE_STATUSES)[number];
 export type NoticeStatus = (typeof NOTICE_STATUSES)[number];
 export type ResourceStatus = (typeof RESOURCE_STATUSES)[number];

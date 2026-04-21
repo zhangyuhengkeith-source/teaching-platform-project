@@ -1,6 +1,7 @@
 import { mapResourceFileRow, mapResourceRow } from "@/lib/db/mappers";
 import { seedResources } from "@/lib/seed/seed";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { nowInShanghaiIso } from "@/lib/utils/timezone";
 import { removeStoredFiles } from "@/services/storage-server-service";
 import type { CreateResourceInput, ResourceFileInput, UpdateResourceInput } from "@/types/api";
 import type { ResourceFileSummary, ResourceSummary } from "@/types/domain";
@@ -271,6 +272,8 @@ export async function updateResourceRecord(profileId: string, input: UpdateResou
       resource_type: input.resource_type,
       visibility: input.visibility,
       status: input.status,
+      archived_at: input.status === "archived" ? nowInShanghaiIso() : undefined,
+      deleted_at: input.status === "deleted" ? nowInShanghaiIso() : undefined,
       published_at: input.published_at,
       sort_order: input.sort_order,
       updated_by: profileId,

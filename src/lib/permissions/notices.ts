@@ -2,6 +2,8 @@ import type { AppUserProfile } from "@/types/auth";
 import type { NoticeSummary, SpaceMembershipSummary, SpaceSummary } from "@/types/domain";
 
 import { canManageSpace, canViewSpace } from "@/lib/permissions/spaces";
+import { isAdminRole } from "@/lib/permissions/profiles";
+import { isNonArchivedContentStatus } from "@/lib/status/content-status";
 
 interface NoticeAccessContext {
   notice: Pick<NoticeSummary, "status">;
@@ -17,6 +19,10 @@ export function canManageNotice(profile: AppUserProfile | null | undefined, cont
 }
 
 export function canViewNotice(profile: AppUserProfile | null | undefined, context: NoticeAccessContext) {
+  if (!isAdminRole(profile) && !isNonArchivedContentStatus(context.notice.status)) {
+    return false;
+  }
+
   if (context.notice.status !== "published") {
     return canManageNotice(profile, context);
   }

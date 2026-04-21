@@ -3,6 +3,7 @@ import type { SpaceMembershipSummary, SpaceSummary } from "@/types/domain";
 import type { SpaceMembershipRole } from "@/lib/constants/roles";
 
 import { isExternalStudent, isSuperAdmin, isTeacher } from "@/lib/permissions/profiles";
+import { isNonArchivedContentStatus } from "@/lib/status/content-status";
 
 interface SpaceAccessContext {
   space: Pick<SpaceSummary, "id" | "ownerId" | "status" | "type">;
@@ -44,6 +45,10 @@ export function canViewSpace(profile: AppUserProfile | null | undefined, context
     return false;
   }
 
+  if (!isSuperAdmin(profile) && !isNonArchivedContentStatus(context.space.status)) {
+    return false;
+  }
+
   if (canManageSpace(profile, context)) {
     return true;
   }
@@ -55,4 +60,3 @@ export function canViewSpace(profile: AppUserProfile | null | undefined, context
 
   return Boolean(hasActiveMembership(profile.id, context.memberships));
 }
-

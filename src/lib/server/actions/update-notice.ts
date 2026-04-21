@@ -8,6 +8,8 @@ import { getSpaceById, listMembershipsForSpace } from "@/lib/queries/spaces";
 import { updateNoticeSchema } from "@/lib/validations/notices";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { canManageNotice } from "@/lib/permissions/notices";
+import { getChangeActionFromStatusTransition } from "@/lib/status/content-status";
+import { notifyClassContentChanged } from "@/services/content-change-notification-service";
 
 export async function updateNoticeAction(input: unknown) {
   const profile = await requireAuth();
@@ -32,6 +34,15 @@ export async function updateNoticeAction(input: unknown) {
     ...parsed,
     space_id: parsed.space_id ?? notice.spaceId,
   });
+  if (space.type === "class") {
+    await notifyClassContentChanged({
+      classId: space.id,
+      contentType: "announcement",
+      contentId: updated.id,
+      actionType: getChangeActionFromStatusTransition(notice.status, updated.status),
+      title: updated.title,
+    });
+  }
   revalidatePath("/admin/notices");
   revalidatePath("/classes");
   revalidatePath("/electives");

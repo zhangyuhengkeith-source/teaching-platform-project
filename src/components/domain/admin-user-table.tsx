@@ -17,6 +17,7 @@ type AdminUserRowData = ProfileSummary & {
 };
 
 const ROLE_OPTIONS = [
+  { value: "admin", labelKey: "profile.roles.admin" },
   { value: "super_admin", labelKey: "profile.roles.superAdmin" },
   { value: "teacher", labelKey: "profile.roles.teacher" },
   { value: "student", labelKey: "profile.roles.student" },
