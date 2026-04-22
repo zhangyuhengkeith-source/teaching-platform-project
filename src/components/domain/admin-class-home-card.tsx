@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/utils/format";
+import { getClassManagementPath } from "@/lib/constants/class-management";
 import type { AdminClassCardSummary } from "@/types/domain";
 
 function ApprovalBadge({ status }: { status: AdminClassCardSummary["approvalStatus"] }) {
@@ -120,8 +121,8 @@ export function AdminClassHomeCard({ item, canApprove }: { item: AdminClassCardS
         ) : null}
 
         {item.approvalStatus === "approved" ? (
-          <Link className="inline-flex items-center gap-2 text-sm font-medium text-primary" href={`/classes/${item.slug}`}>
-            Enter class
+          <Link className="inline-flex items-center gap-2 text-sm font-medium text-primary" href={getClassManagementPath(item.id)}>
+            Manage class
             <ArrowRight className="h-4 w-4" />
           </Link>
         ) : null}
