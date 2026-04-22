@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { seedNotices } from "@/lib/seed/seed";
 import { isAdminRole } from "@/lib/permissions/profiles";
 import { isNonArchivedContentStatus } from "@/lib/status/content-status";
+import { archiveExpiredNotices } from "@/services/notice-expiration-service";
 import type { AppUserProfile } from "@/types/auth";
 import type { NoticeSummary, SpaceSummary } from "@/types/domain";
 
@@ -16,6 +17,8 @@ export async function listManageableNoticeSpaces(profile: AppUserProfile): Promi
 }
 
 export async function listNoticesForSpace(spaceId: string): Promise<NoticeSummary[]> {
+  await archiveExpiredNotices({ spaceIds: [spaceId] });
+
   const supabase = await createSupabaseServerClient();
 
   if (!supabase) {
@@ -31,6 +34,8 @@ export async function listNoticesForSpace(spaceId: string): Promise<NoticeSummar
 }
 
 export async function getNoticeById(noticeId: string): Promise<NoticeSummary | null> {
+  await archiveExpiredNotices({ noticeIds: [noticeId] });
+
   const supabase = await createSupabaseServerClient();
 
   if (!supabase) {
@@ -47,6 +52,8 @@ export async function getNoticeById(noticeId: string): Promise<NoticeSummary | n
 
 export async function listManageableNotices(profile: AppUserProfile): Promise<NoticeSummary[]> {
   const spaces = await listManageableNoticeSpaces(profile);
+  await archiveExpiredNotices({ spaceIds: spaces.map((space) => space.id) });
+
   const spacesWithMemberships = await Promise.all(
     spaces.map(async (space) => ({
       space,
