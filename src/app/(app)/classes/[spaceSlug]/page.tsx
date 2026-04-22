@@ -1,9 +1,8 @@
 import { BellRing, BookOpen, FolderKanban, Layers3 } from "lucide-react";
 
-import { CourseChapterDirectory } from "@/components/domain/course-chapter-directory";
 import { ExerciseSetCard } from "@/components/domain/exercise-set-card";
 import { NoticeCard } from "@/components/domain/notice-card";
-import { ResourceCard } from "@/components/domain/resource-card";
+import { StudentClassCourseContent } from "@/components/domain/student-class-course-content";
 import { TaskCard } from "@/components/domain/task-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
@@ -31,10 +30,17 @@ export default async function ClassDetailPage({
     listCourseChapterSetsByClassId(space.id),
   ]);
 
-  const visibleChapterSets = chapterSets.filter((chapterSet) => isReadableContentStatus(profile, chapterSet.status) && (chapterSet.status === "published" || profile.role !== "student"));
+  const visibleChapterSets = chapterSets.filter(
+    (chapterSet) => isReadableContentStatus(profile, chapterSet.status) && (chapterSet.status === "published" || profile.role !== "student"),
+  );
   const visibleChapterItems = visibleChapterSets.flatMap((chapterSet) => chapterSet.items);
-  const visibleResources = resources.filter((resource) => isReadableContentStatus(profile, resource.status) && (resource.status === "published" || profile.role !== "student"));
-  const visibleNotices = notices.filter((notice) => isReadableContentStatus(profile, notice.status) && (notice.status === "published" || profile.role !== "student"));
+  const secondLevelChapterCount = visibleChapterItems.filter((item) => item.level === 2).length;
+  const visibleResources = resources.filter(
+    (resource) => isReadableContentStatus(profile, resource.status) && (resource.status === "published" || profile.role !== "student"),
+  );
+  const visibleNotices = notices.filter(
+    (notice) => isReadableContentStatus(profile, notice.status) && (notice.status === "published" || profile.role !== "student"),
+  );
   const visibleTasks = tasks.filter((task) => isReadableContentStatus(profile, task.status) && (task.status === "published" || profile.role !== "student"));
 
   const latestNotice = visibleNotices[0]?.title ?? "暂无已发布公告";
@@ -43,19 +49,19 @@ export default async function ClassDetailPage({
     <div className="space-y-6">
       <PageHeader description={space.description ?? "这里会集中展示班级资料、章节学习内容与最新公告。"} title={space.title} />
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <SectionCard description="按章节、模块或周次组织的学习内容" title="章节总数">
+        <SectionCard description="章节总数仅统计二级标题数量。" title="章节总数">
           <div className="flex items-center justify-between">
-            <p className="text-3xl font-semibold">{visibleChapterItems.length}</p>
+            <p className="text-3xl font-semibold">{secondLevelChapterCount}</p>
             <Layers3 className="h-5 w-5 text-primary" />
           </div>
         </SectionCard>
-        <SectionCard description="已发布或当前对你可见的学习资源" title="资源">
+        <SectionCard description="当前班级中已发布的学习资源。" title="资源">
           <div className="flex items-center justify-between">
             <p className="text-3xl font-semibold">{visibleResources.length}</p>
             <BookOpen className="h-5 w-5 text-primary" />
           </div>
         </SectionCard>
-        <SectionCard description="本班级中的作业任务与提交项目" title="任务">
+        <SectionCard description="本班级中的作业任务与提交项目。" title="任务">
           <div className="flex items-center justify-between">
             <p className="text-3xl font-semibold">{visibleTasks.length}</p>
             <FolderKanban className="h-5 w-5 text-primary" />
@@ -71,35 +77,7 @@ export default async function ClassDetailPage({
 
       <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
         <div className="space-y-6">
-          <SectionCard description="按章节、模块或周次进入班级学习内容。" title="章节">
-            {visibleChapterSets.length > 0 ? (
-              <CourseChapterDirectory chapterSets={visibleChapterSets} />
-            ) : (
-              <EmptyState description="这个班级暂时还没有添加章节内容。" icon={Layers3} title="暂无章节" />
-            )}
-          </SectionCard>
-
-          <SectionCard description="当前班级中最近可学习的资源材料。" title="最新资源">
-            {visibleResources.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                {visibleResources.slice(0, 4).map((resource) => (
-                  <ResourceCard
-                    description={resource.description}
-                    files={resource.files}
-                    key={resource.id}
-                    resourceId={resource.id}
-                    resourceType={resource.resourceType}
-                    status={resource.status}
-                    title={resource.title}
-                    updatedAt={resource.updatedAt}
-                    visibility={resource.visibility}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState description="教师发布学习资源后，会显示在这里。" icon={BookOpen} title="暂无资源" />
-            )}
-          </SectionCard>
+          <StudentClassCourseContent chapterSets={visibleChapterSets} resources={visibleResources} />
 
           <SectionCard description="与本班级关联的练习，用于自测与复习。" title="练习">
             {exerciseSets.length > 0 ? (
@@ -140,7 +118,7 @@ export default async function ClassDetailPage({
           <SectionCard description="教师为本班级撰写的课程说明与学习概览。" title="班级概览">
             <div className="space-y-3 text-sm leading-7 text-muted-foreground">
               <p>{space.description ?? "这个班级已经可以承载章节内容、公告发布与学习资源。"}</p>
-              <p>{"学年："}{space.academicYear ?? "待确认"}</p>
+              <p>学年：{space.academicYear ?? "待确认"}</p>
             </div>
           </SectionCard>
 
