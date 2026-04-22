@@ -2,6 +2,7 @@ import type { ExerciseItemType, ExerciseSetType, FlashcardSelfEvaluation } from 
 import type { GroupMemberRole, GroupMemberStatus, SubmissionMode } from "@/lib/constants/elective-types";
 import type { SpaceMembershipRole, SpaceMembershipStatus } from "@/lib/constants/roles";
 import type {
+  ContentStatus,
   ExerciseSetStatus,
   GroupStatus,
   NoticeStatus,
@@ -13,7 +14,7 @@ import type {
 } from "@/lib/constants/statuses";
 import type { ResourceType } from "@/lib/constants/resource-types";
 import type { AppRole, ProfileStatus, UserType } from "@/types/auth";
-import type { ClassApprovalStatus, NoticeType, ResourceVisibility, SectionType, SpaceType } from "@/types/database";
+import type { ClassApprovalStatus, CourseChapterTemplateVisibility, NoticeType, ResourceVisibility, SectionType, SpaceType } from "@/types/database";
 
 export interface ProfileSummary {
   id: string;
@@ -329,6 +330,59 @@ export interface TaskSubmissionSummary {
 export interface TaskDetail extends TaskSummary {
   templateResource?: ResourceSummary | null;
   submission?: TaskSubmissionSummary | null;
+}
+
+export type CourseChapterLevel = 1 | 2 | 3 | 4;
+
+export interface CourseChapterItemSummary {
+  id: string;
+  chapterSetId: string;
+  parentId: string | null;
+  level: CourseChapterLevel;
+  title: string;
+  description: string | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CourseChapterSetSummary {
+  id: string;
+  classId: string;
+  mainTitle: string;
+  subtitle: string | null;
+  status: ContentStatus;
+  createdBy: string;
+  updatedBy: string | null;
+  archivedAt: string | null;
+  deletedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  items: CourseChapterItemSummary[];
+}
+
+export interface CourseChapterTemplateItem {
+  id: string;
+  parentId: string | null;
+  level: CourseChapterLevel;
+  title: string;
+  description: string | null;
+  sortOrder: number;
+}
+
+export interface CourseChapterTemplateSummary {
+  id: string;
+  name: string;
+  description: string | null;
+  visibility: CourseChapterTemplateVisibility;
+  sourceClassId: string | null;
+  sourceChapterSetId: string | null;
+  mainTitle: string;
+  subtitle: string | null;
+  items: CourseChapterTemplateItem[];
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type ChangeNotificationContentType = "announcement" | "chapter" | "resource" | "assignment" | "practice_set" | "student_group";

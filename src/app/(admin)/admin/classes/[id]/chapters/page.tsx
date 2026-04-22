@@ -1,5 +1,10 @@
-import { ClassModulePageShell } from "@/components/domain/class-module-page-shell";
+import { CourseChaptersManager } from "@/components/domain/course-chapters-manager";
 import { requireClassManagementContext } from "@/lib/auth/require-class-management";
+import { isAdminRole } from "@/lib/permissions/profiles";
+import {
+  listCourseChapterSetsByClassId,
+  listCourseChapterTemplates,
+} from "@/repositories/course-chapter-repository";
 
 export default async function CourseChaptersPage({
   params,
@@ -7,16 +12,21 @@ export default async function CourseChaptersPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { classSpace } = await requireClassManagementContext(id);
+  const { classSpace, profile } = await requireClassManagementContext(id);
+  const [chapterSets, templates] = await Promise.all([
+    listCourseChapterSetsByClassId(classSpace.id, {
+      includeArchived: isAdminRole(profile),
+    }),
+    listCourseChapterTemplates(),
+  ]);
 
   return (
-    <ClassModulePageShell
+    <CourseChaptersManager
       classSpace={classSpace}
-      createLabel="Create chapter"
-      emptyDescription="No course chapters have been created for this class yet."
-      emptyTitle="No chapters"
-      moduleDescription="Manage chapter structure and class course organization."
-      moduleTitle="Course Chapters"
+      currentUserId={profile.id}
+      initialChapterSets={chapterSets}
+      initialTemplates={templates}
+      isAdmin={isAdminRole(profile)}
     />
   );
 }

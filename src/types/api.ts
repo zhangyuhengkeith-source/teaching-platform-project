@@ -1,6 +1,7 @@
 import type { ExerciseItemType, ExerciseSetType, FlashcardSelfEvaluation } from "@/lib/constants/exercise-types";
 import type { GroupMemberRole, SubmissionMode } from "@/lib/constants/elective-types";
 import type {
+  ContentStatus,
   ExerciseSetStatus,
   GroupStatus,
   NoticeStatus,
@@ -11,7 +12,7 @@ import type {
   WrongBookStatus,
 } from "@/lib/constants/statuses";
 import type { ResourceType } from "@/lib/constants/resource-types";
-import type { ClassApprovalStatus, NoticeType, ResourceVisibility, SpaceType } from "@/types/database";
+import type { ClassApprovalStatus, CourseChapterTemplateVisibility, NoticeType, ResourceVisibility, SpaceType } from "@/types/database";
 
 export interface UpdateProfileInput {
   full_name: string;
@@ -227,6 +228,40 @@ export interface CreateTaskInput {
 
 export interface UpdateTaskInput extends Partial<CreateTaskInput> {
   id: string;
+}
+
+export interface CourseChapterItemInput {
+  id?: string;
+  parent_id?: string | null;
+  level: 1 | 2 | 3 | 4;
+  title: string;
+  description?: string | null;
+  sort_order?: number;
+}
+
+export interface CreateCourseChapterSetInput {
+  class_id: string;
+  main_title: string;
+  subtitle?: string | null;
+  status?: ContentStatus;
+  items?: CourseChapterItemInput[];
+}
+
+export interface UpdateCourseChapterSetInput extends Partial<CreateCourseChapterSetInput> {
+  id: string;
+}
+
+export interface SaveCourseChapterTemplateInput {
+  chapter_set_id: string;
+  name: string;
+  description?: string | null;
+  visibility: CourseChapterTemplateVisibility;
+}
+
+export interface ImportCourseChapterTemplateInput {
+  template_id: string;
+  main_title?: string | null;
+  subtitle?: string | null;
 }
 
 export interface CreateTaskSubmissionInput {

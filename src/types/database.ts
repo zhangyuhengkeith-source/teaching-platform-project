@@ -2,6 +2,7 @@ import type { ExerciseItemType, ExerciseSetType } from "@/lib/constants/exercise
 import type { GroupMemberRole, GroupMemberStatus, SubmissionMode } from "@/lib/constants/elective-types";
 import type { SpaceMembershipRole, SpaceMembershipStatus } from "@/lib/constants/roles";
 import type {
+  ContentStatus,
   ExerciseSetStatus,
   GroupStatus,
   NoticeStatus,
@@ -20,6 +21,7 @@ export type SectionType = "chapter" | "module" | "week" | "topic_group";
 export type ResourceVisibility = "space" | "selected_members" | "public";
 export type NoticeType = "homework" | "deadline" | "mock_exam" | "general" | "grouping" | "service_update";
 export type WrongBookSourceType = "exercise_item";
+export type CourseChapterTemplateVisibility = "private" | "teachers";
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export interface Database {
@@ -594,6 +596,99 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["task_submission_files"]["Insert"]>;
         Relationships: [{ foreignKeyName: "task_submission_files_submission_id_fkey"; columns: ["submission_id"]; referencedRelation: "task_submissions"; referencedColumns: ["id"] }];
       };
+      course_chapter_sets: {
+        Row: {
+          id: string;
+          class_id: string;
+          main_title: string;
+          subtitle: string | null;
+          status: ContentStatus;
+          created_by: string;
+          updated_by: string | null;
+          archived_at: string | null;
+          deleted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          class_id: string;
+          main_title: string;
+          subtitle?: string | null;
+          status?: ContentStatus;
+          created_by: string;
+          updated_by?: string | null;
+          archived_at?: string | null;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["course_chapter_sets"]["Insert"]>;
+        Relationships: [
+          { foreignKeyName: "course_chapter_sets_class_id_fkey"; columns: ["class_id"]; referencedRelation: "spaces"; referencedColumns: ["id"] },
+          { foreignKeyName: "course_chapter_sets_created_by_fkey"; columns: ["created_by"]; referencedRelation: "profiles"; referencedColumns: ["id"] },
+          { foreignKeyName: "course_chapter_sets_updated_by_fkey"; columns: ["updated_by"]; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
+      };
+      course_chapter_items: {
+        Row: {
+          id: string;
+          chapter_set_id: string;
+          parent_id: string | null;
+          level: number;
+          title: string;
+          description: string | null;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          chapter_set_id: string;
+          parent_id?: string | null;
+          level: number;
+          title: string;
+          description?: string | null;
+          sort_order?: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["course_chapter_items"]["Insert"]>;
+        Relationships: [
+          { foreignKeyName: "course_chapter_items_chapter_set_id_fkey"; columns: ["chapter_set_id"]; referencedRelation: "course_chapter_sets"; referencedColumns: ["id"] },
+          { foreignKeyName: "course_chapter_items_parent_id_fkey"; columns: ["parent_id"]; referencedRelation: "course_chapter_items"; referencedColumns: ["id"] },
+        ];
+      };
+      course_chapter_templates: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          visibility: CourseChapterTemplateVisibility;
+          source_class_id: string | null;
+          source_chapter_set_id: string | null;
+          main_title: string;
+          subtitle: string | null;
+          items_json: Json;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          visibility?: CourseChapterTemplateVisibility;
+          source_class_id?: string | null;
+          source_chapter_set_id?: string | null;
+          main_title: string;
+          subtitle?: string | null;
+          items_json?: Json;
+          created_by: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["course_chapter_templates"]["Insert"]>;
+        Relationships: [
+          { foreignKeyName: "course_chapter_templates_source_class_id_fkey"; columns: ["source_class_id"]; referencedRelation: "spaces"; referencedColumns: ["id"] },
+          { foreignKeyName: "course_chapter_templates_source_chapter_set_id_fkey"; columns: ["source_chapter_set_id"]; referencedRelation: "course_chapter_sets"; referencedColumns: ["id"] },
+          { foreignKeyName: "course_chapter_templates_created_by_fkey"; columns: ["created_by"]; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
+      };
       content_change_notifications: {
         Row: {
           id: string;
@@ -651,4 +746,7 @@ export type GroupMemberRow = Database["public"]["Tables"]["group_members"]["Row"
 export type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
 export type TaskSubmissionRow = Database["public"]["Tables"]["task_submissions"]["Row"];
 export type TaskSubmissionFileRow = Database["public"]["Tables"]["task_submission_files"]["Row"];
+export type CourseChapterSetRow = Database["public"]["Tables"]["course_chapter_sets"]["Row"];
+export type CourseChapterItemRow = Database["public"]["Tables"]["course_chapter_items"]["Row"];
+export type CourseChapterTemplateRow = Database["public"]["Tables"]["course_chapter_templates"]["Row"];
 export type ContentChangeNotificationRow = Database["public"]["Tables"]["content_change_notifications"]["Row"];

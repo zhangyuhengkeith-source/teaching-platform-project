@@ -18,6 +18,9 @@ import type {
   TeacherProfileRow,
   WrongBookItemRow,
   ContentChangeNotificationRow,
+  CourseChapterItemRow,
+  CourseChapterSetRow,
+  CourseChapterTemplateRow,
 } from "@/types/database";
 import type {
   ExerciseAttemptSummary,
@@ -39,6 +42,11 @@ import type {
   TeacherProfileSummary,
   WrongBookItemSummary,
   ContentChangeNotificationSummary,
+  CourseChapterItemSummary,
+  CourseChapterLevel,
+  CourseChapterSetSummary,
+  CourseChapterTemplateItem,
+  CourseChapterTemplateSummary,
 } from "@/types/domain";
 
 export function mapProfileRow(row: ProfileRow): ProfileSummary {
@@ -332,5 +340,82 @@ export function mapContentChangeNotificationRow(row: ContentChangeNotificationRo
     isRead: row.is_read,
     readAt: row.read_at,
     createdAt: row.created_at,
+  };
+}
+
+export function mapCourseChapterItemRow(row: CourseChapterItemRow): CourseChapterItemSummary {
+  return {
+    id: row.id,
+    chapterSetId: row.chapter_set_id,
+    parentId: row.parent_id,
+    level: row.level as CourseChapterLevel,
+    title: row.title,
+    description: row.description,
+    sortOrder: row.sort_order,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function mapCourseChapterSetRow(row: CourseChapterSetRow, items: CourseChapterItemSummary[] = []): CourseChapterSetSummary {
+  return {
+    id: row.id,
+    classId: row.class_id,
+    mainTitle: row.main_title,
+    subtitle: row.subtitle,
+    status: row.status,
+    createdBy: row.created_by,
+    updatedBy: row.updated_by,
+    archivedAt: row.archived_at,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    items,
+  };
+}
+
+function isCourseChapterTemplateItem(value: unknown): value is CourseChapterTemplateItem {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.id === "string" &&
+    (typeof record.parentId === "string" || record.parentId === null) &&
+    typeof record.level === "number" &&
+    record.level >= 1 &&
+    record.level <= 4 &&
+    typeof record.title === "string" &&
+    (typeof record.description === "string" || record.description === null) &&
+    typeof record.sortOrder === "number"
+  );
+}
+
+function normalizeCourseChapterTemplateItems(value: unknown): CourseChapterTemplateItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(isCourseChapterTemplateItem).map((item) => ({
+    ...item,
+    level: item.level as CourseChapterLevel,
+  }));
+}
+
+export function mapCourseChapterTemplateRow(row: CourseChapterTemplateRow): CourseChapterTemplateSummary {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    visibility: row.visibility,
+    sourceClassId: row.source_class_id,
+    sourceChapterSetId: row.source_chapter_set_id,
+    mainTitle: row.main_title,
+    subtitle: row.subtitle,
+    items: normalizeCourseChapterTemplateItems(row.items_json),
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
