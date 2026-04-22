@@ -7,6 +7,7 @@ import {
 import { canManageExerciseSet, canViewExerciseSet, canViewWrongBook } from "@/lib/permissions/exercises";
 import { isAdminRole } from "@/lib/permissions/profiles";
 import { getClassSpaceBySlugForUser, getSpaceById, listMembershipsForSpace, listManageableClasses, listSectionsForSpace } from "@/lib/queries/spaces";
+import { listCourseChapterSetsByClassId } from "@/repositories/course-chapter-repository";
 import { isNonArchivedContentStatus } from "@/lib/status/content-status";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
@@ -29,6 +30,8 @@ import type {
 async function enrichExerciseSet(set: ExerciseSetSummary): Promise<ExerciseSetSummary> {
   const [space, sections] = await Promise.all([getSpaceById(set.spaceId), listSectionsForSpace(set.spaceId)]);
   const section = set.sectionId ? sections.find((entry) => entry.id === set.sectionId) : null;
+  const chapterSets = space?.type === "class" && set.chapterId ? await listCourseChapterSetsByClassId(space.id) : [];
+  const chapter = chapterSets.flatMap((chapterSet) => chapterSet.items).find((item) => item.id === set.chapterId) ?? null;
 
   return {
     ...set,
@@ -37,6 +40,7 @@ async function enrichExerciseSet(set: ExerciseSetSummary): Promise<ExerciseSetSu
     spaceSlug: set.spaceSlug ?? space?.slug,
     sectionTitle: set.sectionTitle ?? section?.title ?? null,
     sectionSlug: set.sectionSlug ?? section?.slug ?? null,
+    chapterTitle: set.chapterTitle ?? chapter?.title ?? null,
   };
 }
 

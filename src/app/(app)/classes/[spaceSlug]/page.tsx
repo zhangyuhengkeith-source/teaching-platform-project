@@ -1,6 +1,6 @@
 import { BellRing, BookOpen, FolderKanban, Layers3 } from "lucide-react";
 
-import { ChapterCard } from "@/components/domain/chapter-card";
+import { CourseChapterDirectory } from "@/components/domain/course-chapter-directory";
 import { ExerciseSetCard } from "@/components/domain/exercise-set-card";
 import { NoticeCard } from "@/components/domain/notice-card";
 import { ResourceCard } from "@/components/domain/resource-card";
@@ -14,6 +14,7 @@ import { listNoticesForSpace } from "@/lib/queries/notices";
 import { listResourcesForSpace } from "@/lib/queries/resources";
 import { listTasksForClass } from "@/lib/queries/tasks";
 import { isReadableContentStatus } from "@/lib/status/content-status";
+import { listCourseChapterSetsByClassId } from "@/repositories/course-chapter-repository";
 
 export default async function ClassDetailPage({
   params,
@@ -22,24 +23,19 @@ export default async function ClassDetailPage({
 }) {
   const { spaceSlug } = await params;
   const { profile, space } = await requireAccessibleClassBySlug(spaceSlug);
-  const [resources, notices, exerciseSets, tasks] = await Promise.all([
+  const [resources, notices, exerciseSets, tasks, chapterSets] = await Promise.all([
     listResourcesForSpace(space.id),
     listNoticesForSpace(space.id),
     listExerciseSetsForSpace(space.id, profile),
     listTasksForClass(space.id, profile),
+    listCourseChapterSetsByClassId(space.id),
   ]);
 
-  const visibleSections = space.sections.filter((section) => isReadableContentStatus(profile, section.status ?? "published"));
+  const visibleChapterSets = chapterSets.filter((chapterSet) => isReadableContentStatus(profile, chapterSet.status) && (chapterSet.status === "published" || profile.role !== "student"));
+  const visibleChapterItems = visibleChapterSets.flatMap((chapterSet) => chapterSet.items);
   const visibleResources = resources.filter((resource) => isReadableContentStatus(profile, resource.status) && (resource.status === "published" || profile.role !== "student"));
   const visibleNotices = notices.filter((notice) => isReadableContentStatus(profile, notice.status) && (notice.status === "published" || profile.role !== "student"));
   const visibleTasks = tasks.filter((task) => isReadableContentStatus(profile, task.status) && (task.status === "published" || profile.role !== "student"));
-
-  const resourceCountBySection = new Map<string, number>();
-  visibleResources.forEach((resource) => {
-    if (resource.sectionId) {
-      resourceCountBySection.set(resource.sectionId, (resourceCountBySection.get(resource.sectionId) ?? 0) + 1);
-    }
-  });
 
   const latestNotice = visibleNotices[0]?.title ?? "暂无已发布公告";
 
@@ -49,7 +45,7 @@ export default async function ClassDetailPage({
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <SectionCard description="按章节、模块或周次组织的学习内容" title="章节总数">
           <div className="flex items-center justify-between">
-            <p className="text-3xl font-semibold">{visibleSections.length}</p>
+            <p className="text-3xl font-semibold">{visibleChapterItems.length}</p>
             <Layers3 className="h-5 w-5 text-primary" />
           </div>
         </SectionCard>
@@ -76,19 +72,8 @@ export default async function ClassDetailPage({
       <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
         <div className="space-y-6">
           <SectionCard description="按章节、模块或周次进入班级学习内容。" title="章节">
-            {visibleSections.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                {visibleSections.map((section) => (
-                  <ChapterCard
-                    description={section.description}
-                    href={`/classes/${space.slug}/sections/${section.slug}`}
-                    key={section.id}
-                    resourceCount={resourceCountBySection.get(section.id) ?? 0}
-                    title={section.title}
-                    type={section.type}
-                  />
-                ))}
-              </div>
+            {visibleChapterSets.length > 0 ? (
+              <CourseChapterDirectory chapterSets={visibleChapterSets} />
             ) : (
               <EmptyState description="这个班级暂时还没有添加章节内容。" icon={Layers3} title="暂无章节" />
             )}
@@ -127,7 +112,7 @@ export default async function ClassDetailPage({
                     instructions={exerciseSet.instructions}
                     itemCount={exerciseSet.itemCount}
                     key={exerciseSet.id}
-                    sectionTitle={exerciseSet.sectionTitle}
+                    sectionTitle={exerciseSet.chapterTitle ?? exerciseSet.sectionTitle}
                     status={exerciseSet.status}
                     title={exerciseSet.title}
                   />
