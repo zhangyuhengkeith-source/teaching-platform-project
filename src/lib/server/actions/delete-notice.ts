@@ -39,6 +39,9 @@ export async function deleteNoticeAction(noticeId: string) {
   }
 
   revalidatePath("/admin/notices");
+  if (space.type === "class") {
+    revalidatePath(`/admin/classes/${space.id}/announcements`);
+  }
   revalidatePath("/classes");
   revalidatePath("/electives");
   revalidatePath(space.type === "class" ? `/classes/${space.slug}` : `/electives/${space.slug}`);

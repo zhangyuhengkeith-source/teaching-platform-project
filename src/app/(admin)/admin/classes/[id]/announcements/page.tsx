@@ -1,5 +1,8 @@
-import { ClassModulePageShell } from "@/components/domain/class-module-page-shell";
+import { ClassAnnouncementsManager } from "@/components/domain/class-announcements-manager";
 import { requireClassManagementContext } from "@/lib/auth/require-class-management";
+import { isAdminRole } from "@/lib/permissions/profiles";
+import { listNoticesForSpace } from "@/lib/queries/notices";
+import { isNonArchivedContentStatus } from "@/lib/status/content-status";
 
 export default async function ClassAnnouncementsPage({
   params,
@@ -7,16 +10,17 @@ export default async function ClassAnnouncementsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { classSpace } = await requireClassManagementContext(id);
+  const { classSpace, profile } = await requireClassManagementContext(id);
+  const isAdmin = isAdminRole(profile);
+  const notices = (await listNoticesForSpace(classSpace.id))
+    .filter((notice) => notice.status !== "deleted")
+    .filter((notice) => isAdmin || isNonArchivedContentStatus(notice.status));
 
   return (
-    <ClassModulePageShell
+    <ClassAnnouncementsManager
       classSpace={classSpace}
-      createLabel="Create announcement"
-      emptyDescription="No announcements have been created for this class yet."
-      emptyTitle="No announcements"
-      moduleDescription="Manage class announcements, reminders, and scheduled notices."
-      moduleTitle="Class Announcements"
+      isAdmin={isAdmin}
+      notices={notices}
     />
   );
 }
