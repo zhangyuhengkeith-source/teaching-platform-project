@@ -7,6 +7,7 @@ import { normalizeClassScopedInput } from "@/lib/auth/class-permissions";
 import { createTask } from "@/lib/mutations/electives";
 import { canManageSpace } from "@/lib/permissions/spaces";
 import { getSpaceById, listMembershipsForSpace } from "@/lib/queries/spaces";
+import { generateUniqueSpaceContentSlug } from "@/lib/slugs/auto-slug";
 import { createTaskSchema } from "@/lib/validations/electives";
 
 export async function createTaskAction(input: unknown) {
@@ -27,7 +28,13 @@ export async function createTaskAction(input: unknown) {
     throw new Error("Class tasks currently support individual submission only.");
   }
 
-  const task = await createTask(profile, parsed);
+  const slug = parsed.slug ?? await generateUniqueSpaceContentSlug({
+    className: space.title,
+    moduleName: "task",
+    spaceId: space.id,
+    table: "tasks",
+  });
+  const task = await createTask(profile, { ...parsed, slug });
   const adminEditPath = space.type === "class" ? `/admin/classes/${space.id}/edit` : `/admin/electives/${space.id}/edit`;
   const learnerRootPath = space.type === "class" ? `/classes/${space.slug}` : `/electives/${space.slug}`;
 

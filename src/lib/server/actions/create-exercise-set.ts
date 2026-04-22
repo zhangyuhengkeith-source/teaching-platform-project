@@ -7,6 +7,7 @@ import { requireRole } from "@/lib/auth/require-role";
 import { normalizeClassScopedInput } from "@/lib/auth/class-permissions";
 import { isCompatibleExerciseItemType } from "@/lib/exercises/item-compatibility";
 import { getManageableClassById } from "@/lib/queries/spaces";
+import { generateUniqueSpaceContentSlug } from "@/lib/slugs/auto-slug";
 import { createExerciseItemSchema, createExerciseSetSchema } from "@/lib/validations/exercises";
 
 export async function createExerciseSetAction(input: unknown) {
@@ -20,7 +21,13 @@ export async function createExerciseSetAction(input: unknown) {
     throw new Error("You do not have permission to create exercises for this class.");
   }
 
-  const exerciseSet = await createExerciseSet(profile.id, parsedSet);
+  const slug = parsedSet.slug ?? await generateUniqueSpaceContentSlug({
+    className: space.title,
+    moduleName: "practice-set",
+    spaceId: space.id,
+    table: "exercise_sets",
+  });
+  const exerciseSet = await createExerciseSet(profile.id, { ...parsedSet, slug });
   const items = Array.isArray(payload.items) ? payload.items : [];
 
   for (let index = 0; index < items.length; index += 1) {

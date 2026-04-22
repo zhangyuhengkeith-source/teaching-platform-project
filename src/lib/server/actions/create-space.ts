@@ -8,6 +8,7 @@ import { createSupabaseServerWriteClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSpaceSchema } from "@/lib/validations/spaces";
 import { getSpaceWriteErrorMessage } from "@/lib/server/actions/space-action-errors";
+import { generateUniqueSpaceContentSlug } from "@/lib/slugs/auto-slug";
 import { nowInShanghaiIso } from "@/lib/utils/timezone";
 
 export interface CreateSpaceActionResult {
@@ -55,11 +56,17 @@ export async function createSpaceAction(input: unknown) {
     const writeClient = await createSupabaseServerWriteClient({ requireServiceRole: true });
     const timestamp = nowInShanghaiIso();
     const adminCreating = profile.role === "admin" || profile.role === "super_admin" || isBootstrapAdminEmail(profile.email);
+    const slug = parsed.slug ?? await generateUniqueSpaceContentSlug({
+      className: parsed.title,
+      moduleName: parsed.type,
+      table: "spaces",
+    });
     const space = await createSpace(
       profile.id,
       parsed.type === "class"
         ? {
             ...parsed,
+            slug,
             status: adminCreating ? "published" : "draft",
             approval_status: adminCreating ? "approved" : "pending",
             submitted_at: timestamp,
@@ -69,7 +76,7 @@ export async function createSpaceAction(input: unknown) {
             rejected_by: null,
             rejection_reason: null,
           }
-        : parsed,
+        : { ...parsed, slug },
       writeClient ?? undefined,
     );
     if (parsed.type === "class") {

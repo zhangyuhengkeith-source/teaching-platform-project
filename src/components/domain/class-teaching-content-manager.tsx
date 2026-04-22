@@ -28,7 +28,7 @@ type ContentItem = ResourceSummary | TaskSummary | ExerciseSetSummary | Exercise
 type PracticeSetSubmitPayload = {
   chapter_id: string | null;
   title: string;
-  slug: string;
+  slug?: string;
   instructions: string | null;
   exercise_type: ExerciseSetEditorSchema["exercise_type"];
   publish_at: string | null;
@@ -213,10 +213,13 @@ export function ClassTeachingContentManager({
     const publishAt = fromShanghaiDateTimeInputValue(String(formData.get("publish_at") ?? ""));
     const payload: Record<string, unknown> = {
       title,
-      slug: String(formData.get("slug") ?? "").trim() || createSlug(title),
       chapter_id: String(formData.get("chapter_id") ?? "") || null,
       publish_at: publishAt,
     };
+    const slug = String(formData.get("slug") ?? "").trim();
+    if (item && slug) {
+      payload.slug = slug;
+    }
 
     if (module === "resources") {
       const selectedFiles = formData
@@ -540,15 +543,21 @@ function ContentFormDialog({
         </p>
       ) : null}
       <form action={onSubmit} className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className={cn("grid gap-4", initialItem ? "sm:grid-cols-2" : "sm:grid-cols-1")}>
           <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="content-title">Title</label>
             <Input defaultValue={initialItem?.title ?? ""} id="content-title" name="title" required />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="content-slug">Slug</label>
-            <Input defaultValue={"slug" in (initialItem ?? {}) ? (initialItem as { slug?: string }).slug ?? "" : ""} id="content-slug" name="slug" />
-          </div>
+          {initialItem ? (
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="content-slug">Slug</label>
+              <Input defaultValue={"slug" in initialItem ? (initialItem as { slug?: string }).slug ?? "" : ""} id="content-slug" name="slug" />
+            </div>
+          ) : (
+            <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-muted-foreground">
+              Slug will be generated automatically when this item is created.
+            </p>
+          )}
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -679,7 +688,7 @@ function PracticeSetFormDialog({
     onSubmit({
       chapter_id: chapterId || null,
       title,
-      slug: values.slug.trim() || createSlug(title),
+      slug: initialItem ? values.slug?.trim() || initialItem.slug : undefined,
       instructions: values.instructions?.trim() || null,
       exercise_type: values.exercise_type,
       publish_at: fromShanghaiDateTimeInputValue(publishAt),
@@ -701,15 +710,21 @@ function PracticeSetFormDialog({
         <input type="hidden" {...form.register("space_id")} />
         <input type="hidden" {...form.register("section_id")} />
         <input type="hidden" {...form.register("status")} />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className={cn("grid gap-4", initialItem ? "sm:grid-cols-2" : "sm:grid-cols-1")}>
           <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="practice-title">Title</label>
             <Input id="practice-title" required {...form.register("title")} />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="practice-slug">Slug</label>
-            <Input id="practice-slug" {...form.register("slug")} />
-          </div>
+          {initialItem ? (
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="practice-slug">Slug</label>
+              <Input id="practice-slug" {...form.register("slug")} />
+            </div>
+          ) : (
+            <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-muted-foreground">
+              Slug will be generated automatically when this practice set is created.
+            </p>
+          )}
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-2">

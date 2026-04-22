@@ -80,7 +80,6 @@ export function TaskForm({
           form.reset({
             space_id: resetSpaceId,
             title: "",
-            slug: "",
             brief: "",
             body: "",
             submission_mode: spaceType === "class" ? "individual" : "group",
@@ -133,15 +132,21 @@ export function TaskForm({
         <input type="hidden" value={spaceId} {...form.register("space_id")} />
       )}
       {mode === "edit" && initialValues?.id ? <input type="hidden" value={initialValues.id} {...form.register("id")} /> : null}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className={`grid gap-4 ${mode === "edit" ? "md:grid-cols-2" : ""}`}>
         <div className="space-y-2">
           <label className="text-sm font-medium">{t("admin.forms.taskTitle")}</label>
           <Input {...form.register("title")} />
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">{t("admin.forms.slug")}</label>
-          <Input {...form.register("slug")} />
-        </div>
+        {mode === "edit" ? (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t("admin.forms.slug")}</label>
+            <Input {...form.register("slug")} />
+          </div>
+        ) : (
+          <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-muted-foreground">
+            Slug will be generated automatically when this task is created.
+          </p>
+        )}
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium">{t("admin.forms.brief")}</label>

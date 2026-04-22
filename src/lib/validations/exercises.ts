@@ -5,7 +5,10 @@ import { EXERCISE_SET_STATUSES } from "@/lib/constants/statuses";
 import type { ExerciseItemType } from "@/lib/constants/exercise-types";
 
 const uuidField = z.string().uuid("A valid UUID is required.");
-const slugField = z.string().trim().min(1, "Slug is required.").regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers, and hyphens.");
+const slugField = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.string().trim().regex(/^[A-Za-z0-9-]+$/, "Use letters, numbers, and hyphens.").optional(),
+);
 
 export const mcqOptionSchema = z.object({
   id: z.string().trim().min(1, "Option id is required."),

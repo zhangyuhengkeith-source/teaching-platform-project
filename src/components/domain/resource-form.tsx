@@ -185,17 +185,23 @@ export function ResourceForm({
 
   return (
     <form className="space-y-6" onSubmit={onSubmit}>
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className={`grid gap-6 ${mode === "edit" ? "md:grid-cols-2" : ""}`}>
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="title">{t("admin.forms.resourceTitle")}</label>
           <Input id="title" {...form.register("title")} />
           {form.formState.errors.title ? <p className="text-sm text-red-600">{form.formState.errors.title.message}</p> : null}
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="slug">{t("admin.forms.slug")}</label>
-          <Input id="slug" {...form.register("slug")} />
-          {form.formState.errors.slug ? <p className="text-sm text-red-600">{form.formState.errors.slug.message}</p> : null}
-        </div>
+        {mode === "edit" ? (
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="slug">{t("admin.forms.slug")}</label>
+            <Input id="slug" {...form.register("slug")} />
+            {form.formState.errors.slug ? <p className="text-sm text-red-600">{form.formState.errors.slug.message}</p> : null}
+          </div>
+        ) : (
+          <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-muted-foreground">
+            Slug will be generated automatically when this resource is created.
+          </p>
+        )}
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium" htmlFor="description">{t("admin.forms.description")}</label>

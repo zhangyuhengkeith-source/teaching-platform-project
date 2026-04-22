@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import type { Resolver } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +31,7 @@ export function ElectiveForm({
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<CreateElectiveSchema | UpdateElectiveSchema>({
-    resolver: zodResolver(mode === "create" ? createElectiveSchema : updateElectiveSchema),
+    resolver: zodResolver(mode === "create" ? createElectiveSchema : updateElectiveSchema) as Resolver<CreateElectiveSchema | UpdateElectiveSchema>,
     defaultValues: {
       title: initialValues?.title ?? "",
       slug: initialValues?.slug ?? "",
@@ -69,15 +70,21 @@ export function ElectiveForm({
 
   return (
     <form className="space-y-6" onSubmit={onSubmit}>
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className={`grid gap-6 ${mode === "edit" ? "md:grid-cols-2" : ""}`}>
         <div className="space-y-2">
           <label className="text-sm font-medium">{t("admin.forms.electiveTitle")}</label>
           <Input {...form.register("title")} />
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">{t("admin.forms.slug")}</label>
-          <Input {...form.register("slug")} />
-        </div>
+        {mode === "edit" ? (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t("admin.forms.slug")}</label>
+            <Input {...form.register("slug")} />
+          </div>
+        ) : (
+          <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-muted-foreground">
+            Slug will be generated automatically when this elective is created.
+          </p>
+        )}
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium">{t("admin.forms.description")}</label>

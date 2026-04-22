@@ -73,15 +73,21 @@ export function ExerciseSetForm({
 
   return (
     <form className="space-y-6" onSubmit={onSubmit}>
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className={`grid gap-6 ${mode === "edit" ? "md:grid-cols-2" : ""}`}>
         <div className="space-y-2">
           <label className="text-sm font-medium">{t("admin.tables.title")}</label>
           <Input {...form.register("title")} />
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">{t("admin.forms.slug")}</label>
-          <Input {...form.register("slug")} />
-        </div>
+        {mode === "edit" ? (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t("admin.forms.slug")}</label>
+            <Input {...form.register("slug")} />
+          </div>
+        ) : (
+          <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-muted-foreground">
+            Slug will be generated automatically when this practice set is created.
+          </p>
+        )}
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium">{t("admin.forms.instructions")}</label>

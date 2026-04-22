@@ -18,7 +18,10 @@ export const createResourceSchema = z.object({
   space_id: z.string().uuid("Space id must be a valid UUID."),
   section_id: z.preprocess((value) => (value === "" ? null : value), z.string().uuid("Section id must be a valid UUID.").optional().nullable()),
   title: z.string().trim().min(1, "Title is required."),
-  slug: z.string().trim().min(1, "Slug is required.").regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers, and hyphens."),
+  slug: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().trim().regex(/^[A-Za-z0-9-]+$/, "Use letters, numbers, and hyphens.").optional(),
+  ),
   description: z.string().trim().optional().nullable(),
   resource_type: z.enum(RESOURCE_TYPES),
   visibility: z.enum(["space", "selected_members", "public"]),

@@ -6,7 +6,10 @@ export const spaceTypeSchema = z.enum(["class", "elective"]);
 
 export const createSpaceSchema = z.object({
   title: z.string().trim().min(1, "Title is required."),
-  slug: z.string().trim().min(1, "Slug is required.").regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers, and hyphens."),
+  slug: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().trim().regex(/^[A-Za-z0-9-]+$/, "Use letters, numbers, and hyphens.").optional(),
+  ),
   type: spaceTypeSchema,
   description: z.string().trim().optional().nullable(),
   academic_year: z.string().trim().max(20).optional().nullable(),
@@ -19,4 +22,3 @@ export const updateSpaceSchema = createSpaceSchema.partial().extend({
 
 export type CreateSpaceSchema = z.infer<typeof createSpaceSchema>;
 export type UpdateSpaceSchema = z.infer<typeof updateSpaceSchema>;
-

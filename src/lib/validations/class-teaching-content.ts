@@ -17,7 +17,10 @@ const datetimeField = z.preprocess(
     .optional()
     .nullable(),
 );
-const slugField = z.string().trim().min(1, "Slug is required.").regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers, and hyphens.");
+const slugField = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.string().trim().regex(/^[A-Za-z0-9-]+$/, "Use letters, numbers, and hyphens.").optional(),
+);
 const resourceFileSchema = z.object({
   id: z.string().uuid().optional(),
   file_path: z.string().trim().min(1, "File path is required."),

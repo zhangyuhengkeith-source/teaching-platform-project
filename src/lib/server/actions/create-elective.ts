@@ -7,6 +7,7 @@ import { createElectiveSpace } from "@/lib/mutations/electives";
 import { createSupabaseServerWriteClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSpaceWriteErrorMessage } from "@/lib/server/actions/space-action-errors";
+import { generateUniqueSpaceContentSlug } from "@/lib/slugs/auto-slug";
 import { createElectiveSchema } from "@/lib/validations/electives";
 
 export interface CreateElectiveActionResult {
@@ -52,7 +53,12 @@ export async function createElectiveAction(input: unknown) {
 
     const parsed = createElectiveSchema.parse(input);
     const writeClient = await createSupabaseServerWriteClient({ requireServiceRole: true });
-    await createElectiveSpace(profile.id, parsed, writeClient ?? undefined);
+    const slug = parsed.slug ?? await generateUniqueSpaceContentSlug({
+      className: parsed.title,
+      moduleName: "elective",
+      table: "spaces",
+    });
+    await createElectiveSpace(profile.id, { ...parsed, slug }, writeClient ?? undefined);
 
     revalidatePath("/admin/electives");
     revalidatePath("/electives");

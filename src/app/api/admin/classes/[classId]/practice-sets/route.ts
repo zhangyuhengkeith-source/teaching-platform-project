@@ -4,6 +4,7 @@ import { requireClassManagementApiContext, toClassManagementApiErrorResponse } f
 import { isCompatibleExerciseItemType } from "@/lib/exercises/item-compatibility";
 import { createExerciseItem } from "@/lib/mutations/exercises";
 import { isAdminRole } from "@/lib/permissions/profiles";
+import { generateUniqueSpaceContentSlug } from "@/lib/slugs/auto-slug";
 import { classPracticeSetWithItemsSchema } from "@/lib/validations/class-teaching-content";
 import { createExerciseItemSchema } from "@/lib/validations/exercises";
 import { createClassPracticeSet, listClassPracticeSets } from "@/repositories/class-teaching-content-repository";
@@ -54,7 +55,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ cla
       throw new Error("Add at least one practice question.");
     }
 
-    const item = await createClassPracticeSet(context.profile.id, context.classId, input);
+    const slug = input.slug ?? await generateUniqueSpaceContentSlug({
+      className: context.classSpace.title,
+      moduleName: "practice-set",
+      spaceId: context.classId,
+      table: "exercise_sets",
+    });
+    const item = await createClassPracticeSet(context.profile.id, context.classId, { ...input, slug });
 
     for (const parsedItem of parsedItems) {
       await createExerciseItem({

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireClassManagementApiContext, toClassManagementApiErrorResponse } from "@/lib/auth/require-class-management-api";
 import { isAdminRole } from "@/lib/permissions/profiles";
+import { generateUniqueSpaceContentSlug } from "@/lib/slugs/auto-slug";
 import { classResourceSchema } from "@/lib/validations/class-teaching-content";
 import { createClassResource, listClassResources } from "@/repositories/class-teaching-content-repository";
 
@@ -33,7 +34,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ cla
     const { classId } = await params;
     const context = await requireClassManagementApiContext(classId);
     const input = classResourceSchema.parse(await request.json());
-    const item = await createClassResource(context.profile.id, context.classId, input);
+    const slug = input.slug ?? await generateUniqueSpaceContentSlug({
+      className: context.classSpace.title,
+      moduleName: "resource",
+      spaceId: context.classId,
+      table: "resources",
+    });
+    const item = await createClassResource(context.profile.id, context.classId, { ...input, slug });
 
     return NextResponse.json({ item }, { status: 201 });
   } catch (error) {

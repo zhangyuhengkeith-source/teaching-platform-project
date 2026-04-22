@@ -8,6 +8,7 @@ import { createResourceSchema } from "@/lib/validations/resources";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { normalizeClassScopedInput } from "@/lib/auth/class-permissions";
 import { canManageSpace } from "@/lib/permissions/spaces";
+import { generateUniqueSpaceContentSlug } from "@/lib/slugs/auto-slug";
 
 export async function createResourceAction(input: unknown) {
   const profile = await requireAuth();
@@ -30,7 +31,13 @@ export async function createResourceAction(input: unknown) {
     }
   }
 
-  const resource = await createResource(profile.id, parsed);
+  const slug = parsed.slug ?? await generateUniqueSpaceContentSlug({
+    className: space.title,
+    moduleName: "resource",
+    spaceId: space.id,
+    table: "resources",
+  });
+  const resource = await createResource(profile.id, { ...parsed, slug });
   revalidatePath("/admin/resources");
   revalidatePath("/classes");
   return resource;

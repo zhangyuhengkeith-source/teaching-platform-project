@@ -4,7 +4,10 @@ import { GROUP_STATUSES, SPACE_STATUSES, SUBMISSION_STATUSES, TASK_STATUSES } fr
 import { GROUP_MEMBER_ROLES, SUBMISSION_MODES } from "@/lib/constants/elective-types";
 
 const uuidField = z.string().uuid("A valid UUID is required.");
-const slugField = z.string().trim().min(1, "Slug is required.").regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers, and hyphens.");
+const slugField = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.string().trim().regex(/^[A-Za-z0-9-]+$/, "Use letters, numbers, and hyphens.").optional(),
+);
 const datetimeField = z.preprocess(
   (value) => (value === "" ? null : value),
   z
