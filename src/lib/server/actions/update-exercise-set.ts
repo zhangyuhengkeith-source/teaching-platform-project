@@ -4,23 +4,12 @@ import { revalidatePath } from "next/cache";
 
 import { replaceExerciseItemsForSet, updateExerciseSet } from "@/lib/mutations/exercises";
 import { requireRole } from "@/lib/auth/require-role";
+import { isCompatibleExerciseItemType } from "@/lib/exercises/item-compatibility";
 import { getManageableClassById } from "@/lib/queries/spaces";
 import { createExerciseItemSchema, updateExerciseSetSchema } from "@/lib/validations/exercises";
 import { getManageableExerciseSetById } from "@/lib/queries/exercises";
 import { getChangeActionFromStatusTransition } from "@/lib/status/content-status";
 import { notifyClassContentChanged } from "@/services/content-change-notification-service";
-
-function isCompatibleItemType(exerciseType: "mcq" | "flashcard" | "term_recall", itemType: "mcq" | "flashcard" | "spelling") {
-  if (exerciseType === "mcq") {
-    return itemType === "mcq";
-  }
-
-  if (exerciseType === "flashcard") {
-    return itemType === "flashcard";
-  }
-
-  return itemType === "spelling";
-}
 
 export async function updateExerciseSetAction(input: unknown) {
   const profile = await requireRole(["super_admin", "teacher"]);
@@ -51,7 +40,7 @@ export async function updateExerciseSetAction(input: unknown) {
     );
   });
 
-  if (!parsedItems.every((item) => isCompatibleItemType(updatedSet.exerciseType, item.item_type))) {
+  if (!parsedItems.every((item) => isCompatibleExerciseItemType(updatedSet.exerciseType, item.item_type))) {
     throw new Error("All items in a set must match the exercise type.");
   }
 

@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { requireClassManagementApiContext, toClassManagementApiErrorResponse } from "@/lib/auth/require-class-management-api";
+import { isCompatibleExerciseItemType } from "@/lib/exercises/item-compatibility";
+import { createExerciseItem } from "@/lib/mutations/exercises";
 import { isAdminRole } from "@/lib/permissions/profiles";
-import { classPracticeSetSchema } from "@/lib/validations/class-teaching-content";
+import { classPracticeSetWithItemsSchema } from "@/lib/validations/class-teaching-content";
+import { createExerciseItemSchema } from "@/lib/validations/exercises";
 import { createClassPracticeSet, listClassPracticeSets } from "@/repositories/class-teaching-content-repository";
 
 export async function GET(request: Request, { params }: { params: Promise<{ classId: string }> }) {
@@ -32,8 +35,33 @@ export async function POST(request: Request, { params }: { params: Promise<{ cla
   try {
     const { classId } = await params;
     const context = await requireClassManagementApiContext(classId);
-    const input = classPracticeSetSchema.parse(await request.json());
+    const input = classPracticeSetWithItemsSchema.parse(await request.json());
+    const parsedItems = (input.items ?? []).map((rawItem, index) => {
+      const parsedItem = createExerciseItemSchema.parse({
+        ...rawItem,
+        exercise_set_id: crypto.randomUUID(),
+        sort_order: typeof rawItem.sort_order === "number" ? rawItem.sort_order : index,
+      });
+
+      if (!isCompatibleExerciseItemType(input.exercise_type, parsedItem.item_type)) {
+        throw new Error("All items in a practice set must match the practice type.");
+      }
+
+      return parsedItem;
+    });
+
+    if (parsedItems.length === 0) {
+      throw new Error("Add at least one practice question.");
+    }
+
     const item = await createClassPracticeSet(context.profile.id, context.classId, input);
+
+    for (const parsedItem of parsedItems) {
+      await createExerciseItem({
+        ...parsedItem,
+        exercise_set_id: item.id,
+      });
+    }
 
     return NextResponse.json({ item }, { status: 201 });
   } catch (error) {

@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 
 import { requireClassManagementApiContext, toClassManagementApiErrorResponse } from "@/lib/auth/require-class-management-api";
+import { isCompatibleExerciseItemType } from "@/lib/exercises/item-compatibility";
+import { replaceExerciseItemsForSet } from "@/lib/mutations/exercises";
 import { isAdminRole } from "@/lib/permissions/profiles";
-import { classContentActionSchema, classPracticeSetSchema } from "@/lib/validations/class-teaching-content";
+import { listItemsForExerciseSet } from "@/lib/queries/exercises";
+import { classContentActionSchema, classPracticeSetWithItemsSchema } from "@/lib/validations/class-teaching-content";
+import { createExerciseItemSchema } from "@/lib/validations/exercises";
 import { getClassPracticeSetById, publishNowPatch, updateClassPracticeSet } from "@/repositories/class-teaching-content-repository";
 import { notifyClassContentChanged } from "@/services/content-change-notification-service";
 
@@ -20,7 +24,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ cla
       return NextResponse.json({ error: "Only admins can view archived practice sets." }, { status: 403 });
     }
 
-    return NextResponse.json({ item });
+    return NextResponse.json({
+      item: {
+        ...item,
+        items: await listItemsForExerciseSet(item.id),
+      },
+    });
   } catch (error) {
     return toClassManagementApiErrorResponse(error);
   }
@@ -39,6 +48,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ cl
     const body = await request.json();
     const actionInput = classContentActionSchema.safeParse(body);
     const action = actionInput.success ? actionInput.data.action : undefined;
+    const practiceSetInput = action ? null : classPracticeSetWithItemsSchema.partial().parse(body);
     const input =
       action === "archive"
         ? { status: "archived" as const }
@@ -46,9 +56,31 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ cl
           ? publishNowPatch()
           : action === "reschedule"
             ? { publish_at: actionInput.success ? actionInput.data.publish_at : null }
-            : classPracticeSetSchema.partial().parse(body);
+            : practiceSetInput!;
 
     const item = await updateClassPracticeSet(context.profile.id, current, input);
+    if (!action && practiceSetInput?.items) {
+      const parsedItems = practiceSetInput.items.map((rawItem, index) => {
+        const parsedItem = createExerciseItemSchema.parse({
+          ...rawItem,
+          exercise_set_id: item.id,
+          sort_order: typeof rawItem.sort_order === "number" ? rawItem.sort_order : index,
+        });
+
+        if (!isCompatibleExerciseItemType(item.exerciseType, parsedItem.item_type)) {
+          throw new Error("All items in a practice set must match the practice type.");
+        }
+
+        return parsedItem;
+      });
+
+      if (parsedItems.length === 0) {
+        throw new Error("Add at least one practice question.");
+      }
+
+      await replaceExerciseItemsForSet(item.id, parsedItems);
+    }
+
     await notifyClassContentChanged({
       classId: context.classId,
       contentType: "practice_set",

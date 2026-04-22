@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Archive, CalendarClock, FilePlus2, Pencil, Rocket, Trash2 } from "lucide-react";
+import { useFieldArray, useForm } from "react-hook-form";
+import { Archive, CalendarClock, FilePlus2, Pencil, Plus, Rocket, Trash2 } from "lucide-react";
 
+import { ExerciseItemBuilder } from "@/components/domain/exercise-item-builder";
 import { ClassManagementPageHeader } from "@/components/domain/class-management-page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,11 +18,23 @@ import { formatFileSize } from "@/lib/utils/format";
 import { fromShanghaiDateTimeInputValue, formatInShanghai, toShanghaiDateTimeInputValue } from "@/lib/utils/timezone";
 import { cn } from "@/lib/utils/cn";
 import { removeUploadedStorageObjects, uploadResourceFiles } from "@/services/storage-service";
-import type { CourseChapterItemSummary, ExerciseSetSummary, ResourceSummary, SpaceSummary, TaskSummary } from "@/types/domain";
+import { createDefaultExerciseItem, getDefaultExerciseItemType, mapExerciseSetDetailToEditorValues } from "@/lib/exercises/editor";
+import type { ExerciseSetEditorSchema } from "@/lib/validations/exercises";
+import type { CourseChapterItemSummary, ExerciseSetDetail, ExerciseSetSummary, ResourceSummary, SpaceSummary, TaskSummary } from "@/types/domain";
 
 type ModuleKind = "resources" | "tasks" | "practice-sets";
 type ListMode = "published" | "drafts" | "archived";
-type ContentItem = ResourceSummary | TaskSummary | ExerciseSetSummary;
+type ContentItem = ResourceSummary | TaskSummary | ExerciseSetSummary | ExerciseSetDetail;
+type PracticeSetSubmitPayload = {
+  chapter_id: string | null;
+  title: string;
+  slug: string;
+  instructions: string | null;
+  exercise_type: ExerciseSetEditorSchema["exercise_type"];
+  publish_at: string | null;
+  status?: ExerciseSetEditorSchema["status"];
+  items: ExerciseSetEditorSchema["items"];
+};
 
 interface ClassTeachingContentManagerProps {
   classSpace: SpaceSummary;
@@ -279,6 +293,37 @@ export function ClassTeachingContentManager({
     setMessage(item ? `${config.title} item saved.` : `${config.title} item created.`);
   }
 
+  async function submitPracticeSet(payload: PracticeSetSubmitPayload, item?: ContentItem | null) {
+    const response = await fetch(item ? `${apiBase}/${item.id}` : apiBase, {
+      method: item ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(await readApiError(response));
+    }
+
+    await reload();
+    setEditingItem(null);
+    setMessage(item ? "Practice set saved." : "Practice set created.");
+  }
+
+  async function openEditor(item: ContentItem) {
+    if (module !== "practice-sets") {
+      setEditingItem(item);
+      return;
+    }
+
+    const response = await fetch(`${apiBase}/${item.id}`);
+    if (!response.ok) {
+      throw new Error(await readApiError(response));
+    }
+
+    const body = (await response.json()) as { item: ExerciseSetDetail };
+    setEditingItem(body.item);
+  }
+
   async function patchAction(item: ContentItem, action: "archive" | "publish_now" | "reschedule", publishAt?: string | null) {
     const response = await fetch(`${apiBase}/${item.id}`, {
       method: "PATCH",
@@ -326,13 +371,22 @@ export function ClassTeachingContentManager({
                 {config.createLabel}
               </Button>
             </DialogTrigger>
-            <ContentFormDialog
-              config={config}
-              isPending={isPending}
-              module={module}
-              chapters={chapters}
-              onSubmit={(formData) => runOperation(() => submitForm(formData))}
-            />
+            {module === "practice-sets" ? (
+              <PracticeSetFormDialog
+                chapters={chapters}
+                classId={classSpace.id}
+                isPending={isPending}
+                onSubmit={(payload) => runOperation(() => submitPracticeSet(payload))}
+              />
+            ) : (
+              <ContentFormDialog
+                config={config}
+                isPending={isPending}
+                module={module}
+                chapters={chapters}
+                onSubmit={(formData) => runOperation(() => submitForm(formData))}
+              />
+            )}
           </Dialog>
           <Button
             onClick={() => {
@@ -423,7 +477,7 @@ export function ClassTeachingContentManager({
                     runOperation(() => deleteItem(item));
                   }
                 }}
-                onEdit={() => setEditingItem(item)}
+                onEdit={() => runOperation(() => openEditor(item))}
                 onPublishNow={() => runOperation(() => patchAction(item, "publish_now"))}
               />
             ))}
@@ -433,14 +487,24 @@ export function ClassTeachingContentManager({
 
       <Dialog onOpenChange={(open) => !open && setEditingItem(null)} open={Boolean(editingItem)}>
         {editingItem ? (
-          <ContentFormDialog
-            config={config}
-            initialItem={editingItem}
-            isPending={isPending}
-            module={module}
-            chapters={chapters}
-            onSubmit={(formData) => runOperation(() => submitForm(formData, editingItem))}
-          />
+          module === "practice-sets" ? (
+            <PracticeSetFormDialog
+              chapters={chapters}
+              classId={classSpace.id}
+              initialItem={editingItem as ExerciseSetDetail}
+              isPending={isPending}
+              onSubmit={(payload) => runOperation(() => submitPracticeSet(payload, editingItem))}
+            />
+          ) : (
+            <ContentFormDialog
+              config={config}
+              initialItem={editingItem}
+              isPending={isPending}
+              module={module}
+              chapters={chapters}
+              onSubmit={(formData) => runOperation(() => submitForm(formData, editingItem))}
+            />
+          )
         ) : null}
       </Dialog>
     </div>
@@ -562,6 +626,166 @@ function ContentFormDialog({
           </div>
         ) : null}
         <Button disabled={isPending} type="submit">{isPending ? "Saving..." : "Save"}</Button>
+      </form>
+    </DialogContent>
+  );
+}
+
+function PracticeSetFormDialog({
+  chapters,
+  classId,
+  initialItem,
+  isPending,
+  onSubmit,
+}: {
+  chapters: CourseChapterItemSummary[];
+  classId: string;
+  initialItem?: ExerciseSetDetail;
+  isPending: boolean;
+  onSubmit: (payload: PracticeSetSubmitPayload) => void;
+}) {
+  const initialValues = mapExerciseSetDetailToEditorValues(initialItem);
+  const form = useForm<ExerciseSetEditorSchema>({
+    defaultValues: {
+      ...initialValues,
+      space_id: classId,
+      section_id: "",
+      status: initialItem?.status ?? "published",
+    },
+  });
+  const itemsFieldArray = useFieldArray({
+    control: form.control,
+    name: "items",
+  });
+  const selectedExerciseType = form.watch("exercise_type");
+  const [chapterId, setChapterId] = useState(initialItem?.chapterId ?? "");
+  const [publishAt, setPublishAt] = useState(toShanghaiDateTimeInputValue(initialItem?.publishAt));
+  const [formError, setFormError] = useState<string | null>(null);
+
+  function changeExerciseType(nextType: ExerciseSetEditorSchema["exercise_type"]) {
+    form.setValue("exercise_type", nextType);
+    itemsFieldArray.replace([createDefaultExerciseItem(getDefaultExerciseItemType(nextType))]);
+  }
+
+  const handleSubmit = form.handleSubmit((values) => {
+    setFormError(null);
+
+    if (values.items.length === 0) {
+      setFormError("Add at least one exercise item.");
+      return;
+    }
+
+    const title = values.title.trim();
+    onSubmit({
+      chapter_id: chapterId || null,
+      title,
+      slug: values.slug.trim() || createSlug(title),
+      instructions: values.instructions?.trim() || null,
+      exercise_type: values.exercise_type,
+      publish_at: fromShanghaiDateTimeInputValue(publishAt),
+      status: values.status,
+      items: values.items.map((item, index) => ({
+        ...item,
+        sort_order: index,
+      })),
+    });
+  });
+
+  return (
+    <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto rounded-lg">
+      <DialogTitle>{initialItem ? "Edit practice set" : "Create practice set"}</DialogTitle>
+      <DialogDescription>
+        Add or edit the questions students will answer in this class practice set.
+      </DialogDescription>
+      <form className="space-y-5" onSubmit={handleSubmit}>
+        <input type="hidden" {...form.register("space_id")} />
+        <input type="hidden" {...form.register("section_id")} />
+        <input type="hidden" {...form.register("status")} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="practice-title">Title</label>
+            <Input id="practice-title" required {...form.register("title")} />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="practice-slug">Slug</label>
+            <Input id="practice-slug" {...form.register("slug")} />
+          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="practice-chapter">Linked chapter</label>
+            <select
+              className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm"
+              id="practice-chapter"
+              onChange={(event) => setChapterId(event.target.value)}
+              value={chapterId}
+            >
+              <option value="">Class-wide</option>
+              {chapters.map((chapter) => (
+                <option key={chapter.id} value={chapter.id}>
+                  {"- ".repeat(chapter.level - 1)}{chapter.title}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="practice-type">Practice type</label>
+            <select
+              className="flex h-10 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm"
+              id="practice-type"
+              onChange={(event) => changeExerciseType(event.target.value as ExerciseSetEditorSchema["exercise_type"])}
+              value={selectedExerciseType}
+            >
+              <option value="mcq">Multiple choice</option>
+              <option value="term_recall">Memorize / term recall</option>
+              <option value="flashcard">Flash cards</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="practice-publish">Publish at</label>
+            <Input
+              id="practice-publish"
+              onChange={(event) => setPublishAt(event.target.value)}
+              type="datetime-local"
+              value={publishAt}
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium" htmlFor="practice-instructions">Instructions</label>
+          <Textarea id="practice-instructions" {...form.register("instructions")} />
+        </div>
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold">Practice questions</h3>
+              <p className="text-sm text-muted-foreground">Use the existing MCQ, flash card, and memorize builders.</p>
+            </div>
+            <Button
+              onClick={() => itemsFieldArray.append(createDefaultExerciseItem(getDefaultExerciseItemType(selectedExerciseType)))}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add question
+            </Button>
+          </div>
+          <div className="space-y-4">
+            {itemsFieldArray.fields.map((field, index) => (
+              <ExerciseItemBuilder
+                control={form.control}
+                index={index}
+                item={form.watch(`items.${index}`) as ExerciseSetEditorSchema["items"][number]}
+                key={field.id}
+                onRemove={() => itemsFieldArray.remove(index)}
+                register={form.register}
+              />
+            ))}
+          </div>
+        </div>
+        {formError ? <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}
+        <Button disabled={isPending} type="submit">{isPending ? "Saving..." : "Save practice set"}</Button>
       </form>
     </DialogContent>
   );

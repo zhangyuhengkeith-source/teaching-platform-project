@@ -4,6 +4,7 @@ import { EXERCISE_SET_TYPES } from "@/lib/constants/exercise-types";
 import { RESOURCE_TYPES } from "@/lib/constants/resource-types";
 import { SUBMISSION_MODES } from "@/lib/constants/elective-types";
 import { CONTENT_STATUSES } from "@/lib/constants/statuses";
+import { exerciseItemEditorSchema } from "@/lib/validations/exercises";
 
 const uuidField = z.string().uuid("A valid UUID is required.");
 const nullableUuidField = z.preprocess((value) => (value === "" ? null : value), uuidField.optional().nullable());
@@ -59,6 +60,10 @@ export const classPracticeSetSchema = z.object({
   exercise_type: z.enum(EXERCISE_SET_TYPES),
   publish_at: datetimeField,
   status: z.enum(CONTENT_STATUSES).optional(),
+});
+
+export const classPracticeSetWithItemsSchema = classPracticeSetSchema.extend({
+  items: z.array(exerciseItemEditorSchema).optional(),
 });
 
 export const classContentActionSchema = z.object({

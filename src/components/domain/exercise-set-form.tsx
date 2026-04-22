@@ -12,113 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useI18n } from "@/hooks/use-i18n";
+import { createDefaultExerciseItem, mapExerciseSetDetailToEditorValues } from "@/lib/exercises/editor";
 import { createExerciseSetAction } from "@/lib/server/actions/create-exercise-set";
 import { updateExerciseSetAction } from "@/lib/server/actions/update-exercise-set";
 import { exerciseSetEditorSchema, type ExerciseItemEditorSchema, type ExerciseSetEditorSchema } from "@/lib/validations/exercises";
 import type { ExerciseSetDetail, SpaceSectionSummary, SpaceSummary } from "@/types/domain";
-
-function createDefaultItem(itemType: ExerciseItemEditorSchema["item_type"]): ExerciseItemEditorSchema {
-  if (itemType === "mcq") {
-    return {
-      item_type: "mcq",
-      prompt: "",
-      prompt_rich: null,
-      answer_key_json: {
-        options: [
-          { id: "A", label: "" },
-          { id: "B", label: "" },
-        ],
-        correctOptionId: "A",
-      },
-      explanation: null,
-      sort_order: 0,
-      difficulty: "foundation",
-      tags_json: [],
-    };
-  }
-
-  if (itemType === "flashcard") {
-    return {
-      item_type: "flashcard",
-      prompt: "",
-      prompt_rich: null,
-      answer_key_json: {
-        front: "",
-        back: "",
-      },
-      explanation: null,
-      sort_order: 0,
-      difficulty: "foundation",
-      tags_json: [],
-    };
-  }
-
-  return {
-    item_type: "spelling",
-    prompt: "",
-    prompt_rich: null,
-    answer_key_json: {
-      acceptedAnswers: [""],
-    },
-    explanation: null,
-    sort_order: 0,
-    difficulty: "foundation",
-    tags_json: [],
-  };
-}
-
-function mapInitialValues(initialValues?: ExerciseSetDetail): ExerciseSetEditorSchema {
-  const mappedItems: ExerciseItemEditorSchema[] =
-    initialValues?.items.map((item) => {
-      if (item.itemType === "mcq" && "options" in item.answerKey) {
-        return {
-          item_type: "mcq",
-          prompt: item.prompt,
-          prompt_rich: item.promptRich ?? null,
-          answer_key_json: item.answerKey,
-          explanation: item.explanation ?? null,
-          sort_order: item.sortOrder,
-          difficulty: item.difficulty ?? null,
-          tags_json: item.tags ?? [],
-        };
-      }
-
-      if (item.itemType === "flashcard" && "front" in item.answerKey) {
-        return {
-          item_type: "flashcard",
-          prompt: item.prompt,
-          prompt_rich: item.promptRich ?? null,
-          answer_key_json: item.answerKey,
-          explanation: item.explanation ?? null,
-          sort_order: item.sortOrder,
-          difficulty: item.difficulty ?? null,
-          tags_json: item.tags ?? [],
-        };
-      }
-
-      return {
-        item_type: "spelling",
-        prompt: item.prompt,
-        prompt_rich: item.promptRich ?? null,
-        answer_key_json: "acceptedAnswers" in item.answerKey ? item.answerKey : { acceptedAnswers: [""] },
-        explanation: item.explanation ?? null,
-        sort_order: item.sortOrder,
-        difficulty: item.difficulty ?? null,
-        tags_json: item.tags ?? [],
-      };
-    }) ?? [createDefaultItem("mcq")];
-
-  return {
-    title: initialValues?.title ?? "",
-    slug: initialValues?.slug ?? "",
-    exercise_type: initialValues?.exerciseType ?? "mcq",
-    instructions: initialValues?.instructions ?? "",
-    status: initialValues?.status ?? "draft",
-    space_id: initialValues?.spaceId ?? "",
-    section_id: initialValues?.sectionId ?? "",
-    items: mappedItems,
-  };
-}
 
 export function ExerciseSetForm({
   mode,
@@ -137,7 +35,7 @@ export function ExerciseSetForm({
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<ExerciseSetEditorSchema>({
     resolver: zodResolver(exerciseSetEditorSchema) as Resolver<ExerciseSetEditorSchema>,
-    defaultValues: mapInitialValues(initialValues),
+    defaultValues: mapExerciseSetDetailToEditorValues(initialValues),
   });
   const itemsFieldArray = useFieldArray({
     control: form.control,
@@ -237,19 +135,19 @@ export function ExerciseSetForm({
           </div>
           <div className="flex flex-wrap gap-2">
             {selectedExerciseType === "mcq" ? (
-              <Button onClick={() => itemsFieldArray.append(createDefaultItem("mcq"))} size="sm" type="button" variant="outline">
+              <Button onClick={() => itemsFieldArray.append(createDefaultExerciseItem("mcq"))} size="sm" type="button" variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
                 {t("admin.forms.addMcq")}
               </Button>
             ) : null}
             {selectedExerciseType === "term_recall" ? (
-              <Button onClick={() => itemsFieldArray.append(createDefaultItem("spelling"))} size="sm" type="button" variant="outline">
+              <Button onClick={() => itemsFieldArray.append(createDefaultExerciseItem("spelling"))} size="sm" type="button" variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
                 {t("admin.forms.addRecall")}
               </Button>
             ) : null}
             {selectedExerciseType === "flashcard" ? (
-              <Button onClick={() => itemsFieldArray.append(createDefaultItem("flashcard"))} size="sm" type="button" variant="outline">
+              <Button onClick={() => itemsFieldArray.append(createDefaultExerciseItem("flashcard"))} size="sm" type="button" variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
                 {t("admin.forms.addFlashcard")}
               </Button>
