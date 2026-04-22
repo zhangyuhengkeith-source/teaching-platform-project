@@ -3,6 +3,7 @@ import { Users } from "lucide-react";
 
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { GroupStatus } from "@/lib/constants/statuses";
 
 interface GroupCardProps {
   name: string;
@@ -10,7 +11,7 @@ interface GroupCardProps {
   leaderName?: string | null;
   memberCount?: number;
   maxGroupSize?: number;
-  status: "forming" | "active" | "locked" | "archived";
+  status: GroupStatus;
   action?: ReactNode;
 }
 

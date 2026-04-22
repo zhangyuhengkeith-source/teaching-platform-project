@@ -22,6 +22,7 @@ export type ResourceVisibility = "space" | "selected_members" | "public";
 export type NoticeType = "homework" | "deadline" | "mock_exam" | "general" | "grouping" | "service_update";
 export type WrongBookSourceType = "exercise_item";
 export type CourseChapterTemplateVisibility = "private" | "teachers";
+export type ClassGroupingRuleStatus = "pending" | "completed";
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export interface Database {
@@ -458,6 +459,8 @@ export interface Database {
           project_title: string | null;
           project_summary: string | null;
           status: GroupStatus;
+          archived_at: string | null;
+          deleted_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -470,6 +473,8 @@ export interface Database {
           project_title?: string | null;
           project_summary?: string | null;
           status?: GroupStatus;
+          archived_at?: string | null;
+          deleted_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["groups"]["Insert"]>;
         Relationships: [
@@ -481,6 +486,7 @@ export interface Database {
         Row: {
           id: string;
           group_id: string;
+          space_id: string;
           profile_id: string;
           member_role: GroupMemberRole;
           joined_at: string;
@@ -489,6 +495,7 @@ export interface Database {
         Insert: {
           id?: string;
           group_id: string;
+          space_id?: string;
           profile_id: string;
           member_role: GroupMemberRole;
           joined_at?: string;
@@ -497,7 +504,37 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["group_members"]["Insert"]>;
         Relationships: [
           { foreignKeyName: "group_members_group_id_fkey"; columns: ["group_id"]; referencedRelation: "groups"; referencedColumns: ["id"] },
+          { foreignKeyName: "group_members_space_id_fkey"; columns: ["space_id"]; referencedRelation: "spaces"; referencedColumns: ["id"] },
           { foreignKeyName: "group_members_profile_id_fkey"; columns: ["profile_id"]; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
+      };
+      class_grouping_rules: {
+        Row: {
+          id: string;
+          class_id: string;
+          max_students_per_group: number;
+          instructions: string | null;
+          deadline: string;
+          auto_group_status: ClassGroupingRuleStatus;
+          auto_grouped_at: string | null;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          class_id: string;
+          max_students_per_group: number;
+          instructions?: string | null;
+          deadline: string;
+          auto_group_status?: ClassGroupingRuleStatus;
+          auto_grouped_at?: string | null;
+          created_by: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["class_grouping_rules"]["Insert"]>;
+        Relationships: [
+          { foreignKeyName: "class_grouping_rules_class_id_fkey"; columns: ["class_id"]; referencedRelation: "spaces"; referencedColumns: ["id"] },
+          { foreignKeyName: "class_grouping_rules_created_by_fkey"; columns: ["created_by"]; referencedRelation: "profiles"; referencedColumns: ["id"] },
         ];
       };
       tasks: {
@@ -755,6 +792,7 @@ export type ExerciseAttemptRow = Database["public"]["Tables"]["exercise_attempts
 export type WrongBookItemRow = Database["public"]["Tables"]["wrong_book_items"]["Row"];
 export type GroupRow = Database["public"]["Tables"]["groups"]["Row"];
 export type GroupMemberRow = Database["public"]["Tables"]["group_members"]["Row"];
+export type ClassGroupingRuleRow = Database["public"]["Tables"]["class_grouping_rules"]["Row"];
 export type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
 export type TaskSubmissionRow = Database["public"]["Tables"]["task_submissions"]["Row"];
 export type TaskSubmissionFileRow = Database["public"]["Tables"]["task_submission_files"]["Row"];

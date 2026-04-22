@@ -217,6 +217,35 @@ export interface RemoveGroupMemberInput {
   profile_id: string;
 }
 
+export interface CreateClassGroupingRuleInput {
+  class_id: string;
+  max_students_per_group: number;
+  instructions?: string | null;
+  deadline: string;
+}
+
+export interface CreateClassGroupInput {
+  class_id: string;
+  name: string;
+  leader_profile_id: string;
+  project_summary?: string | null;
+  status?: GroupStatus;
+}
+
+export interface UpdateClassGroupInput {
+  id: string;
+  name?: string;
+  leader_profile_id?: string;
+  project_summary?: string | null;
+  status?: GroupStatus;
+}
+
+export interface MoveClassGroupMemberInput {
+  profile_id: string;
+  target_group_id?: string | null;
+  member_role?: GroupMemberRole;
+}
+
 export interface CreateTaskInput {
   space_id: string;
   chapter_id?: string | null;

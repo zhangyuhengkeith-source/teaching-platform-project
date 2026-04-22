@@ -14,7 +14,7 @@ import type {
 } from "@/lib/constants/statuses";
 import type { ResourceType } from "@/lib/constants/resource-types";
 import type { AppRole, ProfileStatus, UserType } from "@/types/auth";
-import type { ClassApprovalStatus, CourseChapterTemplateVisibility, NoticeType, ResourceVisibility, SectionType, SpaceType } from "@/types/database";
+import type { ClassApprovalStatus, ClassGroupingRuleStatus, CourseChapterTemplateVisibility, NoticeType, ResourceVisibility, SectionType, SpaceType } from "@/types/database";
 
 export interface ProfileSummary {
   id: string;
@@ -252,6 +252,7 @@ export interface PracticeSubmissionResult {
 export interface GroupMemberSummary {
   id: string;
   groupId: string;
+  spaceId?: string;
   profileId: string;
   memberRole: GroupMemberRole;
   joinedAt: string;
@@ -268,16 +269,33 @@ export interface GroupSummary {
   projectTitle: string | null;
   projectSummary: string | null;
   status: GroupStatus;
+  archivedAt?: string | null;
+  deletedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   spaceTitle?: string;
   spaceSlug?: string;
   leaderName?: string | null;
   memberCount?: number;
+  memberNames?: string[];
+  joinStatus?: "full" | "open";
 }
 
 export interface GroupDetail extends GroupSummary {
   members: GroupMemberSummary[];
+}
+
+export interface ClassGroupingRuleSummary {
+  id: string;
+  classId: string;
+  maxStudentsPerGroup: number;
+  instructions: string | null;
+  deadline: string;
+  autoGroupStatus: ClassGroupingRuleStatus;
+  autoGroupedAt: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TaskSummary {

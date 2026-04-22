@@ -1,5 +1,12 @@
-import { ClassModulePageShell } from "@/components/domain/class-module-page-shell";
+import { ClassStudentGroupsManager } from "@/components/domain/class-student-groups-manager";
 import { requireClassManagementContext } from "@/lib/auth/require-class-management";
+import { isAdminRole } from "@/lib/permissions/profiles";
+import {
+  ensureAutoGroupingForDueRule,
+  getLatestClassGroupingRule,
+  listClassGroups,
+  listClassStudentsWithGroupState,
+} from "@/repositories/class-group-repository";
 
 export default async function StudentGroupsPage({
   params,
@@ -7,16 +14,21 @@ export default async function StudentGroupsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { classSpace } = await requireClassManagementContext(id);
+  const { classSpace, profile } = await requireClassManagementContext(id);
+  await ensureAutoGroupingForDueRule(classSpace.id);
+  const [groups, rule, students] = await Promise.all([
+    listClassGroups(classSpace.id, { includeArchived: false }),
+    getLatestClassGroupingRule(classSpace.id),
+    listClassStudentsWithGroupState(classSpace.id),
+  ]);
 
   return (
-    <ClassModulePageShell
+    <ClassStudentGroupsManager
       classSpace={classSpace}
-      createLabel="Create group"
-      emptyDescription="No student groups have been created for this class yet."
-      emptyTitle="No student groups"
-      moduleDescription="Manage student groups and class collaboration rosters."
-      moduleTitle="Student Groups"
+      initialGroups={groups}
+      initialRule={rule}
+      initialStudents={students}
+      isAdmin={isAdminRole(profile)}
     />
   );
 }

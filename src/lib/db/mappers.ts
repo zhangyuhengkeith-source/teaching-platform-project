@@ -21,6 +21,7 @@ import type {
   CourseChapterItemRow,
   CourseChapterSetRow,
   CourseChapterTemplateRow,
+  ClassGroupingRuleRow,
 } from "@/types/database";
 import type {
   ExerciseAttemptSummary,
@@ -47,6 +48,7 @@ import type {
   CourseChapterSetSummary,
   CourseChapterTemplateItem,
   CourseChapterTemplateSummary,
+  ClassGroupingRuleSummary,
 } from "@/types/domain";
 
 export function mapProfileRow(row: ProfileRow): ProfileSummary {
@@ -265,6 +267,8 @@ export function mapGroupRow(row: GroupRow): GroupSummary {
     projectTitle: row.project_title,
     projectSummary: row.project_summary,
     status: row.status,
+    archivedAt: row.archived_at,
+    deletedAt: row.deleted_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -274,10 +278,26 @@ export function mapGroupMemberRow(row: GroupMemberRow): GroupMemberSummary {
   return {
     id: row.id,
     groupId: row.group_id,
+    spaceId: row.space_id,
     profileId: row.profile_id,
     memberRole: row.member_role,
     joinedAt: row.joined_at,
     status: row.status,
+  };
+}
+
+export function mapClassGroupingRuleRow(row: ClassGroupingRuleRow): ClassGroupingRuleSummary {
+  return {
+    id: row.id,
+    classId: row.class_id,
+    maxStudentsPerGroup: row.max_students_per_group,
+    instructions: row.instructions,
+    deadline: row.deadline,
+    autoGroupStatus: row.auto_group_status,
+    autoGroupedAt: row.auto_grouped_at,
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 

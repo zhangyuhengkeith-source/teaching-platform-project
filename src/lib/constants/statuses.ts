@@ -21,7 +21,7 @@ export const NOTICE_STATUSES = CONTENT_STATUSES;
 export const RESOURCE_STATUSES = CONTENT_STATUSES;
 export const EXERCISE_SET_STATUSES = CONTENT_STATUSES;
 export const WRONG_BOOK_STATUSES = ["active", "mastered"] as const;
-export const GROUP_STATUSES = ["forming", "active", "locked", "archived"] as const;
+export const GROUP_STATUSES = ["forming", "active", "locked", "archived", "deleted"] as const;
 export const TASK_STATUSES = CONTENT_STATUSES;
 export const SUBMISSION_STATUSES = ["draft", "submitted", "overdue", "returned", "resubmitted", "completed"] as const;
 
