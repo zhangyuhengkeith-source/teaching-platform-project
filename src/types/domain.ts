@@ -108,6 +108,7 @@ export interface ResourceSummary {
   id: string;
   spaceId: string;
   sectionId: string | null;
+  chapterId?: string | null;
   title: string;
   slug: string;
   description: string | null;
@@ -115,10 +116,12 @@ export interface ResourceSummary {
   status: ResourceStatus;
   visibility: ResourceVisibility;
   publishedAt: string | null;
+  publishAt?: string | null;
   sortOrder: number;
   createdAt?: string;
   updatedAt?: string;
   files?: ResourceFileSummary[];
+  chapterTitle?: string | null;
 }
 
 export interface NoticeSummary {
@@ -160,11 +163,13 @@ export interface ExerciseSetSummary {
   id: string;
   spaceId: string;
   sectionId: string | null;
+  chapterId?: string | null;
   title: string;
   slug: string;
   exerciseType: ExerciseSetType;
   instructions: string | null;
   status: ExerciseSetStatus;
+  publishAt?: string | null;
   createdBy: string;
   updatedBy: string | null;
   createdAt: string;
@@ -174,6 +179,7 @@ export interface ExerciseSetSummary {
   spaceSlug?: string;
   sectionTitle?: string | null;
   sectionSlug?: string | null;
+  chapterTitle?: string | null;
 }
 
 export interface ExerciseItemSummary {
@@ -277,12 +283,15 @@ export interface GroupDetail extends GroupSummary {
 export interface TaskSummary {
   id: string;
   spaceId: string;
+  chapterId?: string | null;
   title: string;
   slug: string;
   brief: string | null;
   body: string | null;
   submissionMode: SubmissionMode;
   dueAt: string | null;
+  deadline?: string | null;
+  publishAt?: string | null;
   allowResubmission: boolean;
   templateResourceId: string | null;
   status: TaskStatus;
@@ -291,6 +300,7 @@ export interface TaskSummary {
   updatedAt: string;
   spaceTitle?: string;
   spaceSlug?: string;
+  chapterTitle?: string | null;
 }
 
 export interface SubmissionFileSummary {

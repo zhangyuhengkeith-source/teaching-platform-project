@@ -1,5 +1,7 @@
-import { ClassModulePageShell } from "@/components/domain/class-module-page-shell";
+import { ClassTeachingContentManager } from "@/components/domain/class-teaching-content-manager";
 import { requireClassManagementContext } from "@/lib/auth/require-class-management";
+import { isAdminRole } from "@/lib/permissions/profiles";
+import { listChapterOptionsForClass, listClassTasks } from "@/repositories/class-teaching-content-repository";
 
 export default async function CourseTasksPage({
   params,
@@ -7,16 +9,19 @@ export default async function CourseTasksPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { classSpace } = await requireClassManagementContext(id);
+  const { classSpace, profile } = await requireClassManagementContext(id);
+  const [items, chapters] = await Promise.all([
+    listClassTasks(classSpace.id, { mode: "published" }),
+    listChapterOptionsForClass(classSpace.id),
+  ]);
 
   return (
-    <ClassModulePageShell
+    <ClassTeachingContentManager
       classSpace={classSpace}
-      createLabel="Create task"
-      emptyDescription="No course tasks have been created for this class yet."
-      emptyTitle="No tasks"
-      moduleDescription="Manage homework, assignments, and class task workflows."
-      moduleTitle="Course Tasks"
+      chapters={chapters}
+      initialItems={items}
+      isAdmin={isAdminRole(profile)}
+      module="tasks"
     />
   );
 }

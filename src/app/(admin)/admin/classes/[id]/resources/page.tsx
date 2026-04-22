@@ -1,5 +1,7 @@
-import { ClassModulePageShell } from "@/components/domain/class-module-page-shell";
+import { ClassTeachingContentManager } from "@/components/domain/class-teaching-content-manager";
 import { requireClassManagementContext } from "@/lib/auth/require-class-management";
+import { isAdminRole } from "@/lib/permissions/profiles";
+import { listChapterOptionsForClass, listClassResources } from "@/repositories/class-teaching-content-repository";
 
 export default async function CourseResourcesPage({
   params,
@@ -7,16 +9,19 @@ export default async function CourseResourcesPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { classSpace } = await requireClassManagementContext(id);
+  const { classSpace, profile } = await requireClassManagementContext(id);
+  const [items, chapters] = await Promise.all([
+    listClassResources(classSpace.id, { mode: "published" }),
+    listChapterOptionsForClass(classSpace.id),
+  ]);
 
   return (
-    <ClassModulePageShell
+    <ClassTeachingContentManager
       classSpace={classSpace}
-      createLabel="Create resource"
-      emptyDescription="No course resources have been added for this class yet."
-      emptyTitle="No resources"
-      moduleDescription="Manage class slides, files, worksheets, and reference materials."
-      moduleTitle="Course Resources"
+      chapters={chapters}
+      initialItems={items}
+      isAdmin={isAdminRole(profile)}
+      module="resources"
     />
   );
 }

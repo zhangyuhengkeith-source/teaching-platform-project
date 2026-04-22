@@ -1,5 +1,7 @@
-import { ClassModulePageShell } from "@/components/domain/class-module-page-shell";
+import { ClassTeachingContentManager } from "@/components/domain/class-teaching-content-manager";
 import { requireClassManagementContext } from "@/lib/auth/require-class-management";
+import { isAdminRole } from "@/lib/permissions/profiles";
+import { listChapterOptionsForClass, listClassPracticeSets } from "@/repositories/class-teaching-content-repository";
 
 export default async function CoursePracticeSetsPage({
   params,
@@ -7,16 +9,19 @@ export default async function CoursePracticeSetsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { classSpace } = await requireClassManagementContext(id);
+  const { classSpace, profile } = await requireClassManagementContext(id);
+  const [items, chapters] = await Promise.all([
+    listClassPracticeSets(classSpace.id, { mode: "published" }),
+    listChapterOptionsForClass(classSpace.id),
+  ]);
 
   return (
-    <ClassModulePageShell
+    <ClassTeachingContentManager
       classSpace={classSpace}
-      createLabel="Create practice set"
-      emptyDescription="No practice sets have been created for this class yet."
-      emptyTitle="No practice sets"
-      moduleDescription="Manage quizzes, flashcards, and recall practice for this class."
-      moduleTitle="Course Practice Sets"
+      chapters={chapters}
+      initialItems={items}
+      isAdmin={isAdminRole(profile)}
+      module="practice-sets"
     />
   );
 }

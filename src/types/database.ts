@@ -203,6 +203,7 @@ export interface Database {
           id: string;
           space_id: string;
           section_id: string | null;
+          chapter_id: string | null;
           title: string;
           slug: string;
           description: string | null;
@@ -212,6 +213,7 @@ export interface Database {
           created_by: string;
           updated_by: string | null;
           published_at: string | null;
+          publish_at: string | null;
           archived_at: string | null;
           deleted_at: string | null;
           sort_order: number;
@@ -222,6 +224,7 @@ export interface Database {
           id?: string;
           space_id: string;
           section_id?: string | null;
+          chapter_id?: string | null;
           title: string;
           slug: string;
           description?: string | null;
@@ -231,6 +234,7 @@ export interface Database {
           created_by: string;
           updated_by?: string | null;
           published_at?: string | null;
+          publish_at?: string | null;
           archived_at?: string | null;
           deleted_at?: string | null;
           sort_order?: number;
@@ -315,6 +319,7 @@ export interface Database {
           id: string;
           space_id: string;
           section_id: string | null;
+          chapter_id: string | null;
           title: string;
           slug: string;
           exercise_type: ExerciseSetType;
@@ -322,6 +327,7 @@ export interface Database {
           status: ExerciseSetStatus;
           created_by: string;
           updated_by: string | null;
+          publish_at: string | null;
           archived_at: string | null;
           deleted_at: string | null;
           created_at: string;
@@ -331,6 +337,7 @@ export interface Database {
           id?: string;
           space_id: string;
           section_id?: string | null;
+          chapter_id?: string | null;
           title: string;
           slug: string;
           exercise_type: ExerciseSetType;
@@ -338,6 +345,7 @@ export interface Database {
           status?: ExerciseSetStatus;
           created_by: string;
           updated_by?: string | null;
+          publish_at?: string | null;
           archived_at?: string | null;
           deleted_at?: string | null;
         };
@@ -496,6 +504,7 @@ export interface Database {
         Row: {
           id: string;
           space_id: string;
+          chapter_id: string | null;
           title: string;
           slug: string;
           brief: string | null;
@@ -503,6 +512,7 @@ export interface Database {
           submission_mode: SubmissionMode;
           due_at: string | null;
           deadline: string | null;
+          publish_at: string | null;
           allow_resubmission: boolean;
           template_resource_id: string | null;
           status: TaskStatus;
@@ -515,6 +525,7 @@ export interface Database {
         Insert: {
           id?: string;
           space_id: string;
+          chapter_id?: string | null;
           title: string;
           slug: string;
           brief?: string | null;
@@ -522,6 +533,7 @@ export interface Database {
           submission_mode: SubmissionMode;
           due_at?: string | null;
           deadline?: string | null;
+          publish_at?: string | null;
           allow_resubmission?: boolean;
           template_resource_id?: string | null;
           status?: TaskStatus;

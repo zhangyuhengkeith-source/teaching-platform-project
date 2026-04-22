@@ -75,6 +75,7 @@ export interface UpdateElectiveInput extends Partial<CreateElectiveInput> {
 export interface CreateResourceInput {
   space_id: string;
   section_id?: string | null;
+  chapter_id?: string | null;
   title: string;
   slug: string;
   description?: string | null;
@@ -82,6 +83,7 @@ export interface CreateResourceInput {
   visibility: ResourceVisibility;
   status?: ResourceStatus;
   published_at?: string | null;
+  publish_at?: string | null;
   sort_order?: number;
   file_metadata?: ResourceFileInput[] | null;
 }
@@ -140,11 +142,13 @@ export type ExerciseAnswerKeyInput = McqAnswerKeyInput | FlashcardAnswerKeyInput
 export interface CreateExerciseSetInput {
   space_id: string;
   section_id?: string | null;
+  chapter_id?: string | null;
   title: string;
   slug: string;
   exercise_type: ExerciseSetType;
   instructions?: string | null;
   status: ExerciseSetStatus;
+  publish_at?: string | null;
 }
 
 export interface UpdateExerciseSetInput extends Partial<CreateExerciseSetInput> {
@@ -215,12 +219,15 @@ export interface RemoveGroupMemberInput {
 
 export interface CreateTaskInput {
   space_id: string;
+  chapter_id?: string | null;
   title: string;
   slug: string;
   brief?: string | null;
   body?: string | null;
   submission_mode: SubmissionMode;
   due_at?: string | null;
+  deadline?: string | null;
+  publish_at?: string | null;
   allow_resubmission?: boolean;
   template_resource_id?: string | null;
   status?: TaskStatus;
