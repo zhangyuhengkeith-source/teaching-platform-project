@@ -246,7 +246,7 @@ export async function createResourceRecord(profileId: string, input: CreateResou
 
 export async function updateResourceRecord(profileId: string, input: UpdateResourceInput): Promise<ResourceSummary> {
   const supabase = await createSupabaseServerClient();
-  const normalizedFiles = normalizeFileMetadata(input.file_metadata);
+  const normalizedFiles = typeof input.file_metadata === "undefined" ? undefined : normalizeFileMetadata(input.file_metadata);
 
   if (!supabase) {
     return {
@@ -263,7 +263,7 @@ export async function updateResourceRecord(profileId: string, input: UpdateResou
       publishedAt: input.publish_at ?? input.published_at ?? null,
       publishAt: input.publish_at ?? input.published_at ?? null,
       sortOrder: input.sort_order ?? 0,
-      files: normalizedFiles.map(mapResourceFileInput),
+      files: normalizedFiles?.map(mapResourceFileInput),
     };
   }
 

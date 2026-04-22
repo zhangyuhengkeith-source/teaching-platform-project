@@ -17,6 +17,16 @@ const datetimeField = z.preprocess(
     .nullable(),
 );
 const slugField = z.string().trim().min(1, "Slug is required.").regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers, and hyphens.");
+const resourceFileSchema = z.object({
+  id: z.string().uuid().optional(),
+  file_path: z.string().trim().min(1, "File path is required."),
+  file_name: z.string().trim().min(1, "File name is required."),
+  file_ext: z.string().trim().optional().nullable(),
+  mime_type: z.string().trim().optional().nullable(),
+  file_size: z.number().int().min(0).optional().nullable(),
+  preview_url: z.string().trim().optional().nullable(),
+  sort_order: z.number().int().min(0).optional(),
+});
 
 export const classResourceSchema = z.object({
   chapter_id: nullableUuidField,
@@ -26,6 +36,7 @@ export const classResourceSchema = z.object({
   resource_type: z.enum(RESOURCE_TYPES),
   publish_at: datetimeField,
   status: z.enum(CONTENT_STATUSES).optional(),
+  file_metadata: z.array(resourceFileSchema).optional().nullable(),
 });
 
 export const classTaskSchema = z.object({

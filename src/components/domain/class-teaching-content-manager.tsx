@@ -11,8 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SectionCard } from "@/components/shared/section-card";
+import { MAX_RESOURCE_FILE_SIZE_BYTES, getFileExtension } from "@/lib/db/storage";
+import { formatFileSize } from "@/lib/utils/format";
 import { fromShanghaiDateTimeInputValue, formatInShanghai, toShanghaiDateTimeInputValue } from "@/lib/utils/timezone";
 import { cn } from "@/lib/utils/cn";
+import { removeUploadedStorageObjects, uploadResourceFiles } from "@/services/storage-service";
 import type { CourseChapterItemSummary, ExerciseSetSummary, ResourceSummary, SpaceSummary, TaskSummary } from "@/types/domain";
 
 type ModuleKind = "resources" | "tasks" | "practice-sets";
@@ -191,6 +194,7 @@ export function ClassTeachingContentManager({
   }
 
   async function submitForm(formData: FormData, item?: ContentItem | null) {
+    let uploadedObjects: Array<{ bucket: string; objectPath: string }> = [];
     const title = String(formData.get("title") ?? "").trim();
     const publishAt = fromShanghaiDateTimeInputValue(String(formData.get("publish_at") ?? ""));
     const payload: Record<string, unknown> = {
@@ -201,6 +205,48 @@ export function ClassTeachingContentManager({
     };
 
     if (module === "resources") {
+      const selectedFiles = formData
+        .getAll("resource_files")
+        .filter((value): value is File => value instanceof File && value.size > 0);
+      const oversizedFile = selectedFiles.find((file) => file.size > MAX_RESOURCE_FILE_SIZE_BYTES);
+
+      if (oversizedFile) {
+        throw new Error(`File "${oversizedFile.name}" exceeds the 25 MB limit.`);
+      }
+
+      if (selectedFiles.length > 0) {
+        const existingFileMetadata = item && module === "resources"
+          ? ((item as ResourceSummary).files ?? []).map((file, index) => ({
+              id: file.id,
+              file_path: file.filePath,
+              file_name: file.fileName,
+              file_ext: file.fileExt,
+              mime_type: file.mimeType,
+              file_size: file.fileSize,
+              preview_url: file.previewUrl,
+              sort_order: index,
+            }))
+          : [];
+        const uploadResult = await uploadResourceFiles(
+          classSpace.slug,
+          selectedFiles.map((file) => ({
+            file,
+            fileName: file.name,
+            fileExt: getFileExtension(file.name),
+            mimeType: file.type || null,
+            fileSize: file.size,
+          })),
+        );
+        uploadedObjects = uploadResult.uploadedObjects;
+        payload.file_metadata = [
+          ...existingFileMetadata,
+          ...uploadResult.fileMetadata,
+        ].map((file, index) => ({
+          ...file,
+          sort_order: index,
+        }));
+      }
+
       payload.description = String(formData.get("description") ?? "").trim() || null;
       payload.resource_type = String(formData.get("type") ?? "other");
     } else if (module === "tasks") {
@@ -213,14 +259,19 @@ export function ClassTeachingContentManager({
       payload.exercise_type = String(formData.get("type") ?? "mcq");
     }
 
-    const response = await fetch(item ? `${apiBase}/${item.id}` : apiBase, {
-      method: item ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const response = await fetch(item ? `${apiBase}/${item.id}` : apiBase, {
+        method: item ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    if (!response.ok) {
-      throw new Error(await readApiError(response));
+      if (!response.ok) {
+        throw new Error(await readApiError(response));
+      }
+    } catch (submitError) {
+      await removeUploadedStorageObjects(uploadedObjects);
+      throw submitError;
     }
 
     await reload();
@@ -467,9 +518,29 @@ function ContentFormDialog({
           ) : null}
         </div>
         {module === "resources" ? (
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="content-description">Description</label>
-            <Textarea defaultValue={(initialItem as ResourceSummary | undefined)?.description ?? ""} id="content-description" name="description" />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="content-description">Description</label>
+              <Textarea defaultValue={(initialItem as ResourceSummary | undefined)?.description ?? ""} id="content-description" name="description" />
+            </div>
+            <div className="space-y-3 rounded-lg border border-dashed border-border bg-slate-50 p-4">
+              <div className="space-y-1">
+                <label className="text-sm font-medium" htmlFor="resource-files">Resource files</label>
+                <p className="text-xs text-muted-foreground">Upload one or more files. Each file must be 25 MB or smaller.</p>
+              </div>
+              <Input id="resource-files" multiple name="resource_files" type="file" />
+              {(initialItem as ResourceSummary | undefined)?.files?.length ? (
+                <div className="space-y-2 rounded-lg border border-border bg-white p-3">
+                  <p className="text-xs font-medium text-slate-500">Existing files</p>
+                  {(initialItem as ResourceSummary).files!.map((file) => (
+                    <div className="flex items-center justify-between gap-3 text-sm" key={file.id}>
+                      <span className="min-w-0 truncate">{file.fileName}</span>
+                      <span className="shrink-0 text-xs text-muted-foreground">{formatFileSize(file.fileSize)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </div>
         ) : null}
         {module === "tasks" ? (
