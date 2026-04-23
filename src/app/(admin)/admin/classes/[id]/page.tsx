@@ -34,6 +34,7 @@ export default async function ClassManagementHomePage({
       <ClassManagementPageHeader
         classSpace={classSpace}
         description="Choose a module to manage class content, tasks, practice, and student organization."
+        showBackToClassList
       />
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {CLASS_MANAGEMENT_MODULES.map((module) => (

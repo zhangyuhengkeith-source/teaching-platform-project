@@ -14,6 +14,7 @@ interface ClassManagementPageHeaderProps {
   title?: string;
   description?: string;
   actions?: ReactNode;
+  showBackToClassList?: boolean;
   showBackToModules?: boolean;
 }
 
@@ -22,19 +23,32 @@ export function ClassManagementPageHeader({
   title,
   description,
   actions,
+  showBackToClassList = false,
   showBackToModules = false,
 }: ClassManagementPageHeaderProps) {
   return (
     <PageHeader
       actions={actions}
       breadcrumbs={
-        showBackToModules ? (
-          <Button asChild size="sm" variant="ghost">
-            <Link href={getClassManagementPath(classSpace.id)}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to modules
-            </Link>
-          </Button>
+        showBackToClassList || showBackToModules ? (
+          <div className="flex flex-wrap gap-2">
+            {showBackToClassList ? (
+              <Button asChild size="sm" variant="ghost">
+                <Link href="/admin/classes">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  返回班级列表
+                </Link>
+              </Button>
+            ) : null}
+            {showBackToModules ? (
+              <Button asChild size="sm" variant="ghost">
+                <Link href={getClassManagementPath(classSpace.id)}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to modules
+                </Link>
+              </Button>
+            ) : null}
+          </div>
         ) : null
       }
       description={
