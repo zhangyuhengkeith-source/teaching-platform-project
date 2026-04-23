@@ -36,6 +36,7 @@ export function ClassForm({
   const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
   const form = useForm<CreateClassFormSchema | UpdateClassFormSchema>({
     resolver: zodResolver(mode === "create" ? createClassFormSchema : updateClassFormSchema),
     defaultValues: {
@@ -50,6 +51,7 @@ export function ClassForm({
 
   const onSubmit = form.handleSubmit((values) => {
     setFormError(null);
+    setFormMessage(null);
 
     startTransition(async () => {
       try {
@@ -66,10 +68,19 @@ export function ClassForm({
             return;
           }
         } else {
-          await updateSpaceAction(payload);
+          const result = await updateSpaceAction(payload);
+          if (!result.ok) {
+            setFormError(result.error ?? t("admin.userTable.saveFailed"));
+            return;
+          }
+
+          if (result.pendingApproval) {
+            setFormMessage("班级编辑已提交超管审批。审批通过前，班级名称、学科、描述、学年和状态会保持提交前不变。");
+            return;
+          }
         }
 
-        router.push("/admin/classes");
+        router.push("/admin");
       } catch (error) {
         setFormError(error instanceof Error ? error.message : t("admin.userTable.saveFailed"));
       }
@@ -124,10 +135,16 @@ export function ClassForm({
         </div>
       </div>
       {mode === "edit" && initialValues?.id ? <input type="hidden" value={initialValues.id} {...form.register("id")} /> : null}
+      {mode === "edit" ? (
+        <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          教师修改班级名称、学科、描述、学年或状态后，需要超管审批。审批通过前，学生端和班级管理状态保持当前版本不变。
+        </p>
+      ) : null}
       {formError ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p> : null}
+      {formMessage ? <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{formMessage}</p> : null}
       <div className="flex gap-3">
         <Button type="submit">{isPending ? t("forms.saving") : mode === "create" ? t("admin.forms.createClass") : t("admin.forms.updateClass")}</Button>
-        <Button onClick={() => router.push("/admin/classes")} type="button" variant="outline">{t("common.cancel")}</Button>
+        <Button onClick={() => router.push("/admin")} type="button" variant="outline">{t("common.cancel")}</Button>
       </div>
     </form>
   );

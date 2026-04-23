@@ -14,7 +14,7 @@ import type {
 } from "@/lib/constants/statuses";
 import type { ResourceType } from "@/lib/constants/resource-types";
 import type { AppRole, ProfileStatus, UserType } from "@/types/auth";
-import type { ClassApprovalStatus, ClassGroupingRuleStatus, CourseChapterTemplateVisibility, NoticeType, ResourceVisibility, SectionType, SpaceType } from "@/types/database";
+import type { ClassApprovalStatus, ClassGroupingRuleStatus, ClassUpdateRequestStatus, CourseChapterTemplateVisibility, NoticeType, ResourceVisibility, SectionType, SpaceType } from "@/types/database";
 
 export interface ProfileSummary {
   id: string;
@@ -86,6 +86,24 @@ export interface SpaceSummary {
   createdAt?: string;
   updatedAt?: string;
   ownerName?: string | null;
+}
+
+export interface ClassUpdateRequestSummary {
+  id: string;
+  classId: string;
+  requestedBy: string;
+  proposedTitle: string;
+  proposedSlug: string;
+  proposedDescription: string | null;
+  proposedAcademicYear: string | null;
+  proposedStatus: SpaceStatus;
+  status: ClassUpdateRequestStatus;
+  submittedAt: string;
+  reviewedAt: string | null;
+  reviewedBy: string | null;
+  rejectionReason: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SpaceDetail extends SpaceSummary {
@@ -471,7 +489,7 @@ export interface CourseChapterTemplateSummary {
   updatedAt: string;
 }
 
-export type ChangeNotificationContentType = "announcement" | "chapter" | "resource" | "assignment" | "practice_set" | "student_group";
+export type ChangeNotificationContentType = "class" | "announcement" | "chapter" | "resource" | "assignment" | "practice_set" | "student_group";
 export type ChangeNotificationActionType = "edited" | "archived" | "deleted";
 
 export interface ContentChangeNotificationSummary {
@@ -492,4 +510,5 @@ export interface AdminClassCardSummary extends SpaceSummary {
   studentCount: number;
   teacherCount: number;
   latestResourceUpdatedAt: string | null;
+  pendingUpdateRequest?: ClassUpdateRequestSummary | null;
 }

@@ -3,6 +3,7 @@ import { isAdminRole } from "@/lib/permissions/profiles";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { seedMemberships, seedResources, seedSpaces } from "@/lib/seed/seed";
 import { mapSpaceRow } from "@/lib/db/mappers";
+import { listPendingClassUpdateRequests } from "@/lib/server/class-approval-service";
 import type { AppUserProfile } from "@/types/auth";
 import type { AdminClassCardSummary, SpaceSummary } from "@/types/domain";
 
@@ -112,12 +113,15 @@ async function getClassStats(spaceId: string) {
 
 export async function listAdminClassCards(profile: AppUserProfile): Promise<AdminClassCardSummary[]> {
   const classes = await listClassSpacesForAdminHome(profile);
+  const pendingUpdateRequests = await listPendingClassUpdateRequests(classes.map((space) => space.id));
+  const pendingUpdateRequestByClassId = new Map(pendingUpdateRequests.map((request) => [request.classId, request]));
   const cards = await Promise.all(
     classes.map(async (space) => ({
       ...space,
       approvalStatus: space.approvalStatus ?? "approved",
       createdBy: space.createdBy ?? space.ownerId,
       subjectLabel: getClassSubjectLabelFromSlug(space.slug),
+      pendingUpdateRequest: pendingUpdateRequestByClassId.get(space.id) ?? null,
       ...(await getClassStats(space.id)),
     })),
   );

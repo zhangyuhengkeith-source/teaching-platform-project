@@ -34,7 +34,7 @@ export function ClassManagementPageHeader({
           <div className="flex flex-wrap gap-2">
             {showBackToClassList ? (
               <Button asChild size="sm" variant="ghost">
-                <Link href="/admin/classes">
+                <Link href="/admin">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   返回班级列表
                 </Link>

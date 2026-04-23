@@ -17,6 +17,7 @@ import type { AppRole, ProfileStatus, UserType } from "@/types/auth";
 
 export type SpaceType = "class" | "elective";
 export type ClassApprovalStatus = "pending" | "approved" | "rejected";
+export type ClassUpdateRequestStatus = "pending" | "approved" | "rejected";
 export type SectionType = "chapter" | "module" | "week" | "topic_group";
 export type ResourceVisibility = "space" | "selected_members" | "public";
 export type NoticeType = "homework" | "deadline" | "mock_exam" | "general" | "grouping" | "service_update";
@@ -167,6 +168,46 @@ export interface Database {
         Relationships: [
           { foreignKeyName: "space_memberships_space_id_fkey"; columns: ["space_id"]; referencedRelation: "spaces"; referencedColumns: ["id"] },
           { foreignKeyName: "space_memberships_profile_id_fkey"; columns: ["profile_id"]; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
+      };
+      class_update_requests: {
+        Row: {
+          id: string;
+          class_id: string;
+          requested_by: string;
+          proposed_title: string;
+          proposed_slug: string;
+          proposed_description: string | null;
+          proposed_academic_year: string | null;
+          proposed_status: SpaceStatus;
+          status: ClassUpdateRequestStatus;
+          submitted_at: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          rejection_reason: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          class_id: string;
+          requested_by: string;
+          proposed_title: string;
+          proposed_slug: string;
+          proposed_description?: string | null;
+          proposed_academic_year?: string | null;
+          proposed_status: SpaceStatus;
+          status?: ClassUpdateRequestStatus;
+          submitted_at?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          rejection_reason?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["class_update_requests"]["Insert"]>;
+        Relationships: [
+          { foreignKeyName: "class_update_requests_class_id_fkey"; columns: ["class_id"]; referencedRelation: "spaces"; referencedColumns: ["id"] },
+          { foreignKeyName: "class_update_requests_requested_by_fkey"; columns: ["requested_by"]; referencedRelation: "profiles"; referencedColumns: ["id"] },
+          { foreignKeyName: "class_update_requests_reviewed_by_fkey"; columns: ["reviewed_by"]; referencedRelation: "profiles"; referencedColumns: ["id"] },
         ];
       };
       space_sections: {
@@ -743,7 +784,7 @@ export interface Database {
           id: string;
           user_id: string;
           class_id: string;
-          content_type: "announcement" | "chapter" | "resource" | "assignment" | "practice_set" | "student_group";
+          content_type: "class" | "announcement" | "chapter" | "resource" | "assignment" | "practice_set" | "student_group";
           content_id: string;
           action_type: "edited" | "archived" | "deleted";
           message: string;
@@ -755,7 +796,7 @@ export interface Database {
           id?: string;
           user_id: string;
           class_id: string;
-          content_type: "announcement" | "chapter" | "resource" | "assignment" | "practice_set" | "student_group";
+          content_type: "class" | "announcement" | "chapter" | "resource" | "assignment" | "practice_set" | "student_group";
           content_id: string;
           action_type: "edited" | "archived" | "deleted";
           message: string;
@@ -782,6 +823,7 @@ export type TeacherProfileRow = Database["public"]["Tables"]["teacher_profiles"]
 export type StudentProfileRow = Database["public"]["Tables"]["student_profiles"]["Row"];
 export type SpaceRow = Database["public"]["Tables"]["spaces"]["Row"];
 export type SpaceMembershipRow = Database["public"]["Tables"]["space_memberships"]["Row"];
+export type ClassUpdateRequestRow = Database["public"]["Tables"]["class_update_requests"]["Row"];
 export type SpaceSectionRow = Database["public"]["Tables"]["space_sections"]["Row"];
 export type ResourceRow = Database["public"]["Tables"]["resources"]["Row"];
 export type ResourceFileRow = Database["public"]["Tables"]["resource_files"]["Row"];

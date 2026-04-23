@@ -14,6 +14,7 @@ export interface NotifyClassContentChangeInput {
 }
 
 const contentTypeLabels: Record<ChangeNotificationContentType, string> = {
+  class: "班级",
   announcement: "公告",
   chapter: "章节",
   resource: "资源",

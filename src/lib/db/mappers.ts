@@ -18,6 +18,7 @@ import type {
   TeacherProfileRow,
   WrongBookItemRow,
   ContentChangeNotificationRow,
+  ClassUpdateRequestRow,
   CourseChapterItemRow,
   CourseChapterSetRow,
   CourseChapterTemplateRow,
@@ -43,6 +44,7 @@ import type {
   TeacherProfileSummary,
   WrongBookItemSummary,
   ContentChangeNotificationSummary,
+  ClassUpdateRequestSummary,
   CourseChapterItemSummary,
   CourseChapterLevel,
   CourseChapterSetSummary,
@@ -118,6 +120,26 @@ export function mapSpaceMembershipRow(row: SpaceMembershipRow): SpaceMembershipS
     membershipRole: row.membership_role,
     status: row.status,
     joinedAt: row.joined_at,
+  };
+}
+
+export function mapClassUpdateRequestRow(row: ClassUpdateRequestRow): ClassUpdateRequestSummary {
+  return {
+    id: row.id,
+    classId: row.class_id,
+    requestedBy: row.requested_by,
+    proposedTitle: row.proposed_title,
+    proposedSlug: row.proposed_slug,
+    proposedDescription: row.proposed_description,
+    proposedAcademicYear: row.proposed_academic_year,
+    proposedStatus: row.proposed_status,
+    status: row.status,
+    submittedAt: row.submitted_at,
+    reviewedAt: row.reviewed_at,
+    reviewedBy: row.reviewed_by,
+    rejectionReason: row.rejection_reason,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 

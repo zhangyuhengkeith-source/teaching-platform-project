@@ -5,8 +5,10 @@ import { z } from "zod";
 
 import {
   approveClassRequest,
+  approveClassUpdateRequest,
   createClassApprovalRequest,
   rejectClassRequest,
+  rejectClassUpdateRequest,
   resubmitRejectedClassRequest,
 } from "@/lib/server/class-approval-service";
 import { buildClassSlug } from "@/lib/constants/class-subjects";
@@ -18,6 +20,14 @@ const approvalActionSchema = z.object({
 });
 
 const rejectClassSchema = approvalActionSchema.extend({
+  reason: z.string().trim().max(1000).optional().nullable(),
+});
+
+const updateRequestActionSchema = z.object({
+  requestId: z.string().uuid(),
+});
+
+const rejectUpdateRequestSchema = updateRequestActionSchema.extend({
   reason: z.string().trim().max(1000).optional().nullable(),
 });
 
@@ -84,5 +94,30 @@ export async function rejectClassRequestAction(input: unknown): Promise<ClassApp
     return { ok: true };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : "Failed to reject class request." };
+  }
+}
+
+export async function approveClassUpdateRequestAction(input: unknown): Promise<ClassApprovalActionResult> {
+  try {
+    const profile = await requireRole(["super_admin"]);
+    const parsed = updateRequestActionSchema.parse(input);
+    const updated = await approveClassUpdateRequest(profile, parsed.requestId);
+    revalidateClassAdmin();
+    revalidatePath(`/classes/${updated.slug}`);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Failed to approve class update request." };
+  }
+}
+
+export async function rejectClassUpdateRequestAction(input: unknown): Promise<ClassApprovalActionResult> {
+  try {
+    const profile = await requireRole(["super_admin"]);
+    const parsed = rejectUpdateRequestSchema.parse(input);
+    await rejectClassUpdateRequest(profile, parsed.requestId, parsed.reason);
+    revalidateClassAdmin();
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Failed to reject class update request." };
   }
 }
