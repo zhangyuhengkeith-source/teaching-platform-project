@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
-import { Archive, CalendarClock, FilePlus2, Pencil, Plus, Rocket, Trash2 } from "lucide-react";
+import { Archive, BarChart3, CalendarClock, CheckCircle2, FilePlus2, Pencil, Plus, Rocket, Trash2, XCircle } from "lucide-react";
 
 import { ExerciseItemBuilder } from "@/components/domain/exercise-item-builder";
 import { ClassManagementPageHeader } from "@/components/domain/class-management-page-header";
@@ -20,7 +20,17 @@ import { cn } from "@/lib/utils/cn";
 import { removeUploadedStorageObjects, uploadResourceFiles } from "@/services/storage-service";
 import { createDefaultExerciseItem, getDefaultExerciseItemType, mapExerciseSetDetailToEditorValues } from "@/lib/exercises/editor";
 import type { ExerciseSetEditorSchema } from "@/lib/validations/exercises";
-import type { CourseChapterItemSummary, ExerciseSetDetail, ExerciseSetSummary, ResourceSummary, SpaceSummary, TaskSummary } from "@/types/domain";
+import type {
+  CourseChapterItemSummary,
+  ExerciseSetDetail,
+  ExerciseSetSummary,
+  PracticeSetProgressMetric,
+  PracticeSetProgressSetSummary,
+  PracticeSetProgressSummary,
+  ResourceSummary,
+  SpaceSummary,
+  TaskSummary,
+} from "@/types/domain";
 
 type ModuleKind = "resources" | "tasks" | "practice-sets";
 type ListMode = "published" | "drafts" | "archived";
@@ -42,6 +52,7 @@ interface ClassTeachingContentManagerProps {
   isAdmin: boolean;
   chapters: CourseChapterItemSummary[];
   initialItems: ContentItem[];
+  practiceSetProgress?: PracticeSetProgressSummary;
 }
 
 const moduleConfig = {
@@ -154,6 +165,7 @@ export function ClassTeachingContentManager({
   isAdmin,
   chapters,
   initialItems,
+  practiceSetProgress,
 }: ClassTeachingContentManagerProps) {
   const config = moduleConfig[module];
   const [items, setItems] = useState(initialItems);
@@ -161,10 +173,12 @@ export function ClassTeachingContentManager({
   const [chapterFilter, setChapterFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null);
+  const [progressItemId, setProgressItemId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const apiBase = `/api/admin/classes/${classSpace.id}/${module}`;
+  const selectedPracticeSetProgress = progressItemId ? practiceSetProgress?.sets.find((entry) => entry.exerciseSetId === progressItemId) ?? null : null;
 
   const visibleItems = useMemo(() => {
     return items.filter((item) => {
@@ -365,6 +379,10 @@ export function ClassTeachingContentManager({
         title={config.title}
       />
 
+      {module === "practice-sets" && practiceSetProgress ? (
+        <PracticeSetProgressDashboard summary={practiceSetProgress} />
+      ) : null}
+
       <div className="flex flex-col gap-3 rounded-lg border border-border bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap gap-2">
           <Dialog>
@@ -482,6 +500,7 @@ export function ClassTeachingContentManager({
                 }}
                 onEdit={() => runOperation(() => openEditor(item))}
                 onPublishNow={() => runOperation(() => patchAction(item, "publish_now"))}
+                onViewProgress={module === "practice-sets" ? () => setProgressItemId(item.id) : undefined}
               />
             ))}
           </div>
@@ -509,6 +528,10 @@ export function ClassTeachingContentManager({
             />
           )
         ) : null}
+      </Dialog>
+
+      <Dialog onOpenChange={(open) => !open && setProgressItemId(null)} open={Boolean(progressItemId)}>
+        {selectedPracticeSetProgress ? <PracticeSetProgressDialog progress={selectedPracticeSetProgress} /> : null}
       </Dialog>
     </div>
   );
@@ -636,6 +659,199 @@ function ContentFormDialog({
         ) : null}
         <Button disabled={isPending} type="submit">{isPending ? "Saving..." : "Save"}</Button>
       </form>
+    </DialogContent>
+  );
+}
+
+function MetricPie({
+  accentClassName,
+  detail,
+  label,
+  metric,
+  valueKey,
+}: {
+  accentClassName: string;
+  detail: string;
+  label: string;
+  metric: PracticeSetProgressMetric;
+  valueKey: "completionRate" | "accuracyRate";
+}) {
+  const value = metric[valueKey];
+
+  return (
+    <div className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 shadow-sm">
+      <div aria-label={`${label}: ${value}%`} className="grid h-24 w-24 shrink-0 place-items-center rounded-full" style={{ background: `conic-gradient(${accentClassName} ${value}%, #e2e8f0 0)` }}>
+        <div className="grid h-16 w-16 place-items-center rounded-full bg-white">
+          <span className="text-lg font-semibold text-slate-950">{value}%</span>
+        </div>
+      </div>
+      <div className="min-w-0 space-y-1">
+        <p className="font-medium text-slate-950">{label}</p>
+        <p className="text-sm leading-6 text-muted-foreground">{detail}</p>
+      </div>
+    </div>
+  );
+}
+
+function PracticeSetProgressDashboard({ summary }: { summary: PracticeSetProgressSummary }) {
+  const { cumulative, latest, latestSetTitle } = summary.dashboard;
+
+  return (
+    <SectionCard
+      description={latestSetTitle ? `最新练习集：${latestSetTitle}` : "暂无未归档练习集数据。"}
+      title="练习集完成情况仪表盘"
+    >
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricPie
+          accentClassName="#2563eb"
+          detail={`${cumulative.completedCount}/${cumulative.totalCount} 个学生题目已首次作答`}
+          label="累计题目完成率"
+          metric={cumulative}
+          valueKey="completionRate"
+        />
+        <MetricPie
+          accentClassName="#059669"
+          detail={`${cumulative.correctCount}/${cumulative.attemptedCount} 个首次答案正确`}
+          label="累计首次正确率"
+          metric={cumulative}
+          valueKey="accuracyRate"
+        />
+        <MetricPie
+          accentClassName="#7c3aed"
+          detail={`${latest.completedCount}/${latest.totalCount} 个学生题目已首次作答`}
+          label="最新练习集完成率"
+          metric={latest}
+          valueKey="completionRate"
+        />
+        <MetricPie
+          accentClassName="#d97706"
+          detail={`${latest.correctCount}/${latest.attemptedCount} 个首次答案正确`}
+          label="最新练习集首次正确率"
+          metric={latest}
+          valueKey="accuracyRate"
+        />
+      </div>
+    </SectionCard>
+  );
+}
+
+function getCompletionStatusLabel(status: PracticeSetProgressSetSummary["students"][number]["completionStatus"]) {
+  if (status === "completed") {
+    return "已完成";
+  }
+
+  if (status === "in_progress") {
+    return "未全部完成";
+  }
+
+  return "未开始";
+}
+
+function PracticeSetProgressDialog({ progress }: { progress: PracticeSetProgressSetSummary }) {
+  const [expandedStudentIds, setExpandedStudentIds] = useState<Set<string>>(() => new Set());
+
+  function toggleStudent(profileId: string) {
+    setExpandedStudentIds((current) => {
+      const next = new Set(current);
+      if (next.has(profileId)) {
+        next.delete(profileId);
+      } else {
+        next.add(profileId);
+      }
+      return next;
+    });
+  }
+
+  return (
+    <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto rounded-lg">
+      <DialogTitle>{progress.title} 完成情况</DialogTitle>
+      <DialogDescription>
+        正确率只统计每个学生每道题的首次作答结果，重做后答对不计入这里的正确率。
+      </DialogDescription>
+
+      <div className="mt-5 space-y-6">
+        <section className="space-y-3">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold text-slate-950">每道题正确率</h3>
+          </div>
+          {progress.itemStats.length > 0 ? (
+            <div className="space-y-3">
+              {progress.itemStats.map((item, index) => (
+                <div className="rounded-lg border border-border bg-white p-3" key={item.itemId}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-950">第 {index + 1} 题</p>
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">{item.prompt}</p>
+                    </div>
+                    <Badge variant={item.accuracyRate >= 80 ? "success" : item.accuracyRate >= 50 ? "warning" : "muted"}>
+                      {item.accuracyRate}% 正确
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {item.correctCount}/{item.firstAttemptCount} 个首次作答正确
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState description="这套练习集暂时没有题目。" icon={BarChart3} title="暂无题目数据" />
+          )}
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="font-semibold text-slate-950">学生完成状态</h3>
+          {progress.students.length > 0 ? (
+            <div className="space-y-3">
+              {progress.students.map((student) => {
+                const isExpanded = expandedStudentIds.has(student.profileId);
+
+                return (
+                  <div className="rounded-lg border border-border bg-white p-4" key={student.profileId}>
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <p className="font-medium text-slate-950">{student.studentName}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {getCompletionStatusLabel(student.completionStatus)} · {student.completedCount}/{student.totalItems} 题已完成
+                        </p>
+                      </div>
+                      <button
+                        className="grid h-16 w-16 place-items-center rounded-full border border-primary bg-blue-50 text-sm font-semibold text-primary transition hover:bg-blue-100"
+                        onClick={() => toggleStudent(student.profileId)}
+                        type="button"
+                      >
+                        {student.accuracyRate}%
+                        <span className="sr-only">展开或折叠学生逐题正误</span>
+                      </button>
+                    </div>
+                    {isExpanded ? (
+                      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                        {student.items.map((item, index) => (
+                          <div className="flex items-start gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm" key={item.itemId}>
+                            {item.status === "correct" ? (
+                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                            ) : item.status === "incorrect" ? (
+                              <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+                            ) : (
+                              <span className="mt-1 h-3 w-3 shrink-0 rounded-full border border-slate-300" />
+                            )}
+                            <div className="min-w-0">
+                              <p className="font-medium text-slate-700">第 {index + 1} 题：{item.status === "correct" ? "正确" : item.status === "incorrect" ? "错误" : "未作答"}</p>
+                              <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">{item.prompt}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <EmptyState description="这个班级暂时没有可统计的学生。" icon={BarChart3} title="暂无学生数据" />
+          )}
+        </section>
+      </div>
     </DialogContent>
   );
 }
@@ -817,6 +1033,7 @@ function ContentCard({
   onDelete,
   onEdit,
   onPublishNow,
+  onViewProgress,
 }: {
   config: typeof moduleConfig[ModuleKind];
   isAdmin: boolean;
@@ -828,6 +1045,7 @@ function ContentCard({
   onDelete: () => void;
   onEdit: () => void;
   onPublishNow: () => void;
+  onViewProgress?: () => void;
 }) {
   const publishAt = getItemPublishAt(item);
   const deadline = getItemDeadline(item);
@@ -853,6 +1071,12 @@ function ContentCard({
           <Pencil className="mr-2 h-4 w-4" />
           Edit
         </Button>
+        {onViewProgress ? (
+          <Button disabled={isPending} onClick={onViewProgress} size="sm" type="button" variant="outline">
+            <BarChart3 className="mr-2 h-4 w-4" />
+            查看完成情况
+          </Button>
+        ) : null}
         {mode === "drafts" ? (
           <Button disabled={isPending} onClick={onPublishNow} size="sm" type="button" variant="outline">
             <Rocket className="mr-2 h-4 w-4" />

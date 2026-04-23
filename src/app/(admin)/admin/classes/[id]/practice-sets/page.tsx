@@ -1,4 +1,5 @@
 import { ClassTeachingContentManager } from "@/components/domain/class-teaching-content-manager";
+import { getPracticeSetProgressSummary } from "@/lib/analytics/practice-set-progress";
 import { requireClassManagementContext } from "@/lib/auth/require-class-management";
 import { isAdminRole } from "@/lib/permissions/profiles";
 import { listChapterOptionsForClass, listClassPracticeSets } from "@/repositories/class-teaching-content-repository";
@@ -10,9 +11,10 @@ export default async function CoursePracticeSetsPage({
 }) {
   const { id } = await params;
   const { classSpace, profile } = await requireClassManagementContext(id);
-  const [items, chapters] = await Promise.all([
+  const [items, chapters, practiceSetProgress] = await Promise.all([
     listClassPracticeSets(classSpace.id, { mode: "published" }),
     listChapterOptionsForClass(classSpace.id),
+    getPracticeSetProgressSummary(classSpace.id),
   ]);
 
   return (
@@ -22,6 +24,7 @@ export default async function CoursePracticeSetsPage({
       initialItems={items}
       isAdmin={isAdminRole(profile)}
       module="practice-sets"
+      practiceSetProgress={practiceSetProgress}
     />
   );
 }

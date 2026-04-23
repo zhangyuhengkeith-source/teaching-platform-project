@@ -249,6 +249,64 @@ export interface PracticeSubmissionResult {
   wrongBookStatus?: WrongBookStatus | null;
 }
 
+export type PracticeSetStudentCompletionStatus = "not_started" | "in_progress" | "completed";
+export type PracticeSetItemResultStatus = "not_started" | "correct" | "incorrect";
+
+export interface PracticeSetProgressMetric {
+  completedCount: number;
+  totalCount: number;
+  completionRate: number;
+  correctCount: number;
+  attemptedCount: number;
+  accuracyRate: number;
+}
+
+export interface PracticeSetProgressItemSummary {
+  itemId: string;
+  prompt: string;
+  sortOrder: number;
+  firstAttemptCount: number;
+  correctCount: number;
+  accuracyRate: number;
+}
+
+export interface PracticeSetProgressStudentItemSummary {
+  itemId: string;
+  prompt: string;
+  status: PracticeSetItemResultStatus;
+}
+
+export interface PracticeSetProgressStudentSummary {
+  profileId: string;
+  studentName: string;
+  completionStatus: PracticeSetStudentCompletionStatus;
+  completedCount: number;
+  totalItems: number;
+  correctCount: number;
+  accuracyRate: number;
+  items: PracticeSetProgressStudentItemSummary[];
+}
+
+export interface PracticeSetProgressSetSummary {
+  exerciseSetId: string;
+  title: string;
+  metric: PracticeSetProgressMetric;
+  itemStats: PracticeSetProgressItemSummary[];
+  students: PracticeSetProgressStudentSummary[];
+}
+
+export interface PracticeSetProgressDashboardSummary {
+  cumulative: PracticeSetProgressMetric;
+  latest: PracticeSetProgressMetric;
+  latestSetId: string | null;
+  latestSetTitle: string | null;
+}
+
+export interface PracticeSetProgressSummary {
+  dashboard: PracticeSetProgressDashboardSummary;
+  sets: PracticeSetProgressSetSummary[];
+}
+
 export interface GroupMemberSummary {
   id: string;
   groupId: string;
