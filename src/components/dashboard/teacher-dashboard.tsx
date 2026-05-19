@@ -12,7 +12,7 @@ export function TeacherDashboard() {
   return (
     <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
       <div className="space-y-6">
-        <section className="grid gap-4 md:grid-cols-2">
+        <section className="grid gap-4 md:grid-cols-3">
           {teacherMetrics.map((item) => {
             const Icon = item.icon;
             return (
@@ -49,14 +49,12 @@ export function TeacherDashboard() {
       <div className="space-y-6">
         <SectionCard description={t("dashboard.teacher.quickActionsDescription")} title={t("dashboard.teacher.quickActionsTitle")}>
           <div className="grid gap-3">
-            <Button className="justify-start" variant="outline">{t("dashboard.teacher.reviewEssayQueue")}</Button>
             <Button className="justify-start" variant="outline">{t("dashboard.teacher.postNotice")}</Button>
             <Button className="justify-start" variant="outline">{t("dashboard.teacher.adjustElectiveGroups")}</Button>
           </div>
         </SectionCard>
         <SectionCard description={t("dashboard.teacher.upcomingDeadlinesDescription")} title={t("dashboard.teacher.upcomingDeadlinesTitle")}>
           <ul className="space-y-3 text-sm text-slate-600">
-            <li className="rounded-xl bg-slate-50 p-4">{t("dashboard.teacher.deadline1")}</li>
             <li className="rounded-xl bg-slate-50 p-4">{t("dashboard.teacher.deadline2")}</li>
             <li className="rounded-xl bg-slate-50 p-4">{t("dashboard.teacher.deadline3")}</li>
           </ul>

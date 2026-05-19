@@ -1,7 +1,6 @@
 import { ArrowRight, BookOpen, Clock3, FilePenLine, GraduationCap, Inbox, MessageSquareWarning } from "lucide-react";
 
 export const teacherMetrics = [
-  { labelKey: "dashboard.teacher.metrics.essayOrders.label", value: "12", detailKey: "dashboard.teacher.metrics.essayOrders.detail", icon: FilePenLine },
   { labelKey: "dashboard.teacher.metrics.deadlines.label", value: "7", detailKey: "dashboard.teacher.metrics.deadlines.detail", icon: Clock3 },
   { labelKey: "dashboard.teacher.metrics.classes.label", value: "5", detailKey: "dashboard.teacher.metrics.classes.detail", icon: GraduationCap },
   { labelKey: "dashboard.teacher.metrics.electives.label", value: "4", detailKey: "dashboard.teacher.metrics.electives.detail", icon: BookOpen },

@@ -5,7 +5,6 @@ import {
   FileText,
   GraduationCap,
   LayoutDashboard,
-  LifeBuoy,
   NotebookPen,
   Shield,
   UserRound,
@@ -34,7 +33,6 @@ export const APP_NAV: NavItem[] = [
   { titleKey: "nav.dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
   { titleKey: "nav.classes", href: ROUTES.classes, icon: GraduationCap },
   { titleKey: "nav.electives", href: ROUTES.electives, icon: BookOpen },
-  { titleKey: "nav.service", href: ROUTES.service, icon: LifeBuoy },
   { titleKey: "nav.notifications", href: ROUTES.notifications, icon: Bell },
   { titleKey: "nav.profile", href: ROUTES.profile, icon: UserRound },
   { titleKey: "nav.wrongBook", href: ROUTES.wrongBook, icon: NotebookPen },
@@ -50,7 +48,7 @@ export function getAppNavForProfile(profile: AppUserProfile): NavItem[] {
   }
 
   if (isTeacher(profile)) {
-    const teacherNav = APP_NAV.filter((item) => item.href !== ROUTES.service && item.href !== ROUTES.wrongBook);
+    const teacherNav = APP_NAV.filter((item) => item.href !== ROUTES.wrongBook);
     return [
       ...teacherNav.slice(0, 1),
       { titleKey: "nav.teacherAdmin", href: ROUTES.admin, icon: Shield },
@@ -62,13 +60,12 @@ export function getAppNavForProfile(profile: AppUserProfile): NavItem[] {
     return APP_NAV.filter(
       (item) =>
         item.href === ROUTES.dashboard ||
-        item.href === ROUTES.service ||
         item.href === ROUTES.notifications ||
         item.href === ROUTES.profile,
     );
   }
 
-  return APP_NAV.filter((item) => item.href !== ROUTES.service);
+  return APP_NAV;
 }
 
 export function getAdminNavForProfile(profile: AppUserProfile): NavItem[] {
